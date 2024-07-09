@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "@permaweb/aoconnect": "^0.0.56"
+  },
+  "name": "ao-aimodel-benchmark-process",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "directories": {
+    "test": "tests"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

@@ -1,8 +1,10 @@
-DataTxID = "-3WsuaNDa8-ke9pYcpq5kKUpPOl4Z6UwY09kQ6KypLk"
-LlamaRouter = ""
+DataTxID = DataTxID or "-3WsuaNDa8-ke9pYcpq5kKUpPOl4Z6UwY09kQ6KypLk"
+LlamaRouter = LlamaRouter or "glGRJ4CqL-mL29RN8udCTro2-7svs7hfqH9Vf4WXAn4"
+BenchmarkProcess = BenchmarkProcess or "1mkMVtnJDAGGCjke6Cx1juspsGJ3YRO-twntzBTYqvs"
 
-local weave = require('weave')
-local json = require('json')
+weave = require('weave')
+json = require('json')
+local ao = require('ao')
 
 DataSets = DataSets or {}
 
@@ -10,15 +12,16 @@ ScoreSets = ScoreSets or {}
 
 Handlers.add(
   "Init",
-  Handlers.utils.hasMatchingData("Init"),
+  Handlers.utils.hasMatchingTag("Action", "Init"),
   function()
     DataSets = weave.getJsonData(DataTxID)
+    print("Init")
   end
 )
 
 Handlers.add(
   "Info",
-  Handlers.utils.hasMatchingData("Info"),
+  Handlers.utils.hasMatchingTag("Action", "Info"),
   function()
     return {
       name = "Siqa",
@@ -32,10 +35,14 @@ Handlers.add(
 -- benchmark on given model
 Handlers.add(
   "Benchmark",
-  Handlers.utils.hasMatchingData("Benchmark"),
+  Handlers.utils.hasMatchingTag("Action", "Benchmark"),
   function(msg)
     local model = msg.Data
     local scoreSet = ScoreSets[model]
+    if scoreSet == nil then
+      scoreSet = {}
+      ScoreSets[model] = scoreSet
+    end
     local prompts = {}
     for _, DataSetItem in ipairs(DataSets) do
       local userPrompt = "Context: " .. DataSetItem.context .. 
@@ -45,13 +52,15 @@ Handlers.add(
       "\nAnswer B: " .. DataSetItem.answerB .. 
       "\nAnswer C: " .. DataSetItem.answerC .. 
       "\nWhich answer is most likely correct? "
-      local prompt = [[<|system|>]] .. SystemPrompt .. [[\n<|user|>]] .. prompt .. [[\n<|assistant|>]]
+      local prompt = [[<|system|>]] .. SystemPrompt .. [[\n<|user|>]] .. userPrompt .. [[\n<|assistant|>]]
       table.insert(prompts, { prompt = prompt, id = DataSetItem.id })
       scoreSet[DataSetItem.id] = { status = "pending", c_result = DataSetItem.result }
     end
-    return ao.Send({
+    return ao.send({
       Target = LlamaRouter,
-      Method = "Inference",
+      Tags = {
+        { name = "Action", value = "Inference" }
+      },
       Data = json.encode({
         model = model,
         prompts = prompts,
@@ -62,7 +71,7 @@ Handlers.add(
 
 Handlers.add(
   "Data-Info",
-  Handlers.utils.hasMatchingData("Data-Info"),
+  Handlers.utils.hasMatchingTag("Action", "Data-Info"),
   function(msg)
     local id = msg.Data
     return DataSets[id]
@@ -71,7 +80,7 @@ Handlers.add(
 
 Handlers.add(
   "Score-Info",
-  Handlers.utils.hasMatchingData("Score-Info"),
+  Handlers.utils.hasMatchingTag("Action", "Score-Info"),
   function(msg)
     local response = json.decode(msg.Data)
     local model = response.model
@@ -85,8 +94,8 @@ Handlers.add(
 )
 
 Handlers.add(
-  "Benchmark-Response",
-  Handlers.utils.hasMatchingData("Benchmark-Result"),
+  "Inference-Response",
+  Handlers.utils.hasMatchingTag("Action", "Inference-Response"),
   function(msg)
     local response = json.decode(msg.Data)
     local result = response.result
@@ -106,41 +115,54 @@ Handlers.add(
     else
       scoreItem.status = "incorrect"
     end
+    if isComplete(model) then
+      ao.send({
+        Target = BenchmarkProcess,
+        Tags = {
+          { name = "Action", value = "Benchmark-Response" }
+        },
+        Data = json.endcode({
+          model = model,
+          score = score(model),
+        })
+      })
+    end
   end
 )
 
--- Statistics Model Benchmark
+function isComplete(model)
+  local scoreSet = ScoreSets[model]
+  for _, scoreItem in pairs(scoreSet) do
+    if scoreItem.status == "pending" then
+      return false
+    end
+  end
+  return true
+end
+
+function score(model)
+  local scoreSet = ScoreSets[model]
+  if scoreSet == nil then
+    return -1
+  end
+  local total = #scoreSet
+  local correct = 0
+  local incorrect = 0
+  for id, scoreItem in pairs(scoreSet) do
+    if scoreItem.status == "correct" then
+      correct = correct + 1
+    else
+      incorrect = incorrect + 1
+    end
+  end
+  return correct / total
+end
+
 Handlers.add(
   "Statistics",
-  Handlers.utils.hasMatchingData("Statistics"),
+  Handlers.utils.hasMatchingTag("Action", "Statistics"),
   function(msg)
     local model = msg.Data
-    local scoreSet = ScoreSets[model]
-    if scoreSet == nil then
-      return {
-        model = model,
-        total = 0,
-        pending = 0,
-        correct = 0,
-        incorrect = 0,
-      }
-    end
-    local total = #scoreSet
-    local correct = 0
-    local incorrect = 0 
-    for id, scoreItem in pairs(scoreSet) do
-      if scoreItem.status == "correct" then
-        correct = correct + 1
-      else
-        incorrect = incorrect + 1
-      end
-    end
-    return {
-      model = model,
-      total = total,
-      pending = total - correct - incorrect,
-      correct = correct,
-      incorrect = incorrect,
-    }
+    return statistics(model)
   end
 )

@@ -1,20 +1,21 @@
 local json = require("json")
+local ao = require('ao')
 
 Workers = Workers or {}
 PromptRequests = PromptRequests or {}
 
 Handlers.add(
   "Register-Worker",
-  Handlers.utils.hasMatchingData("Register-Worker"),
+  Handlers.utils.hasMatchingTag("Action", "Register-Worker"),
   function(msg)
     -- TODO: add supported models to worker
     Workers[msg.From] = { workload = 0 }
   end
 )
 
-Handler.add(
+Handlers.add(
   "Unregister-Worker",
-  Handlers.utils.hasMatchingData("Unregister-Worker"),
+  Handlers.utils.hasMatchingTag("Action", "Unregister-Worker"),
   function(msg)
     Workers[msg.From] = nil
   end
@@ -25,11 +26,11 @@ function getWorkerWithLessWorkload()
   local minWorkload = math.huge
   for worker, workerData in pairs(Workers) do
     if workerData == nil then
-      continue
-    end
-    if workerData.workload < minWorkload then
-      minWorker = worker
-      minWorkload = workerData.workload
+    else
+      if workerData.workload < minWorkload then
+        minWorker = worker
+        minWorkload = workerData.workload
+      end
     end
   end
   return minWorker
@@ -37,7 +38,7 @@ end
 
 Handlers.add(
   "Inference",
-  Handlers.utils.hasMatchingData("Inference"),
+  Handlers.utils.hasMatchingTag("Action", "Inference"),
   function(msg)
     local response = json.decode(msg.Data)
     local prompts = response.prompts
@@ -49,9 +50,11 @@ Handlers.add(
     -- deliver all requests to workers with less workload
     for _, prompt in ipairs(prompts) do
       local worker = getWorkerWithLessWorkload()
-      ao.Send({
+      ao.send({
         Target = worker,
-        Action = "Inference",
+        Tags = {
+          { name = "Action", value = "Inference" }
+        },
         Data = json.encode({
           prompt = prompt.prompt,
           model = model,
@@ -65,18 +68,21 @@ Handlers.add(
 
 Handlers.add(
   "Inference-Response",
-  Handlers.utils.hasMatchingData("Inference-Response"),
+  Handlers.utils.hasMatchingTag("Action", "Inference-Response"),
   function(msg)
     local response = json.decode(msg.Data)
     if PromptRequests[response.dataset] == nil then
       return
     end
     Workers[msg.From].workload = Workers[msg.From].workload - 1
-    ao.Send({
+    ao.send({
       Target = response.dataset,
-      Action = "Inference-Response",
+      Tags = {
+        { name = "Action", value = "Inference-Response" }
+      },
       Data = json.encode({
         id = response.id,
+        model = response.model,
         result = response.result,
       })
     })

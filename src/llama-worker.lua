@@ -1,14 +1,16 @@
 local json = require("json")
+local ao = require('ao')
 
 Llama = require('llama')
 Llama.logLevel = 4
 DefaultModel = "ISrbGzQot05rs_HKC08O_SmkipYQnqgB1yC3mjZZeEo"
 DefaultMaxTokens = 1
 DefaultSystemPrompt = "You are performing an benchmark testing. Choose RIGHT answer for the question based on the context. [Important] Only answer with the letter of the correct answer. If you are not sure, answer with 'N'"
+DEBUG = false
 
 Handlers.add(
   "loadModel",
-  Handlers.utils.hasMatchingData("setModel"),
+  Handlers.utils.hasMatchingTag("Action", "setModel"),
   function(msg)
     Llama.load(msg.Data or DefaultModel)
   end
@@ -17,7 +19,7 @@ Handlers.add(
 -- set Max Token
 Handlers.add(
   "setMaxTokens",
-  Handlers.utils.hasMatchingData("setMaxTokens"),
+  Handlers.utils.hasMatchingTag("Action", "setMaxTokens"),
   function(msg)
     MaxTokens = msg.Data or DefaultMaxTokens
   end
@@ -26,7 +28,7 @@ Handlers.add(
 -- set system prompt
 Handlers.add(
   "setSystemPrompt",
-  Handlers.utils.hasMatchingData("setSystemPrompt"),
+  Handlers.utils.hasMatchingTag("Action", "setSystemPrompt"),
   function(msg)
     SystemPrompt = msg.Data or DefaultSystemPrompt
   end
@@ -35,7 +37,7 @@ Handlers.add(
 -- Inference
 Handlers.add(
   "Inference",
-  Handlers.utils.hasMatchingData("Inference"),
+  Handlers.utils.hasMatchingTag("Action", "Inference"),
   function(msg)
     local response = json.deocde(msg.Data)
     local prompt = response.prompt
@@ -43,11 +45,14 @@ Handlers.add(
     local id = response.id
     local dataset = response.dataset
     -- TODO: check if the model is loaded
-    ao.Send({
+    ao.send({
       Target = msg.From,
-      Action = "Inference-Response",
+      Tags = {
+        { name = "Action", value = "Inference-Response" }
+      },
       Data = json.encode({
         id = id,
+        model = model,
         dataset = dataset,
         result = infer(prompt),
       }),
@@ -56,6 +61,9 @@ Handlers.add(
 )
 
 function infer(prompt)
+  if DEBUG then
+    return "A"
+  end
   Llama.setPrompt(prompt)
   local response = ""
   local tokens = 0

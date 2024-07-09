@@ -1,54 +1,68 @@
 local json = require("json")
+local ao = require('ao')
 
 DataSets = DataSets or {}
-Models = Models or {}
 Benchmarks = Benchmarks or {}
 
 Handlers.add(
-  "Register-DataSet",
-  Handlers.utils.hasMatchingData("Register-DataSet"),
-  function(msg)
-    DataSets[msg.Data] = {}
-  end
-)
-
-Handlers.add(
-  "Register-Model",
-  Handlers.utils.hasMatchingData("Register-Model"),
-  function(msg)
-    table.insert(Models, msg.Data)
-  end
-)
-
-Handlers.add(
-  "Create-Benchmark",
-  Handlers.utils.hasMatchingData("Create-Benchmark"),
+  "Create-Pool",
+  Handlers.utils.hasMatchingTag("Action", "Create-Pool"),
   function(msg)
     -- TODO: check Balance
     local response = json.decode(msg.Data)
     local dataset = response.dataset
-    Benchmarks[id] = {
-      dataset = dataset,
+    Benchmarks[dataset] = {
+      owner = msg.From,
+      funds = msg.Token,
       models = {}
     }
   end
 )
 
 Handlers.add(
-  "Join-Benchmark",
-  Handlers.utils.hasMatchingData("Join-Benchmark"),
+  "Join-Pool",
+  Handlers.utils.hasMatchingTag("Action", "Join-Pool"),
   function(msg)
     local response = json.decode(msg.Data)
-    local benchmark = response.benchmark
+    local dataset = response.dataset
     local model = response.model
-    Benchmarks[benchmark].models[model] = {}
+    Benchmarks[dataset].models[model] = {
+      participant = msg.From,
+      score = 0,
+    }
+    ao.send({
+      Target = dataset,
+      Tags = {
+        { name = "Action", value = "Benchmark" },
+      },
+      Data = model
+    })
   end
 )
 
 Handlers.add(
-  "Benchmark-Result",
-  Handlers.utils.hasMatchingData("Benchmark-Result"),
+  "Benchmark-Response",
+  Handlers.utils.hasMatchingTag("Action", "Benchmark-Response"),
   function(msg)
-    ao.Send
+    assert(Benchmarks[msg.From] ~= nil, "Benchmark not found")
+    local response = json.decode(msg.Data)
+    Benchmarks[msg.From].models[response.model].score = response.score
+  end
+)
+
+Handlers.add(
+  "Leaderboard",
+  Handlers.utils.hasMatchingTag("Action", "Leaderboard"),
+  function(msg)
+    local response = json.decode(msg.Data)
+    local dataset = response.dataset
+    local models = Benchmarks[dataset].models
+    local leaderboard = {}
+    for model, score in pairs(models) do
+      leaderboard[model] = score
+    end
+    -- sort leaderboard by score
+    table.sort(leaderboard, function(a, b) return a.score > b.score end)
+    return json.encode(leaderboard)
   end
 )
