@@ -30,9 +30,20 @@ ao.send({
 })
 ```
 
-### Model Upload
+### Prepare Model for Benchmark
 
-TBD
+Ardrive -> Data Tx Id
+
+- Opensource Models
+  - Phi-3 Mini 4k Instruct: ISrbGzQot05rs_HKC08O_SmkipYQnqgB1yC3mjZZeEo
+  - Phi-2: kd34P4974oqZf2Db-hFTUiCipsU6CzbR6t-iJoQhKIo
+  - GPT-2 117M: XOJ8FBxa6sGLwChnxhF2L71WkKLSKq1aU5Yn5WnFLrY
+  - GPT-2-XL 4-bit quantized model: M-OzkyjxWhSvWYF87p0kvmkuAEEkvOzIj4nMNoSIydc
+  - CodeQwen 1.5 7B Chat q3: sKqjvBbhqKvgzZT4ojP1FNvt4r_30cqjuIIQIr-3088
+  - Llama3 8B Instruct q4: Pr2YVrxd7VwNdg6ekC0NXWNKXxJbfTlHhhlrKbAd1dA
+  - Llama3 8B Instruct q8: jbx-H6aq7b3BbNCHlK50Jz9L-6pz9qmldrYXMwjqQVI
+- Fine-tuned Models
+  - 
 
 ### Model Evaluation
 
@@ -42,7 +53,7 @@ Trainer can join a pool by sending a message to the pool process with the follow
 ao.send({
    Target = 'DLJoP8Xtdat6SKz3kqYGZPaa7DJBG6etF1jRLQCwquo',
    Action = 'Join-Pool',
-   Data = '{"dataset": <the pool id you want to join>, "model": <your model process id>}'
+   Data = '{"dataset": <the pool id you want to join>, "model": <your model id>}'
 })
 ```
 
@@ -241,6 +252,11 @@ Make sure you use your own `authority` Tags of the process and forward the messa
 - [scripts/wrappedAR.ts](scripts/wrappedAR.ts) : A script to send wrappedAR to the pool/dataset process
 - [scripts/spawn.ts](scripts/spawn.ts) : A script to spawn all processes to setup the benchmark
 - [scripts/siqa.ts](scripts/siqa.ts) : A script to load the siqa data into the dataset process
+
+### Process ID
+- Benchmark: `DLJoP8Xtdat6SKz3kqYGZPaa7DJBG6etF1jRLQCwquo`
+- Siqa: `XUw5NtwUzk7hf_dE4ifEFD2rHfXffMLb8s2QfnZEvg4`
+- WrappedAR: `xU9zFkq3X2ZQ6olwNVvr1vUWIjc3kXTWr7xKQD6dh10`
 
 # Contributing
 
