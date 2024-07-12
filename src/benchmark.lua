@@ -57,6 +57,10 @@ Handlers.add(
     local allocation = msg.Tags["X-Allocation"]
     local sender = msg.Tags["Sender"]
     local quantity = msg.Tags["Quantity"]
+    if (Benchmarks[dataset] ~= nil) then
+      print("Pool " .. dataset .. " already exists")
+      return
+    end
     Benchmarks[dataset] = {
       funder = sender,
       funds = tonumber(quantity),
@@ -176,6 +180,8 @@ Handlers.add(
     for model, modelData in pairs(models) do
       table.insert(leaderboard, {
         model = model,
+        progress = modelData.progress,
+        correctRatio = modelData.correctRatio,
         score = modelData.score * modelData.progress
       })
     end

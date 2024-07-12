@@ -1,4 +1,4 @@
-# Benchmark POC: Benchmarking LLM models on AO
+# Benchmark POC: Model Benchmark on AO
 
 The benchmark POC is a proof of concept that aims to benchmark LLM models on AO.
 Funders can setup a funding pool with a set of questions and get a leaderboard of the models that are able to answer the questions.
