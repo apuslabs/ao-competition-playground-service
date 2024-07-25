@@ -11,6 +11,12 @@ SystemPrompt = SystemPrompt or [[You are a helpful assistant that can answer que
 Choose the correct answer for question based on the context. If you are not sure, answer N.
 **Important**You must only answer with A, B, C, or N.
 ]]
+SasPrompt = "[[
+    You are a helpful assistant that can compute the SAS(semantic answer similarity) metrics.
+    You can compute a score between 0~100 based on the SAS, 0 stands totally different, 100 stands almost the same.
+    Now the user will send you two sentences(sentenceA and sentenceB), please return the SAS score of them.
+**Important**You must only return the SAS score, no need extra descriptions.
+]]"
 
 Handlers.add(
   "Init",
@@ -24,10 +30,9 @@ Handlers.add(
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           context TEXT NOT NULL,
           question TEXT NOT NULL,
-          answerA TEXT NOT NULL,
-          answerB TEXT NOT NULL,
-          answerC TEXT NOT NULL,
-          result TEXT NOT NULL
+          expected_responseA TEXT NOT NULL,
+          expected_responseB TEXT NOT NULL,
+          expected_responseC TEXT NOT NULL,
       );
 
       CREATE TABLE models (
@@ -44,6 +49,7 @@ Handlers.add(
           prompt TEXT NOT NULL,
           correct_answer TEXT NOT NULL,
           prediction TEXT,
+          prediction_sas_score INTEGER,
           inference_start_time DATETIME,
           inference_end_time DATETIME,
           inference_reference TEXT,
@@ -61,7 +67,7 @@ Handlers.add(
 
 local SQL = {
   INSERT_DATASET = [[
-    INSERT INTO datasets (context, question, answerA, answerB, answerC, result) VALUES ('%s', '%s', '%s', '%s', '%s', '%s');
+    INSERT INTO datasets (context, expected_responseA) VALUES ('%s', '%s', '%s', '%s', '%s', '%s');
   ]],
   COUNT_DATASETS = [[
     SELECT COUNT(id) as count FROM datasets;
@@ -75,6 +81,9 @@ local SQL = {
   GET_UNEVALUATED_EVALUATIONS = [[
     SELECT * FROM evaluations WHERE inference_start_time IS NULL AND model_id = '%s' LIMIT %d;
   ]],
+  GET_EXPECTED_RESPONSE = [[
+    SELECT expected_responseA FROM datasets WHERE inference_reference = '%s'
+  ]],
   CREATE_EVALUATION = [[
     INSERT INTO evaluations (dataset_id, model_id, prompt, correct_answer) VALUES ('%s', '%s', '%s', '%s') ON CONFLICT(dataset_id, model_id) DO NOTHING;
   ]],
@@ -84,8 +93,14 @@ local SQL = {
   END_EVALUATION = [[
     UPDATE evaluations SET inference_end_time = CURRENT_TIMESTAMP, prediction = '%s' WHERE inference_reference = '%s';
   ]],
+  UPDATE_SCORE = [[
+    UPDATE evaluations SET prediction_sas_score = '%s' WHERE inference_reference = '%s';
+  ]],
   CORRECT_COUNT = [[
     SELECT COUNT(*) as count FROM evaluations WHERE model_id = '%s' AND correct_answer = prediction;
+  ]],
+  EVALUATED_SCORE_SUM = [[
+    SELECT sum(*) FROM evaluations WHERE inference_start_time IS NOT NULL AND model_id = '%s';
   ]],
   UNEVALUATED_COUNT = [[
     SELECT COUNT(*) as count FROM evaluations WHERE inference_start_time IS NULL AND model_id = '%s';
@@ -103,11 +118,7 @@ Handlers.add(
       local query = string.format(
         SQL.INSERT_DATASET,
         DataSetItem.context,
-        DataSetItem.question,
-        DataSetItem.answerA,
-        DataSetItem.answerB,
-        DataSetItem.answerC,
-        DataSetItem.result
+        DataSetItem.expected_response[1]
       )
       DB:exec(query)
     end
@@ -154,34 +165,22 @@ Handlers.add(
     local model = msg.Data
     -- TODO: check if model exists, register model
     for row in DB:nrows(SQL.GET_ALL_DATASETS) do
-      local userPrompt = "Context: " .. row.context .. 
-      "\nQuestion: " .. 
-      row.question .. 
-      "\nAnswerA: " .. row.answerA .. 
-      "\nAnswerB: " .. row.answerB .. 
-      "\nAnswerC: " .. row.answerC
+      local userPrompt = "Context: " .. row.context
       local prompt = [[<|system|>]] .. SystemPrompt .. [[<|user|>]] .. userPrompt .. [[<|assistant|>]]
       DB:exec(string.format(
         SQL.CREATE_EVALUATION,
-        row.id, model, prompt, row.result
+        row.id, model, prompt, row.expected_responseA
       ))
     end
     print('ok')
   end
 )
 
-
--- A:1 B:2 ...
 local function ResultRetriever(answer)
-  if answer:find("A") then
-    return "1"
-  elseif answer:find("B") then
-    return "2"
-  elseif answer:find("C") then
-    return "3"
-  end
-  return "0"
+  return answer
 end
+
+
 
 Handlers.add(
   "Evaluate",
@@ -199,6 +198,14 @@ Handlers.add(
           SQL.END_EVALUATION,
           ResultRetriever(answer), reference
         ))
+          local expectedResponse = String.format(DB:exec(SQL.GET_EXPECTED_RESPONSE, reference))
+          local sentences = " sentenceA: " ..  Answer .. ",\n" ..
+                  "sentenceB:" .. expectedResponse
+          local sasUserPrompt = SasPrompt .. "\n" .. sentences
+          Llama.run(sasUserPrompt, 1, function(sasScore)
+              print("Sas score:" .. sasScore .. "\n")
+              DB:exec(SQL.UPDATE_SCORE, sasScore, reference)
+          end)
       end)
       DB:exec(string.format(
         SQL.START_EVALUATION,
@@ -209,11 +216,12 @@ Handlers.add(
   end
 )
 
-function GetCorrectCount(model)
-  for row in DB:nrows(string.format(SQL.CORRECT_COUNT, model)) do
-    return tonumber(row.count)
-  end
-  return 0
+
+function GetEvaluatedScoreSum(model)
+    for score in DB:nrows(string.format(SQL.EVALUATED_SCORE_SUM, model)) do
+        return tonumber(score)
+    end
+    return 0
 end
 
 function GetUnevaluatedCount(model)
@@ -227,7 +235,7 @@ local function ScoreCalculator(correct, total)
   if total == 0 then
     return 0
   end
-  return correct / total
+  return correct / (total * 100)
 end
 
 Handlers.add(
@@ -235,7 +243,7 @@ Handlers.add(
   Handlers.utils.hasMatchingTag("Action", "Score"),
   function(msg)
     local model = msg.Data
-    local correct = GetCorrectCount(model)
+    local sasScoreSum = GetEvaluatedScoreSum(model)
     local unevaluated = GetUnevaluatedCount(model)
     local total = getDataSetCount()
     ao.send({
@@ -248,7 +256,7 @@ Handlers.add(
         correct = correct,
         unevaluated = unevaluated,
         total = total,
-        score = ScoreCalculator(correct, total - unevaluated),
+        score = ScoreCalculator(sasScoreSum, total - unevaluated),
         progress = (total - unevaluated) / total,
       })
     })
