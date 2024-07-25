@@ -11,12 +11,15 @@ SystemPrompt = SystemPrompt or [[You are a helpful assistant that can answer que
 Choose the correct answer for question based on the context. If you are not sure, answer N.
 **Important**You must only answer with A, B, C, or N.
 ]]
-SasPrompt = "[[
-    You are a helpful assistant that can compute the SAS(semantic answer similarity) metrics.
-    You can compute a score between 0~100 based on the SAS, 0 stands totally different, 100 stands almost the same.
-    Now the user will send you two sentences(sentenceA and sentenceB), please return the SAS score of them.
-**Important**You must only return the SAS score, no need extra descriptions.
-]]"
+Phi3Template = "<|system|>
+                %s<|end|>
+                <|user|>
+                %s<|end|>"
+
+SasSystemPrompt =  "You are a helpful assistant that can compute the SAS(semantic answer similarity) metrics.
+                    You can compute a score between 0~100 based on the SAS, 0 stands totally different, 100 stands almost the same.
+                    Now the user will send you two sentences(sentenceA and sentenceB), please return the SAS score of them.
+                    **Important**You must return as this format: `{<the-sas-score>}`."
 
 Handlers.add(
   "Init",
@@ -199,10 +202,9 @@ Handlers.add(
           ResultRetriever(answer), reference
         ))
           local expectedResponse = String.format(DB:exec(SQL.GET_EXPECTED_RESPONSE, reference))
-          local sentences = " sentenceA: " ..  Answer .. ",\n" ..
-                  "sentenceB:" .. expectedResponse
-          local sasUserPrompt = SasPrompt .. "\n" .. sentences
-          Llama.run(sasUserPrompt, 1, function(sasScore)
+          local sentences = " sentenceA: " ..  Answer .. ", sentenceB:" .. expectedResponse .. "."
+          local prompt = string.format(Phi3Template, SasSystemPrompt, sentences)
+          Llama.run(prompt, 1, function(sasScore)
               print("Sas score:" .. sasScore .. "\n")
               DB:exec(SQL.UPDATE_SCORE, sasScore, reference)
           end)
