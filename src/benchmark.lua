@@ -2,7 +2,8 @@ local json = require("json")
 local ao = require('ao')
 
 Benchmarks = Benchmarks or {}
-WrappedAR = "xU9zFkq3X2ZQ6olwNVvr1vUWIjc3kXTWr7xKQD6dh10"
+--WrappedAR = "xU9zFkq3X2ZQ6olwNVvr1vUWIjc3kXTWr7xKQD6dh10"
+ApusTokenProcess = "t9UgMVcWtc4NuivdJYmWPb5kzti1TJlQ-nG-aQoXRDA"
 
 local Enum = {
   AllocationRules = {
@@ -48,10 +49,10 @@ Handlers.add(
   "Create-Pool",
   function(msg)
     return msg.Tags.Action == "Credit-Notice" and
-      msg.From == WrappedAR
+      msg.From == ApusTokenProcess
   end,
   function(msg)
-    -- TODO: check Balance
+    -- TODO: check quantity the type
     local dataset = msg.Tags["X-Dataset"]
     local allocation = msg.Tags["X-Allocation"]
     local sender = msg.Tags["Sender"]
