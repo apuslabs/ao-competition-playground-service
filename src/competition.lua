@@ -58,6 +58,21 @@ Handlers.add(
   end
 )
 
+Handlers.add(
+    "Allocate-Rewards",
+    Handlers.utils.hasMatchingTag("Action", "Allocate-Rewards-Response"),
+    function (msg)
+        ao.send({
+            Target = msg.From,
+            Tags = {
+                  { name = "Action", value = "Allocate-Rewards-Response" },
+                  { name = "status", value = "200" }
+            }
+      })
+      print("OK")
+    end
+)
+
 
 Handlers.add(
     "Get-Dashboard",
@@ -117,19 +132,3 @@ Handlers.add(
       print("OK")
     end
 )
-
-Handlers.add(
-    "Allocate-Rewards",
-    Handlers.utils.hasMatchingTag("Action", "Allocate-Rewards-Response"),
-    function (msg)
-        ao.send({
-            Target = msg.From,
-            Tags = {
-                  { name = "Action", value = "Allocate-Rewards-Response" },
-                  { name = "status", value = "200" }
-            }
-      })
-      print("OK")
-    end
-)
-
