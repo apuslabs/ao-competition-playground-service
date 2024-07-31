@@ -63,7 +63,7 @@ Handlers.add(
     "Get-Dashboard",
     Handlers.utils.hasMatchingTag("Action", "Get-Dashboard"),
     function (msg)
-        -- TODO
+        -- TODO @Json
         ao.send({
             Target = msg.From,
             Tags = {
@@ -85,7 +85,7 @@ Handlers.add(
     "Get-Leaderboard",
     Handlers.utils.hasMatchingTag("Action", "Get-Leaderboard"),
     function (msg)
-        -- TODO
+        -- TODO @Json
         local data = json.encode({
             {
                 rank = 1,
