@@ -11,15 +11,16 @@ SystemPrompt = SystemPrompt or [[You are a helpful assistant that can answer que
 Choose the correct answer for question based on the context. If you are not sure, answer N.
 **Important**You must only answer with A, B, C, or N.
 ]]
-Phi3Template = "<|system|>
+
+Phi3Template = [[<|system|>
                 %s<|end|>
                 <|user|>
-                %s<|end|>"
+                %s<|end|>]]
 
-SasSystemPrompt =  "You are a helpful assistant that can compute the SAS(semantic answer similarity) metrics.
-                    You can compute a score between 0~100 based on the SAS, 0 stands totally different, 100 stands almost the same.
+SasSystemPrompt =  [[You are a helpful assistant that can compute the SAS(semantic answer similarity) metrics.
+                    You can compute a score between 0~100 based on the SAS, 0 means totally different, 100 means almost the same.
                     Now the user will send you two sentences(sentenceA and sentenceB), please return the SAS score of them.
-                    **Important**You must return as this format: `{<the-sas-score>}`."
+                    **Important**You must return as this format: {<the-sas-score>}.]]
 
 Handlers.add(
   "Init",
@@ -27,15 +28,13 @@ Handlers.add(
   function()
     -- DataSets = weave.getJsonData(DataTxID)
     DB = sqlite3.open_memory()
-  
+    print("start to do DB exec")
     DB:exec[[
       CREATE TABLE datasets (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          context TEXT NOT NULL,
-          question TEXT NOT NULL,
-          expected_responseA TEXT NOT NULL,
-          expected_responseB TEXT NOT NULL,
-          expected_responseC TEXT NOT NULL,
+          context TEXT,
+          question TEXT,
+          expected_responseA TEXT
       );
 
       CREATE TABLE models (
@@ -62,24 +61,31 @@ Handlers.add(
       INSERT INTO models (name, inference_process, data_tx) VALUES
         ('Phi-3 Mini 4k Instruct', 'wh5vB2IbqmIBUqgodOaTvByNFDPr73gbUq1bVOUtCrw', 'ISrbGzQot05rs_HKC08O_SmkipYQnqB1yC3mjZZeEo'),
         ('Model B', 'Process B', 'Data TX B');
+      INSERT INTO datasets (context, expected_responseA) VALUES 
+                                ('a context', 'a response AAA'),
+                               ("It's 2021-07-15 08:26:00 now", "Its 2021-07-15 08:26:00 now");
     ]]
-    
+
+    print("DB exec succeded")
     return "ok"
   end
 )
 
 local SQL = {
-  INSERT_DATASET = [[
-    INSERT INTO datasets (context, expected_responseA) VALUES ('%s', '%s', '%s', '%s', '%s', '%s');
+  INSERT_DATASET = [[ 
+    INSERT INTO datasets(context, expected_responseA) VALUES ("%s", "%s"); 
   ]],
   COUNT_DATASETS = [[
-    SELECT COUNT(id) as count FROM datasets;
+    SELECT COUNT(*) as count FROM datasets;
   ]],
   GET_ALL_DATASETS = [[
     SELECT * FROM datasets;
   ]],
   GET_ALL_MODELS = [[
     SELECT * FROM models;
+  ]],
+  COUNT_ALL_MODELS = [[
+    SELECT COUNT(*) as count FROM models;
   ]],
   GET_UNEVALUATED_EVALUATIONS = [[
     SELECT * FROM evaluations WHERE inference_start_time IS NULL AND model_id = '%s' LIMIT %d;
@@ -111,9 +117,10 @@ local SQL = {
 }
 
 Handlers.add(
-  "Load-Data",
-  Handlers.utils.hasMatchingTag("Action", "Load-Data"),
+  "Load-QA-Data",
+  Handlers.utils.hasMatchingTag("Action", "Load-QA-Data"),
   function(msg)
+    Handlers.utils.reply("start Load-Data!!!!!!")(msg)
     local data = msg.Data
     assert(data ~= nil, "Data is nil")
     local DataSets = json.decode(data)
@@ -123,7 +130,8 @@ Handlers.add(
         DataSetItem.context,
         DataSetItem.expected_response[1]
       )
-      DB:exec(query)
+      print(query)
+      print(Dump(DB:exec(query)))
     end
     print('ok')
   end
@@ -131,15 +139,18 @@ Handlers.add(
 
 function getDataSetCount()
   for row in DB:nrows(SQL.COUNT_DATASETS) do
+    print(Dump(row))
     return tonumber(row.count)
   end
 end
 
 Handlers.add(
-  "Info",
-  Handlers.utils.hasMatchingTag("Action", "Info"),
+  "QAInfo",
+  Handlers.utils.hasMatchingTag("Action", "QAInfo"),
   function()
+    print("start Info")
     local count = getDataSetCount()
+    print("count :" .. count)
     return {
       name = "Siqa",
       description = "The Siqa dataset is a collection of questions and answers from the SQuAD dataset.",
@@ -183,6 +194,23 @@ local function ResultRetriever(answer)
   return answer
 end
 
+function extractSasScore(input_string)
+    local pattern = "^{<(%d+)>}$"
+    local match = input_string:match(pattern)
+
+    if not match then
+        print(string.format("Error: Input string: %s does not match the format {<sas-score>}", input_string))
+        return nil
+    end
+
+    local score = tonumber(match)
+    if not score then
+        print("Error: Unable to extract integer value from input string.")
+        return nil
+    end
+
+    return score
+end
 
 
 Handlers.add(
@@ -206,7 +234,7 @@ Handlers.add(
           local prompt = string.format(Phi3Template, SasSystemPrompt, sentences)
           Llama.run(prompt, 1, function(sasScore)
               print("Sas score:" .. sasScore .. "\n")
-              DB:exec(SQL.UPDATE_SCORE, sasScore, reference)
+              DB:exec(SQL.UPDATE_SCORE, extractSasScore(sasScore), reference)
           end)
       end)
       DB:exec(string.format(

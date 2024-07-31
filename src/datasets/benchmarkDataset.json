@@ -1,0 +1,1412 @@
+[
+  {
+    "context": "It's 2021-07-17 02:36:49 now. What is the discussion about how #DeFi is transforming the products we use every day?",
+    "expected_response": [
+      "It's 2021-07-20 23:00:00 now. Going live right now!"
+    ]
+  },
+  {
+    "context": "It's 2021-07-15 22:12:06 now. How is #Arweave being used to build the future of film?",
+    "expected_response": [
+      "It's 2021-07-15 22:23:40 now. What's this about, @kevinabosch ?"
+    ]
+  },
+  {
+    "context": "It's 2021-07-15 21:25:45 now. What are fiat on-ramps for $AR and how do they make the Arweave ecosystem accessible to more users?",
+    "expected_response": [
+      "It's 2021-07-15 21:35:43 now. Awesome overview of the new ways to buy Arweave storage with debit and credit cards!"
+    ]
+  },
+  {
+    "context": "It's 2021-07-15 03:01:27 now. How is @redstone_defi leveraging Arweave's decentralized storage infrastructure?",
+    "expected_response": [
+      "It's 2021-07-15 12:45:19 now. Congrats, @redstone_defi !"
+    ]
+  },
+  {
+    "context": "It's 2021-07-15 08:26:00 now. How is automated backup for all @cryptovoxels parcels being implemented on Arweave?",
+    "expected_response": [
+      "It's 2021-07-15 10:37:08 now. Permanent archive of @cryptovoxels on Arweave!"
+    ]
+  },
+  {
+    "context": "It's 2021-07-12 20:27:15 now. What is wrapped Arweave on Uniswap?",
+    "expected_response": [
+      "It's 2021-07-13 14:05:20 now. Arweave tokens, now on Uniswap."
+    ]
+  },
+  {
+    "context": "It's 2021-07-12 19:56:45 now. What is Wrapped AR?",
+    "expected_response": [
+      "It's 2021-07-13 13:59:42 now. Wrapped $AR (via @FinanceEver) is now live on the Ethereum main net! This means more liquidity, easier access to AR for a wider audience, many more wallet options, and potentially even defi apps with $AR tokens."
+    ]
+  },
+  {
+    "context": "It's 2021-07-12 16:01:10 now. What is the AMA with @samecwilliams about?",
+    "expected_response": [
+      "It's 2021-07-13 13:45:51 now. Meet me on the permaweb!"
+    ]
+  },
+  {
+    "context": "It's 2021-07-12 05:36:00 now. What is the benefit of permanent and immutable data?",
+    "expected_response": [
+      "It's 2021-07-12 11:53:34 now. This."
+    ]
+  },
+  {
+    "context": "It's 2021-07-10 01:09:09 now. What are the use cases for a decentralized podcasting app?",
+    "expected_response": [
+      "It's 2021-07-10 03:33:07 now. Announcement of the next permaweb incubator, Open Web Foundry v4, is coming very soon! Anyone up for building a permaweb podcasting app? There are major opportunities in this area."
+    ]
+  },
+  {
+    "context": "It's 2021-07-09 00:06:13 now. What is the impact of @modern_fi on @ArweaveTeam?",
+    "expected_response": [
+      "It's 2021-07-09 07:23:28 now. Arweave tl;dr"
+    ]
+  },
+  {
+    "context": "It's 2021-07-08 00:02:36 now. What is @KYVEnetwork bringing to the Avalanche blockchain?",
+    "expected_response": [
+      "It's 2021-07-08 00:25:55 now. Awesome to see @avalancheavax stored on Arweave, validated by @KYVENetwork !"
+    ]
+  },
+  {
+    "context": "It's 2021-07-07 22:22:59 now. What is the purpose of archiving #timeless data sets?",
+    "expected_response": [
+      "It's 2021-07-07 22:30:48 now. on "
+    ]
+  },
+  {
+    "context": "It's 2021-07-06 21:27:59 now. How is Web3 overturning the internet status quo?",
+    "expected_response": [
+      "It's 2021-07-07 04:14:17 now. > Forces are quietly mustering for a new revolution — one whose very structure is designed to prevent such concentrations of profit and control from shaping the future. Great article by @petkanics outlining the vision of web3 in @IBTimes today!"
+    ]
+  },
+  {
+    "context": "It's 2021-07-05 23:57:18 now. What is the innovation of SmartWeave contracts?",
+    "expected_response": [
+      "It's 2021-07-06 02:44:39 now. tfw you realise that this protocol could be slightly tweaked to allow any smart contract chain stored on Arweave (Solana, Cosmos, Polkadot, etc.) to invoke SmartWeave contract functions. Has this already been discussed @TateBerenbaum @RieweFabian @johnletey ?"
+    ]
+  },
+  {
+    "context": "It's 2021-07-05 23:28:17 now. What is the new use-case added to Arweave's stack?",
+    "expected_response": [
+      "It's 2021-07-05 23:57:18 now. This also makes use of another community-led innovation: In SmartWeave, contracts essentially live 'independently' inside Arweave. @TateBerenbaum's Foreign Call Protocol creates a mechanism for them to interact -- allowing contracts to own tokens, etc., and much more!"
+    ]
+  },
+  {
+    "context": "It's 2021-07-02 06:17:02 now. What is the story behind the transgender teen's crypto art series?",
+    "expected_response": [
+      "It's 2021-07-03 02:02:59 now. The crypto art series by transgender teen @fewocious has fetched $2.16M. You can check out the piece, published on the permaweb, here: https://t.co/LW38euuP3U"
+    ]
+  },
+  {
+    "context": "It's 2021-07-01 03:02:45 now. What is the article about Arweave, the permaweb, and the future of information storage?",
+    "expected_response": [
+      "It's 2021-07-01 03:21:30 now. The article discusses the implications of information permanence and features the phrase 'Arweave is like an I love mom tattoo you can never erase' (twice)"
+    ]
+  },
+  {
+    "context": "It's 2021-07-01 02:04:31 now. What is the significance of the NFT of the source code for the Web sold at an auction?",
+    "expected_response": [
+      "It's 2021-07-01 02:09:24 now. The NFT of the source code for the Web, stored on Arweave, sold for $5.4m. Congrats, Sir @timberners_lee !"
+    ]
+  },
+  {
+    "context": "It's 2021-06-27 20:48:16 now. What is the new feature being implemented for NFTs on Arweave?",
+    "expected_response": [
+      "It's 2021-07-01 01:36:23 now. Each NFT is getting an Arweave permaweb website with an animated player. So there will be a link to ipfs audio, and Arweave website link in metadata."
+    ]
+  },
+  {
+    "context": "It's 2021-06-30 22:05:48 now. What is the partnership between @argoapplive and Arweave about?",
+    "expected_response": [
+      "It's 2021-07-01 00:51:53 now. Partnering with @argoapplive to use its Arweave protocol and abstraction layer to ensure security, will allow us to decentralize our frontend app."
+    ]
+  },
+  {
+    "context": "It's 2021-06-29 22:16:36 now. What is the 'who is who in the token ecosystem' by the EUTOK working group?",
+    "expected_response": [
+      "It's 2021-06-30 16:31:44 now. The 'who is who in the token ecosystem' is a representation of the value flow in PST apps, featuring @ArweaveTeam's AR token."
+    ]
+  },
+  {
+    "context": "It's 2021-06-29 12:43:00 now. Why is @samecwilliams storing data on Arweave?",
+    "expected_response": [
+      "It's 2021-06-29 12:51:12 now. Ain't no other way"
+    ]
+  },
+  {
+    "context": "It's 2021-06-28 22:00:27 now. What are the integrations with @ArweaveTeam and other networks?",
+    "expected_response": [
+      "It's 2021-06-29 00:30:58 now. New networks tapping Arweave for chain storage today: @cosmos @Polkadot @avalancheavax @NEARProtocol. Welcome to the permaweb, all! "
+    ]
+  },
+  {
+    "context": "It's 2021-06-28 15:21:46 now. What is the issue with NFT metadata and decentralized storage?",
+    "expected_response": [
+      "It's 2021-06-28 23:10:11 now. Without Decentralised Storage Your NFT is Worthless. Permanent storage without a centralised point of failure is critical if your digital assets are to hold value long-term."
+    ]
+  },
+  {
+    "context": "It's 2021-06-28 22:23:43 now. What is the achievement of @argoapplive?",
+    "expected_response": [
+      "It's 2021-06-28 22:27:56 now. Amazing to see @argoapplive bringing truly decentralised UIs to the crypto space! 400 permaweb deployments from 1,350 devs already!"
+    ]
+  },
+  {
+    "context": "It's 2021-06-24 21:50:23 now. What is happening with Hong Kong's Apple Daily?",
+    "expected_response": [
+      "It's 2021-06-24 22:07:59 now. Supporters of Hong Kong's Apple Daily are storing its archives on a blockchain after the government shut it down."
+    ]
+  },
+  {
+    "context": "It's 2021-06-24 19:42:47 now. What has been archived on Arweave related to the Hong Kong \"pro-democracy movement\"?",
+    "expected_response": [
+      "It's 2021-06-24 20:41:54 now. >24k articles about Hong Kong \"pro-democracy movement\" since Oct 2019 - April 2020 have been archived on Arweave."
+    ]
+  },
+  {
+    "context": "It's 2021-06-23 11:33:10 now. What is the significance of @universe_xyz highlighting @ArweaveTeam as a storage component?",
+    "expected_response": [
+      "It's 2021-06-24 03:47:21 now. @universe_xyz has highlighted @ArweaveTeam as a storage component, which is a notable development."
+    ]
+  },
+  {
+    "context": "It's 2021-06-21 16:38:34 now. How does the interactive NFT made out of Javascript/HTML/CSS work?",
+    "expected_response": [
+      "It's 2021-06-21 19:54:17 now. The JavaScript at runtime detects the right scene to show, and also has a timeout that loads the next panel whenever the right time comes. All files are on the Arweave chain, but the js does the trick."
+    ]
+  },
+  {
+    "context": "It's 2021-06-19 03:14:55 now. What is the significance of the nodejs wrapper for Arweave graphql queries?",
+    "expected_response": [
+      "It's 2021-06-19 03:31:28 now. The nodejs wrapper for Arweave graphql queries enables more ways to query the permaweb, making it a shared data lake for humanity."
+    ]
+  },
+  {
+    "context": "It's 2021-06-19 02:49:28 now. What is the integration of #arweave with @coldstack_io?",
+    "expected_response": [
+      "It's 2021-06-19 03:22:19 now. The integration of #arweave with @coldstack_io brings greater accessibility to the @ArweaveTeam and helps their mission to fight #censorship through the #blockchain and #DeFi ecosystem."
+    ]
+  },
+  {
+    "context": "It's 2021-06-18 20:03:14 now. What is the significance of @opensea adding support for @ArweaveTeam URIs in the metadata?",
+    "expected_response": [
+      "It's 2021-06-18 20:24:48 now. @opensea has added support for @ArweaveTeam URIs in the metadata, which is a notable development for the permaweb community."
+    ]
+  },
+  {
+    "context": "It's 2021-06-16 19:59:47 now. What is the significance of goar supporting the use of threshold signatures to manage RSA keys?",
+    "expected_response": [
+      "It's 2021-06-18 05:26:55 now. Threshold signatures for Arweave wallets is a big deal, enabling multisig wallets, DAOs-controlling-AR, and perhaps generic MPC."
+    ]
+  },
+  {
+    "context": "It's 2021-06-17 08:54:57 now. How do devs interact with @samecwilliams from @ArweaveTeam?",
+    "expected_response": [
+      "It's 2021-06-18 05:12:47 now. Devs can interact with @samecwilliams from @ArweaveTeam, and he is supportive of their projects."
+    ]
+  },
+  {
+    "context": "It's 2021-06-15 02:58:02 now. What is the project \"1111\" about?",
+    "expected_response": [
+      "It's 2021-06-15 16:44:50 now. The project \"1111\" is a collaboration between @kevinabosch, @al_koi_, @open_koi, and @samecwilliams, and it would be great to get the space on Arweave."
+    ]
+  },
+  {
+    "context": "It's 2021-05-31 23:32:45 now. What is Nina Litepaper and what is its vision for the future of music online?",
+    "expected_response": [
+      "It's 2021-06-01 02:48:09 now. Nina Litepaper is a project that uses Arweave storage for music NFTs, with interesting ideas such as delegated AR payments, where Nina Pressing-Plant Nodes prepare and package files for streaming delivery and pay the storage fee to Arweave on behalf of the artist."
+    ]
+  },
+  {
+    "context": "It's 2021-05-28 18:14:07 now. Why is freedom of speech essential for bringing about change in society, and how do web3 social networks aim to make this right absolute?",
+    "expected_response": [
+      "It's 2021-05-28 18:22:31 now. Freedom of speech is a human right, and web3 social networks are trying to make this right absolute by allowing users to express their opinions and speak freely, which is essential for bringing about change in society."
+    ]
+  },
+  {
+    "context": "It's 2021-05-28 06:13:08 now. What is Arweave, and what are its key features?",
+    "expected_response": [
+      "It's 2021-05-28 14:19:35 now. Arweave is an open, permissionless database that anyone can read from and write to, making it a unique and less understood angle of the project."
+    ]
+  },
+  {
+    "context": "It's 2021-05-27 03:08:19 now. What is the new Arweave integration tutorial, and what does it cover?",
+    "expected_response": [
+      "It's 2021-05-27 06:17:30 now. The new Arweave integration tutorial covers setting up an Arweave HTTP gateway, deploying a test file, and adding it as a resource to Media Network, allowing users to reach large audiences without relying on centralized CDN providers."
+    ]
+  },
+  {
+    "context": "It's 2021-05-27 04:20:29 now. What is Genesis.json, and what is its significance?",
+    "expected_response": [
+      "It's 2021-05-27 05:13:49 now. Genesis.json is a one-of-one bespoke piece of software living on the blockchain, featuring 24 hours of music and visuals, and is considered the coolest NFT seen so far."
+    ]
+  },
+  {
+    "context": "It's 2021-05-22 02:34:05 now. What is the Arweave GraphQL API, and what features does it offer?",
+    "expected_response": [
+      "It's 2021-05-22 03:59:49 now. The Arweave GraphQL API allows users to query Arweave contract states, tokens belonging to an address, and more, making it a super cool tool for developers."
+    ]
+  },
+  {
+    "context": "It's 2021-05-21 00:05:19 now. Who is Sam Williams, and what is his role in the Arweave project?",
+    "expected_response": [
+      "It's 2021-05-21 00:27:09 now. Sam Williams is the founder of Arweave, and he is live on a call with other notable figures in the web3 space."
+    ]
+  },
+  {
+    "context": "It's 2021-05-08 03:39:50 now. What is the new Verto integration on ViewBlock, and what features does it offer?",
+    "expected_response": [
+      "It's 2021-05-20 12:14:08 now. The new Verto integration on ViewBlock allows users to search and examine trading posts in detail, see Verto transaction types, and access matching orders, making it an awesome expansion of support for apps on top of the permaweb."
+    ]
+  },
+  {
+    "context": "It's 2021-05-19 22:34:38 now. What is Ardrive, and what is its significance in the decentralized storage space?",
+    "expected_response": [
+      "It's 2021-05-19 23:56:27 now. Ardrive is a decentralized alternative to cloud storage giants like Dropbox and OneDrive, and its ArFS protocol is rapidly becoming the standardized format for storage on Arweave."
+    ]
+  },
+  {
+    "context": "It's 2021-05-14 12:37:47 now. What is the significance of Binance listing Arweave's AR token?",
+    "expected_response": [
+      "It's 2021-05-14 14:51:34 now. Binance listing Arweave's AR token is a significant event, indicating growing interest and adoption of the Arweave project."
+    ]
+  },
+  {
+    "context": "It's 2021-05-12 03:55:59 now. What is the current total of donations?",
+    "expected_response": [
+      "It's 2021-05-12 03:56:42 now. The total as of now is $45k."
+    ]
+  },
+  {
+    "context": "It's 2021-05-11 05:11:54 now. How can one off tips to github contributors be made?",
+    "expected_response": [
+      "It's 2021-05-12 00:40:34 now. One off tips to github contributors can be made via https://t.co/1KImjoOOMj"
+    ]
+  },
+  {
+    "context": "It's 2021-05-11 15:11:46 now. What is the bounty for creating a wrapped $AR token?",
+    "expected_response": [
+      "It's 2021-05-12 00:39:10 now. The bounty is 5k."
+    ]
+  },
+  {
+    "context": "It's 2021-05-10 03:51:58 now. What is Sam Williams' impression of the new Verto?",
+    "expected_response": [
+      "It's 2021-05-10 07:16:15 now. He is very excited and has never been so excited for a release."
+    ]
+  },
+  {
+    "context": "It's 2021-05-05 09:48:18 now. What does Sam Williams think is needed for the web?",
+    "expected_response": [
+      "It's 2021-05-10 07:13:38 now. He thinks an open web with open apps is needed."
+    ]
+  },
+  {
+    "context": "It's 2021-05-05 23:49:34 now. What is the progress on removing CPU work from Arweave mining?",
+    "expected_response": [
+      "It's 2021-05-05 23:53:53 now. The R&D is progressing well."
+    ]
+  },
+  {
+    "context": "It's 2021-04-22 10:23:58 now. What is the idea for tokenizing generative artwork on Arweave?",
+    "expected_response": [
+      "It's 2021-04-23 07:05:16 now. The idea is to tokenize its “DNA” on Arweave."
+    ]
+  },
+  {
+    "context": "It's 2021-04-22 08:09:24 now. What was the topic of conversation between Sam Williams and @_DKleine?",
+    "expected_response": [
+      "It's 2021-04-23 03:35:28 now. They discussed NFT permanence, the permaweb, and growth in the profit sharing community space on Arweave."
+    ]
+  },
+  {
+    "context": "It's 2021-04-16 22:59:35 now. How many early bird #arweavers were in the house?",
+    "expected_response": [
+      "It's 2021-04-17 00:46:29 now. There were over 100 early bird #arweavers in the house."
+    ]
+  },
+  {
+    "context": "It's 2021-04-16 22:40:27 now. What was happening at that time?",
+    "expected_response": [
+      "It's 2021-04-16 22:59:35 now. They were going live."
+    ]
+  },
+  {
+    "context": "It's 2021-04-16 22:08:58 now. What is ArConf#1 and when does it kick off?",
+    "expected_response": [
+      "It's 2021-04-16 22:40:27 now. ArConf#1 is kicking off in 22 minutes. See you there, #arweavers!"
+    ]
+  },
+  {
+    "context": "It's 2021-04-10 05:20:56 now. What is ArConf#1 and who is it for?",
+    "expected_response": [
+      "It's 2021-04-16 03:46:18 now. ArConf#1 is an exclusive community-focused event for founders, devs, and OGs in the Arweave ecosystem."
+    ]
+  },
+  {
+    "context": "It's 2021-04-14 03:12:57 now. What is Arweave and what are its implications for Web3, NFTs, and history?",
+    "expected_response": [
+      "It's 2021-04-14 04:21:05 now. Arweave allows anyone to pay once and store forever, which has implications for Web3, NFTs, and history itself."
+    ]
+  },
+  {
+    "context": "It's 2021-04-12 02:40:01 now. What is a Distributed Serverless Blockchain-Based Cache System?",
+    "expected_response": [
+      "It's 2021-04-13 03:41:38 now. A Distributed Serverless Blockchain-Based Cache System is a system developed by decentLand_ that utilizes Arweave for caching."
+    ]
+  },
+  {
+    "context": "It's 2021-04-10 20:27:49 now. How can you create and manage NFTs with Evermore?",
+    "expected_response": [
+      "It's 2021-04-13 03:29:47 now. You can create and manage NFTs with Evermore by following their simple method for minting Atomic NFTs on Arweave."
+    ]
+  },
+  {
+    "context": "It's 2021-04-13 02:24:25 now. What are some core issues that the NFT industry needs to focus on?",
+    "expected_response": [
+      "It's 2021-04-13 02:58:07 now. The NFT industry needs to focus on fixing issues such as permanence, with solutions like Arweave being utilized by platforms like Mintbase."
+    ]
+  },
+  {
+    "context": "It's 2021-04-05 03:04:10 now. What is NFT permanence on Arweave and why is it getting mainstream coverage?",
+    "expected_response": [
+      "It's 2021-04-08 05:41:44 now. NFT permanence on Arweave is getting mainstream coverage because it provides a secure and decentralized way to store NFTs, with coverage from outlets like The Guardian and BBC."
+    ]
+  },
+  {
+    "context": "It's 2021-04-06 22:03:45 now. What updates have been made to the Evermore web app?",
+    "expected_response": [
+      "It's 2021-04-07 05:12:50 now. The Evermore web app has been updated with speed improvements and new features using the new EDST Tokens, allowing everyone to benefit from the speed improvements and still get their Evermore Community rewards."
+    ]
+  },
+  {
+    "context": "It's 2021-04-02 05:41:22 now. What is an example of a community-driven art project on Arweave?",
+    "expected_response": [
+      "It's 2021-04-03 03:25:50 now. Every 1111 art by @kevinabosch is an example of a community-driven art project on Arweave, where every piece of art has its own community."
+    ]
+  },
+  {
+    "context": "It's 2021-04-03 00:01:05 now. What is the Open Web Foundry and what is happening with it?",
+    "expected_response": [
+      "It's 2021-04-03 00:02:49 now. The Open Web Foundry is going live with its fourth Community Demo event."
+    ]
+  },
+  {
+    "context": "It's 2021-04-02 03:34:08 now. What is the link you shared?",
+    "expected_response": [
+      "It's 2021-04-02 03:44:21 now. Oh hell yeah."
+    ]
+  },
+  {
+    "context": "It's 2021-04-02 01:15:39 now. What is on-chain storage?",
+    "expected_response": [
+      "It's 2021-04-02 03:16:13 now. Slowly at first, then all at once . Enormous *THANK YOU* to the Arweave community for helping get the word out over the last few months. We are now the industry standard. NFTs deserve permanence. Nothing less."
+    ]
+  },
+  {
+    "context": "It's 2021-04-01 12:16:08 now. What is the benefit of atomic NFTs on Arweave?",
+    "expected_response": [
+      "It's 2021-04-01 19:21:02 now. Great post about Atomic NFTs by the Pianity team!"
+    ]
+  },
+  {
+    "context": "It's 2021-03-31 23:07:34 now. What is the topic of Masterclass #6 of the Open Web Foundry?",
+    "expected_response": [
+      "It's 2021-04-01 00:01:41 now. Excited to go live with @pet3rpan_ , king of DAOs, in just a moment!. Discussing all things community building. Can't wait!"
+    ]
+  },
+  {
+    "context": "It's 2021-03-30 21:39:11 now. What is the problem with NFT storage?",
+    "expected_response": [
+      "It's 2021-03-31 07:23:24 now. Pianity are the first to bring Arweave's atomic NFTs to the music space -- congrats! . With atomic NFTs, the address of the NFT smart contract _is_ the address of the NFT's data. Permanent, on-chain assets, and no external metadata. One address. How NFTs were supposed to be."
+    ]
+  },
+  {
+    "context": "It's 2021-03-30 09:09:05 now. What happened in the permaweb world?",
+    "expected_response": [
+      "It's 2021-03-30 09:26:33 now. Another amazing community roundup by @theweaver19 ! "
+    ]
+  },
+  {
+    "context": "It's 2021-03-27 02:06:54 now. What is Verto becoming?",
+    "expected_response": [
+      "It's 2021-03-27 05:25:42 now. @vertoexchange = data value lego store?"
+    ]
+  },
+  {
+    "context": "It's 2021-03-27 00:01:16 now. What is happening in 1 hour?",
+    "expected_response": [
+      "It's 2021-03-27 01:06:04 now. Live with 35 Arweavers right now in the permaweb https://t.co/JJhZVcQe0r . Join us! "
+    ]
+  },
+  {
+    "context": "It's 2021-03-25 21:37:34 now. What is the meaning of the link you shared?",
+    "expected_response": [
+      "It's 2021-03-26 10:06:09 now. This one has a different meaning for us in the Arweave community . The cost of storing a byte has declined at an average rate of ~30.5% per year for the last 50 years."
+    ]
+  },
+  {
+    "context": "It's 2021-03-26 06:58:07 now. How do I get a blue profile's checkmark on PublicSquare Tribus?",
+    "expected_response": [
+      "It's 2021-03-26 07:08:37 now. Composable data protocols."
+    ]
+  },
+  {
+    "context": "It's 2021-03-26 06:16:25 now. What is ArGo and how does it relate to Arweave?",
+    "expected_response": [
+      "It's 2021-03-26 06:24:06 now. ArGo is a stealth-mode project built on top of Arweave, enabling web application hosting over the blockweave."
+    ]
+  },
+  {
+    "context": "It's 2021-02-11 12:32:20 now. What is the current state of the Arweave storage endowment?",
+    "expected_response": [
+      "It's 2021-03-23 12:03:07 now. The Arweave storage endowment has passed $100k tokens locked for the first time and has since grown to ~$400k."
+    ]
+  },
+  {
+    "context": "It's 2021-03-20 00:57:28 now. What is the Open Web Foundry and what can be expected from the Community Demo event?",
+    "expected_response": [
+      "It's 2021-03-20 01:27:01 now. The Open Web Foundry is a community-driven initiative, and the Community Demo event will feature news from founders in the Arweave community."
+    ]
+  },
+  {
+    "context": "It's 2021-03-19 10:43:08 now. How does Arweave's file storage mechanism work?",
+    "expected_response": [
+      "It's 2021-03-19 19:38:35 now. Arweave's file storage mechanism works by having users pay for file storage with interest on their money."
+    ]
+  },
+  {
+    "context": "It's 2021-03-17 20:30:28 now. What is the issue with NFTs referencing media and how does it relate to the blockchain space?",
+    "expected_response": [
+      "It's 2021-03-18 05:13:54 now. The issue with NFTs referencing media is a fundamental problem with the current web, and it's essential to ensure that the blockchain space doesn't replicate the same issues."
+    ]
+  },
+  {
+    "context": "It's 2021-03-17 04:21:13 now. What is the topic of Sam Williams' talk at the Arweave Foundry event?",
+    "expected_response": [
+      "It's 2021-03-18 00:14:12 now. Sam Williams' talk is titled 'So you find yourself in a bubble, founder' and will provide honest advice for founders in a crypto bubble cycle."
+    ]
+  },
+  {
+    "context": "It's 2021-03-11 02:35:23 now. What are some notable milestones achieved by Arweave?",
+    "expected_response": [
+      "It's 2021-03-11 09:51:22 now. Arweave has stored 5TB of data, has over 25K wallets with a positive balance, and has seen exponential growth."
+    ]
+  },
+  {
+    "context": "It's 2021-03-04 01:06:39 now. What is the community-built viewer for $bones?",
+    "expected_response": [
+      "It's 2021-03-05 09:27:39 now. The community-built viewer for $bones is a permissionless innovation."
+    ]
+  },
+  {
+    "context": "It's 2021-03-04 00:47:03 now. What is the generative side of the $bones project?",
+    "expected_response": [
+      "It's 2021-03-04 01:06:39 now. The generative side of the $bones project is moving quickly."
+    ]
+  },
+  {
+    "context": "It's 2021-03-03 01:51:30 now. What is the topic of the #meet_the_founders episode featuring Sam Williams and Phil Mataras?",
+    "expected_response": [
+      "It's 2021-03-04 00:57:13 now. The topic is how decentralized storage is changing the game with Arweave and ArDrive."
+    ]
+  },
+  {
+    "context": "It's 2021-02-25 10:54:39 now. Is Arweave the most profitable network to mine in crypto right now?",
+    "expected_response": [
+      "It's 2021-02-25 10:54:39 now. I would also guess that Arweave is probably the most profitable network to mine in crypto right now. ~100 unoptimised mining nodes, $74 worth of AR emitted per block (despite the low inflation rate).Gold rush?"
+    ]
+  },
+  {
+    "context": "It's 2021-02-28 02:25:19 now. What is the new feature implemented by DecentLand?",
+    "expected_response": [
+      "It's 2021-02-28 02:25:19 now. DecentLand Posts Are NFTs!.We are pleased to announce the implementation of a new feature: Post as NFT.From now, each new post is an #NFT (PST): https://t.co/6Rwe2cSFEn https://t.co/0dBc2vYSMo"
+    ]
+  },
+  {
+    "context": "It's 2021-02-27 04:58:37 now. Who is the special AMA guest this weekend?",
+    "expected_response": [
+      "It's 2021-02-27 04:58:37 now. We Have A Special #AMA Guest This Weekend : @decentLand_.Feel Free To Drop Your Questions / Comments In The Form Below!.https://t.co/8nWpygE73p"
+    ]
+  },
+  {
+    "context": "It's 2021-02-27 00:53:11 now. What is the topic of the AMA with ArDrive?",
+    "expected_response": [
+      "It's 2021-02-27 00:53:11 now. Arweave News #AMA With ArDrive!.@ardriveapp @vilenarios.https://t.co/NhyppYYYkv"
+    ]
+  },
+  {
+    "context": "It's 2021-02-26 10:47:59 now. What is the permaweb and how does it work?",
+    "expected_response": [
+      "It's 2021-02-26 10:47:59 now. An inside look: how your data is greeted when it enters the permaweb ⓐ $AR #Arweave @arweavers @ArweaveTeam .Welcome to the permaweb. Welcome to ⓐ Arweave. https://t.co/ALUmkOHimg"
+    ]
+  },
+  {
+    "context": "It's 2021-02-25 09:44:26 now. What is the significance of the first SPoRA block being mined?",
+    "expected_response": [
+      "It's 2021-02-25 09:44:26 now. Congratulations, #Arweavers!! 🎉🎉🎉.The first SPoRA block was successfully mined at 20:03 Eastern.In order to mine this block the Arweave dataset was randomly polled and verified ~12,280,968,465 times. Dataset validation will continue at this frequency indefinitely.More 👇"
+    ]
+  },
+  {
+    "context": "It's 2021-02-25 06:07:42 now. What is the status of the SPoRA upgrade?",
+    "expected_response": [
+      "It's 2021-02-25 06:07:42 now. The SPoRA upgrade is now well underway! The difficulty rate is steadily recalibrating, and operations are proceeding as expected.Miners are already using the new algorithm -- the era of CPU-dominant mining is over!.https://t.co/m5UHZOzwy2"
+    ]
+  },
+  {
+    "context": "It's 2021-02-24 08:53:51 now. What is the significance of the SPoRA network upgrade?",
+    "expected_response": [
+      "It's 2021-02-24 08:53:51 now. ❕Tomorrow is a big day in the Arweave ecosystem❕.The SPoRAs network upgrade will go live in 14 hours.This upgrade will radically increase the number of data replicas in the Arweave network, while also making Arweave substantially more energy efficient.Some points to note👇"
+    ]
+  },
+  {
+    "context": "It's 2021-02-23 04:19:38 now. What is the topic of the interview with Sam Williams?",
+    "expected_response": [
+      "It's 2021-02-23 04:19:38 now. The Case for a Permaweb, interview with Sam Williams!! .@samecwilliams @ArweaveTeam.https://t.co/qP1sM5yh0H"
+    ]
+  },
+  {
+    "context": "It's 2021-02-22 11:32:48 now. What is the current state of the Arweave ecosystem?",
+    "expected_response": [
+      "It's 2021-02-22 11:32:48 now. Another amazing week in the #arweave ecosystem, the #buidl is accelerating, and we are only 3 days away from the SPoRA updgrade!!! Read below 🧵"
+    ]
+  },
+  {
+    "context": "It's 2021-02-18 23:18:21 now. What is the decentralized liquidity bridge to the Ethereum Network?",
+    "expected_response": [
+      "It's 2021-02-19 04:33:08 now. The decentralized liquidity bridge to the Ethereum Network allows anyone to buy their first profit-sharing token and step into the new web in one click."
+    ]
+  },
+  {
+    "context": "It's 2021-02-18 05:25:47 now. What is the Open Web Foundry incubator?",
+    "expected_response": [
+      "It's 2021-02-18 06:27:29 now. The Open Web Foundry is an incubator that has helped founders from prior programs gain incredible traction for their projects and raise over $1.25 million."
+    ]
+  },
+  {
+    "context": "It's 2021-02-18 02:55:46 now. What is the SmartWeave functionality?",
+    "expected_response": [
+      "It's 2021-02-18 06:20:32 now. SmartWeave allows us to transform any piece of data on Arweave into a token, and it's amazing because the image contains an NFT contract that can be pointed to by SmartWeave to tell the owner."
+    ]
+  },
+  {
+    "context": "It's 2021-02-16 06:25:58 now. What did Arweave get up to last week?",
+    "expected_response": [
+      "It's 2021-02-16 08:32:07 now. Arweave had an incredible ecosystem update, as shared by @theweaver19."
+    ]
+  },
+  {
+    "context": "It's 2021-02-15 05:26:38 now. What is the new community ownership economy structure for Profit Sharing Communities (PSCs) owners?",
+    "expected_response": [
+      "It's 2021-02-15 07:16:15 now. The new community ownership economy structure is called Tribus, and it will allow PSC owners to provide a new community ownership economy structure for their PST holders."
+    ]
+  },
+  {
+    "context": "It's 2021-02-14 18:02:14 now. How can financial incentives be designed on top of the \"like\" feature?",
+    "expected_response": [
+      "It's 2021-02-14 18:15:04 now. Financial incentives can be designed on top of the \"like\" feature by turning it into a token-based economy between members."
+    ]
+  },
+  {
+    "context": "It's 2021-02-14 07:47:49 now. What is the UI preview for the upcoming social media platform?",
+    "expected_response": [
+      "It's 2021-02-14 08:24:28 now. The UI preview shows a functional public prototype for a truly decentralized social media platform."
+    ]
+  },
+  {
+    "context": "It's 2021-02-12 08:29:42 now. What is the proposed name for the upcoming \"Metamask for Arweave\" extension?",
+    "expected_response": [
+      "It's 2021-02-12 09:38:20 now. The proposed name is Aris, but other suggestions are welcome."
+    ]
+  },
+  {
+    "context": "It's 2021-02-11 00:51:48 now. What is coming soon to a browser near you?",
+    "expected_response": [
+      "It's 2021-02-11 06:58:46 now. Metamask for Arweave, courtesy of @vertoexchange, is coming soon to a browser near you."
+    ]
+  },
+  {
+    "context": "It's 2021-02-10 01:03:35 now. What is the investment in @ArweaveTeam?",
+    "expected_response": [
+      "It's 2021-02-10 08:44:05 now. The investment in @ArweaveTeam is a decentralized platform that enables anyone to store documents and applications forever."
+    ]
+  },
+  {
+    "context": "It's 2021-02-08 16:34:43 now. What is everPay Beta?",
+    "expected_response": [
+      "It's 2021-02-08 21:45:42 now. everPay Beta is a simple blockchain payment system using https://t.co/lJkf9xxY9g, backed by Arweave."
+    ]
+  },
+  {
+    "context": "It's 2021-02-08 07:58:06 now. What are the updates on the #arweave ecosystem?",
+    "expected_response": [
+      "It's 2021-02-08 14:41:42 now. Thanks for the community update thread, @theweaver19 !"
+    ]
+  },
+  {
+    "context": "It's 2021-02-07 05:46:00 now. What is the importance of governance in cryptonetworks?",
+    "expected_response": [
+      "It's 2021-02-07 06:25:18 now. Governance tokens represent the power to change the rules of the system, and their value increases as the cryptonetwork grows."
+    ]
+  },
+  {
+    "context": "It's 2021-02-04 08:32:39 now. How does the ArVerify algorithm work?",
+    "expected_response": [
+      "It's 2021-02-04 08:32:39 now. The ArVerify algorithm asks people to verify their friends to seed the network of trust, which allows it to estimate who is human and who is not."
+    ]
+  },
+  {
+    "context": "It's 2021-02-04 10:58:03 now. What is the challenge accepted by @samecwilliams?",
+    "expected_response": [
+      "It's 2021-02-04 11:10:21 now. The challenge is to build a quick wallet miner on https://t.co/5PVBwmWP5u."
+    ]
+  },
+  {
+    "context": "It's 2021-02-03 04:59:18 now. What is the early alpha implementation of the PublicSquare data protocol?",
+    "expected_response": [
+      "It's 2021-02-03 06:17:21 now. The early alpha implementation of the PublicSquare data protocol is by @decentLand_."
+    ]
+  },
+  {
+    "context": "It's 2021-02-02 06:10:05 now. Why are content creation and distribution governed by anyone other than creators and end users?",
+    "expected_response": [
+      "It's 2021-02-02 06:59:13 now. This is a core question driving many underlying issues in society, and the answer lies in the deficiency of the HTTP protocol."
+    ]
+  },
+  {
+    "context": "It's 2021-02-01 00:35:32 now. What are the updates since the last th8ta update?",
+    "expected_response": [
+      "It's 2021-02-01 03:34:34 now. Unstoppable."
+    ]
+  },
+  {
+    "context": "It's 2021-01-31 07:20:27 now. What is the permaweb and how does it relate to Dogecoin?",
+    "expected_response": [
+      "It's 2021-01-31 07:25:02 now. The permaweb is a permanent and decentralized storage solution, and Dogecoin's source code and homepage are now immortalized on the permaweb."
+    ]
+  },
+  {
+    "context": "It's 2021-01-29 22:57:18 now. What is the collaboration between @ParityTech and @ArweaveTeam?",
+    "expected_response": [
+      "It's 2021-01-29 23:02:44 now. The collaboration is to launch an archival bridge-building bounty on @gitcoin, connecting @Polkadot parachains with the Arweave network."
+    ]
+  },
+  {
+    "context": "It's 2021-01-28 10:38:50 now. What is Ape Bets and what is it built on?",
+    "expected_response": [
+      "It's 2021-01-28 11:25:41 now. Ape Bets is a decentralized Reddit/Discord built on Arweave, Solana, and Ceramic Network."
+    ]
+  },
+  {
+    "context": "It's 2021-01-28 11:01:30 now. What is the significance of the launch day of @ardriveapp?",
+    "expected_response": [
+      "It's 2021-01-28 11:05:56 now. It's the launch day of @ardriveapp, and it's an incredible achievement."
+    ]
+  },
+  {
+    "context": "It's 2021-01-28 08:55:25 now. What is @decentLand_ and how does it work?",
+    "expected_response": [
+      "It's 2021-01-28 10:49:21 now. @decentLand_ is a platform where every community is governed by a DAO, and users must be staked to post."
+    ]
+  },
+  {
+    "context": "It's 2021-01-27 21:22:56 now. What is the #ArDriveWebLaunch and what does it mean?",
+    "expected_response": [
+      "It's 2021-01-28 04:04:17 now. The #ArDriveWebLaunch is the launch of new features, bug fixes, and performance improvements, and it also includes a giveaway of ARDRIVE tokens."
+    ]
+  },
+  {
+    "context": "It's 2021-01-28 02:25:30 now. What is Verto Protocol and what is its significance?",
+    "expected_response": [
+      "It's 2021-01-28 03:24:33 now. Verto Protocol is a significant development in the Arweave ecosystem, and it has been covered by the community-organized @ArweaveNews."
+    ]
+  },
+  {
+    "context": "It's 2021-01-27 13:06:35 now. What is the #ArDriveWebLaunch and what does it mean?",
+    "expected_response": [
+      "It's 2021-01-27 14:41:12 now. The #ArDriveWebLaunch is the launch of the first major version of the Web App, and it's a significant achievement."
+    ]
+  },
+  {
+    "context": "It's 2021-01-26 18:00:37 now. What is Evermore Datastore and what is its significance?",
+    "expected_response": [
+      "It's 2021-01-27 05:43:20 now. Evermore Datastore is a Mac OS X-compatible app that makes Arweave's permanent data storage widely available through a simple interface."
+    ]
+  },
+  {
+    "context": "It's 2021-01-25 09:51:54 now. What is th8ta and what is its vision?",
+    "expected_response": [
+      "It's 2021-01-25 12:58:58 now. th8ta is a team that is creating a vision, and they have made incredible progress."
+    ]
+  },
+  {
+    "context": "It's 2021-01-23 22:35:11 now. What is fQRs and what is its significance?",
+    "expected_response": [
+      "It's 2021-01-24 00:03:22 now. fQRs is gaining rapid traction, and it's an amazing development."
+    ]
+  },
+  {
+    "context": "It's 2021-01-20 20:00:35 now. What is Limestone and what is its significance?",
+    "expected_response": [
+      "It's 2021-01-21 08:32:03 now. Limestone has passed the 100,000 transactions milestone, proving that Arweave can successfully power the new generation of oracles."
+    ]
+  },
+  {
+    "context": "It's 2021-01-21 08:04:26 now. What is the current status of the token transfer?",
+    "expected_response": [
+      "It's 2021-01-21 08:19:11 now. The tokens will be transferred shortly."
+    ]
+  },
+  {
+    "context": "It's 2021-01-17 07:47:53 now. What is the significance of uploading 51 books to Arweave via @ardriveapp?",
+    "expected_response": [
+      "It's 2021-01-17 15:39:59 now. The books are now permanently available, and the public drive ID is e98a8ad5-2f4e-41e9-b581-35cf06777a16."
+    ]
+  },
+  {
+    "context": "It's 2021-01-13 11:05:19 now. What's new on the permaweb this week?",
+    "expected_response": [
+      "It's 2021-01-14 06:01:00 now. There are new updates, including 1/~infinity."
+    ]
+  },
+  {
+    "context": "It's 2021-01-10 09:02:04 now. What is the significance of the #Permanent #Archive containing the #Trump Riots on the US Capital Building on January 6th 2021?",
+    "expected_response": [
+      "It's 2021-01-11 07:18:16 now. The archive contains 12GB of raw Twitter, Facebook, and Twitch streams, pictures, and movies, and is an example of the community's incredible work."
+    ]
+  },
+  {
+    "context": "It's 2020-12-22 17:41:28 now. What is the Windows Beta for saving data, and how can users access it?",
+    "expected_response": [
+      "It's 2020-12-22 17:45:10 now. The Windows Beta is available for download, and users can start saving their data today."
+    ]
+  },
+  {
+    "context": "It's 2020-12-08 03:01:50 now. What is the significance of the #Aztec phase 2 release, and how are rewards being distributed?",
+    "expected_response": [
+      "It's 2020-12-08 03:19:27 now. Over 9600 ARDRIVE tokens were rewarded to a dozen #datafarmers, with the top farmer earning 2000 tokens for 5.9GB of data uploaded permanently."
+    ]
+  },
+  {
+    "context": "It's 2020-12-07 02:36:33 now. What is the next wave of #Aztec, and how can users participate?",
+    "expected_response": [
+      "It's 2020-12-07 02:55:17 now. The next wave of #Aztec has started, and users can participate by uploading data to earn ARDRIVE tokens."
+    ]
+  },
+  {
+    "context": "It's 2020-12-03 23:10:59 now. What is the significance of the conversation with @samecwilliams, and what is the current state of the #Arweave platform?",
+    "expected_response": [
+      "It's 2020-12-04 23:43:32 now. The conversation was a great discussion on the current state of the #Arweave platform, and the progress made in building a real decentralized tech platform."
+    ]
+  },
+  {
+    "context": "It's 2020-12-02 00:00:58 now. What is the Open Web Fellowship Pitch Day, and what can users expect from the livestream?",
+    "expected_response": [
+      "It's 2020-12-02 01:13:35 now. The Open Web Fellowship Pitch Day is a livestream event where users can see amazing new profit-sharing projects take to the stage to showcase their #dapps and tools."
+    ]
+  },
+  {
+    "context": "It's 2020-11-21 00:58:19 now. What is the Avatars Project, and what is the significance of the NFT experimentation on the permaweb?",
+    "expected_response": [
+      "It's 2020-11-21 01:10:15 now. The Avatars Project is an experiment on the permaweb, and users can hear from Graeme Boy and @samecwilliams to get the latest news on the project."
+    ]
+  },
+  {
+    "context": "It's 2020-11-20 23:51:15 now. What is the topic of the chat with @Arweavers?",
+    "expected_response": [
+      "It's 2020-11-21 00:10:51 now. The topic is @ardriveapp and the @ArweaveTeam ecosystem with some community Q&A at the end."
+    ]
+  },
+  {
+    "context": "It's 2020-11-19 07:12:03 now. What is the news about @mintbase?",
+    "expected_response": [
+      "It's 2020-11-19 08:37:19 now. @mintbase has closed a $1 million seed funding round led by @sinoglobalcap to bring digital collectibles to @NEARProtocol."
+    ]
+  },
+  {
+    "context": "It's 2020-11-19 07:10:46 now. What is the topic of the interview with @Vilenarios, CEO of Ardrive?",
+    "expected_response": [
+      "It's 2020-11-19 08:17:18 now. The topic is how Ardrive and Arweave will disrupt the cloud storage ecosystem."
+    ]
+  },
+  {
+    "context": "It's 2020-11-17 23:52:42 now. Why did @NinoArtCripto and @DappVinci choose Arweave?",
+    "expected_response": [
+      "It's 2020-11-18 02:13:50 now. They chose Arweave as the best way to get their data on the PermaWeb!"
+    ]
+  },
+  {
+    "context": "It's 2020-11-17 04:39:52 now. What is $BALLER and what is it used for?",
+    "expected_response": [
+      "It's 2020-11-17 04:43:33 now. $BALLER is now live on the permaweb and is used to check impermanent loss in perpetuity."
+    ]
+  },
+  {
+    "context": "It's 2020-11-12 00:59:52 now. What is Sworn and what is it used for?",
+    "expected_response": [
+      "It's 2020-11-12 01:13:13 now. Sworn is the Clarity compiler for Arweave and is used to avoid the common pitfalls of smart contracts."
+    ]
+  },
+  {
+    "context": "It's 2020-10-30 10:21:49 now. What is the new feature in @CommunityXyz?",
+    "expected_response": [
+      "It's 2020-10-31 11:19:18 now. The new feature is the ability to make token purchases inside of @CommunityXyz with @vertoexchange."
+    ]
+  },
+  {
+    "context": "It's 2020-10-26 18:43:25 now. Who is the guest speaker and what is the topic of the talk?",
+    "expected_response": [
+      "It's 2020-10-27 02:27:25 now. The guest speaker is @pet3rpan_ and the topic is his experiences operating and coordinating DAOs."
+    ]
+  },
+  {
+    "context": "It's 2020-09-28 23:31:53 now. What is the new easy setup process implemented by @evermoredata?",
+    "expected_response": [
+      "It's 2020-09-29 10:26:21 now. The new easy setup process is implemented to make life simple for everyone!"
+    ]
+  },
+  {
+    "context": "It's 2020-09-19 01:15:34 now. What is Sworn and what is it used for?",
+    "expected_response": [
+      "It's 2020-09-19 01:44:04 now. Sworn is the Clarity smart contract compiler for the SmartWeave protocol and is used for safer and auditable smart contracts."
+    ]
+  },
+  {
+    "context": "It's 2020-09-12 10:33:47 now. How does the cabal's behavior affect their ranking among honest peers?",
+    "expected_response": [
+      "It's 2020-09-12 10:40:11 now. The cabal's behavior would result in lower rankings among honest peers due to the lower utility provided to honest peers."
+    ]
+  },
+  {
+    "context": "It's 2020-05-26 20:23:53 now. What is the permaweb and how does it enable data to be stored forever?",
+    "expected_response": [
+      "It's 2020-05-28 05:41:26 now. The permaweb is a global, community-owned web that allows anyone to contribute to or get paid to maintain it, enabling data to be stored forever through its economic and incentive model."
+    ]
+  },
+  {
+    "context": "It's 2019-06-12 14:08:17 now. What is ArweaveTeam doing?",
+    "expected_response": [
+      "It's 2019-06-22 22:10:29 now. ArweaveTeam is quietly crushing it."
+    ]
+  },
+  {
+    "context": "What is the significance of the triple 👀 emojis on May 18?",
+    "expected_response": [
+      "It's 2021-05-18 03:02:13 now. 👀👀👀"
+    ]
+  },
+  {
+    "context": "What is the current status of $AR trading on Binance?",
+    "expected_response": [
+      "It's 2021-05-14 20:04:53 now. $AR trading just went live on Binance. https://t.co/XwoKL94Vzk"
+    ]
+  },
+  {
+    "context": "What started as a generous $5k grant offer by @fintechfin has snowballed overnight to a pool of $110k to build a wrapped AR token.",
+    "expected_response": [
+      "It's 2021-05-12 21:03:36 now. What started as a generous $5k grant offer by @fintechfin has snowballed overnight to a pool of $110k to build a wrapped AR token. Thank you @sarcophagusio @cryptomanran @Dariusrugys @iamdonho @bitcoingarrett  @Quantstamp @kichsr @kodavista01 @TheYisiLiu @Emsleyjonnie !!"
+    ]
+  },
+  {
+    "context": "What is the significance of the number 110k in the context of building a wrapped AR token?",
+    "expected_response": [
+      "It's 2021-05-12 21:03:36 now. What started as a generous $5k grant offer by @fintechfin has snowballed overnight to a pool of $110k to build a wrapped AR token. Thank you @sarcophagusio @cryptomanran @Dariusrugys @iamdonho @bitcoingarrett  @Quantstamp @kichsr @kodavista01 @TheYisiLiu @Emsleyjonnie !!"
+    ]
+  },
+  {
+    "context": "Can anyone here talk to me about Arweave?",
+    "expected_response": [
+      "It's 2021-05-10 07:51:14 now. Yes. What would you like to know?"
+    ]
+  },
+  {
+    "context": "What is the new project focused on leasing PSTs starting up in the Arweave ecosystem?",
+    "expected_response": [
+      "It's 2021-05-06 00:09:58 now. Interesting new project focused on leasing PSTs starting up in the Arweave ecosystem: https://t.co/oJaMJS4Xmn. #DeFi'ing web app profit streams. One to watch 👀..."
+    ]
+  },
+  {
+    "context": "What are the ecological benefits of Atomic NFTs on Arweave?",
+    "expected_response": [
+      "It's 2021-05-05 23:49:34 now. Great highlight of the ecological benefits of Atomic NFTs on Arweave by @pianitynft : https://t.co/e7Wl74k0M1. R&D is also progressing well to remove the final CPU work from Arweave mining: https://t.co/47o2XbXBac . More soon. NFTs should be about 🔥 art, not 🔥ing power."
+    ]
+  },
+  {
+    "context": "What is the current traction of @ardriveapp amongst NFT projects?",
+    "expected_response": [
+      "It's 2021-05-05 23:05:28 now. Incredible to see @ardriveapp gaining more and more traction amongst NFT projects! Congrats @vilenarios and team 😃"
+    ]
+  },
+  {
+    "context": "What is another awesome NFT collection launched on Arweave?",
+    "expected_response": [
+      "It's 2021-05-05 22:42:03 now. Yet another awesome NFT collection launched on Arweave 🙂"
+    ]
+  },
+  {
+    "context": "What is the schedule for ArConf#1?",
+    "expected_response": [
+      "It's 2021-04-16 22:08:58 now. T-22 minutes until ArConf#1 kicks off! See you there, #arweavers!"
+    ]
+  },
+  {
+    "context": "What is the importance of decentralizing social media to protect our access to speech?",
+    "expected_response": [
+      "It's 2021-04-10 06:01:14 now. Ha! Wonder if my talk of r*volution at ArConf#1 got the tweet suppressed? 15 RTs but only 230 views 🤔. We need to decentralise social media to protect our access to speech. ...fortunately we will be hearing all about that from @EcclesiaSpeech at ArConf#1 😉. Grab an invite. https://t.co/B2c1RDVXes"
+    ]
+  },
+  {
+    "context": "Who is speaking at the Diffusion Digital event about the future of the attention economy?",
+    "expected_response": [
+      "It's 2021-04-07 22:51:30 now. Excited to be speaking at the Diffusion Digital event about the future of the attention economy alongside @jarroddicker @rumimorales @al_morris__ ! Join me at 6 pm BST TODAY 👉 https://t.co/cEoyYUEQ0g"
+    ]
+  },
+  {
+    "context": "What is the significance of NFT permanence on Arweave getting mainstream coverage in #theguardian?",
+    "expected_response": [
+      "It's 2021-04-05 03:04:10 now. Great to see NFT permanence on Arweave getting mainstream coverage in #theguardian ! https://t.co/skirQgoOJp"
+    ]
+  },
+  {
+    "context": "What is happening in the Arweave ecosystem on this day?",
+    "expected_response": [
+      "It's 2021-04-03 04:50:24 now. Today is a big day for the Arweave ecosystem: The first https://t.co/tsPWY7BAPf gateways are coming online Follow the import progress: https://t.co/Fx9k5dGZBh More decentralised, more features, cleaner code. Huge congrats to the team! Only question: when .ar name auctions? 😉"
+    ]
+  },
+  {
+    "context": "What is the significance of the recent capital commitment to profit sharing communities on Arweave?",
+    "expected_response": [
+      "It's 2021-04-01 08:11:34 now. Back of napkin realisation: ~10x more capital has been committed to profit sharing communities on Arweave over the last few weeks than the first 6 months of PSCs combined. This is extraordinarily exciting because: Great founders + great ideas + capital + time = ...? 😃"
+    ]
+  },
+  {
+    "context": "Who sent you 0.1 AR?",
+    "expected_response": [
+      "It's 2021-03-31 07:31:24 now. @Gabriel80913037 Sent you 0.1 AR 🙂"
+    ]
+  },
+  {
+    "context": "What is the milestone achieved by Arweave base-layer TXs?",
+    "expected_response": [
+      "It's 2021-03-30 06:06:12 now. Arweave base-layer TXs just crossed 1 million in a month for the first time. Congrats, #arweave|rs ! https://t.co/GRePomNkHp"
+    ]
+  },
+  {
+    "context": "What is the experience of using ArConnect in a real app for the first time?",
+    "expected_response": [
+      "It's 2021-03-30 05:27:55 now. Just used ArConnect in a real app for the first time. Incredible experience. Congrats @vertoexchange @martonlederer @TateBerenbaum @johnletey @RieweFabian !! Huge improvement to permaweb app security, while 'allowances' also break out of MetaMask's 3 clicks per TX model... https://t.co/L5SVVxDGBK"
+    ]
+  },
+  {
+    "context": "What is the setup of @ricburton's workspace?",
+    "expected_response": [
+      "It's 2021-03-26 12:25:28 now. @ricburton Do I spot NVMe drives amongst the hot sauce and... mechanical(?) keyboards? 😁"
+    ]
+  },
+  {
+    "context": "What is the relationship between complexity and revolutionary advances?",
+    "expected_response": [
+      "It's 2021-03-26 12:11:01 now. Almost every sufficiently powerful invention appears obvious in retrospect. 🤔 Complexity is a sign of evolutionary steps, simplicity is the mark of revolutionary advances."
+    ]
+  },
+  {
+    "context": "How does the Arweave network determine the price of its token?",
+    "expected_response": [
+      "It's 2021-03-26 10:24:31 now. @BMC___Network Not normally -- the network uses work as a heuristic for the price of its own token (in fiat). This allows it to keep the price of storage approximately steady."
+    ]
+  },
+  {
+    "context": "What is the adoption rate of Arweave.js?",
+    "expected_response": [
+      "It's 2021-03-21 04:32:05 now. Arweave.js passed over 500 apps and packages on Github that depend on it this week! 👀 https://t.co/ElCkJvNcvv"
+    ]
+  },
+  {
+    "context": "What is the current time and a link to a tweet?",
+    "expected_response": [
+      "It's 2021-03-19 10:09:15 now.https://t.co/bVpDX53FDG"
+    ]
+  },
+  {
+    "context": "What is the expected storage cost decline per year, and how does it affect the payment for 200 years upfront?",
+    "expected_response": [
+      "It's 2021-03-18 12:00:05 now.@scanlime @cyrxopto @grahamcodes @beepbeepbeep___ @oldking420 If you aren't comfortable with expecting a 0.5% storage cost decline per year (average has been 30.5% per year for the last 50), can you take comfort that the payment is for 200 years upfront (at current price)? The protocol is extremely conversation in this regard."
+    ]
+  },
+  {
+    "context": "What is the topic of Sam Williams' Arweave Foundry talk, and when is it happening?",
+    "expected_response": [
+      "It's 2021-03-17 04:21:13 now.Changing my Arweave Foundry talk tomorrow to: \u0027So you find yourself in a bubble, founder\u0027 Giving honest, clear advice for founders that find themselves in a crypto bubble cycle. How to survive, thrive, and not screw anyone over. Join us @ 6pm CET👇 https://t.co/TukvxMwEr3"
+    ]
+  },
+  {
+    "context": "Who did Sam Williams have an excellent discussion with on the FTX podcast, and what was the topic?",
+    "expected_response": [
+      "It's 2021-03-16 06:29:37 now.Excellent discussion with @jackshaftoes on the @FTX_Official podcast last week! One of my favourite podcasts for a while 🙂 https://t.co/ETaZibD4QX"
+    ]
+  },
+  {
+    "context": "What is happening on the Arweave permaweb, and how can people join?",
+    "expected_response": [
+      "It's 2021-03-13 01:06:21 now.Wow!! The Arweave https://t.co/JJhZVcQe0r is full(!!!) today. Join us as we chat open opportunities on the permaweb, and preview some of the emerging startups from the Open Web Foundry. https://t.co/oMM4qOWD0y https://t.co/8z88CvrCJL"
+    ]
+  },
+  {
+    "context": "What is the current status of @sarcophagusio on Hacker News?",
+    "expected_response": [
+      "It's 2021-03-12 07:26:00 now. Arweave-based dead man's data switch @sarcophagusio is number 8 on Hacker News right now. Congrats, guys! https://t.co/5ofC98Z6JY"
+    ]
+  },
+  {
+    "context": "What is the real story behind the NFT boom?",
+    "expected_response": [
+      "It's 2021-03-12 06:22:19 now. The real story of the NFT boom is that *many* of the assets being purchased will disappear within just a few years. Great to see @jamieCrypto of @BTCTN shedding some light on this: https://t.co/DqDlnjkjqj"
+    ]
+  },
+  {
+    "context": "What is the current transaction volume on the Arweave network?",
+    "expected_response": [
+      "It's 2021-03-06 08:12:50 now. Last month saw all-time high transaction volumes on the Arweave network. We are just a few days in, but March is looking like it will easily match or exceed February. https://t.co/Hx4N5AAtQR"
+    ]
+  },
+  {
+    "context": "What is the activity level of devs on the Arweave Discord?",
+    "expected_response": [
+      "It's 2021-03-05 13:06:59 now. Devs on the Arweave Discord over the last month... https://t.co/ojsNOHTA61"
+    ]
+  },
+  {
+    "context": "What is the philosophy behind great protocols?",
+    "expected_response": [
+      "It's 2021-03-05 10:18:05 now. Great protocols maximise possibility, while minimising complexity. Possibility: Enable the largest space of useful things to be built on top. Complexity: Make it cost as little as possible (in time/money) for devs to integrate."
+    ]
+  },
+  {
+    "context": "What is the Open standard for @vertoexchange compatible NFTs?",
+    "expected_response": [
+      "It's 2021-03-04 07:14:46 now. Open standard for @vertoexchange compatible NFTs, by @TateBerenbaum ! The interface is trivial to implement in a few dozen lines of JS. 👏👏👏"
+    ]
+  },
+  {
+    "context": "What do you think about the generative side of [project]?",
+    "expected_response": [
+      "It's 2021-03-04 00:47:03 now. Got mine! Awesome work 😄. Love the generative side of it. https://t.co/ozXRgAhdXB"
+    ]
+  },
+  {
+    "context": "Can you tell me more about the intersection between art, value, and collective intelligence?",
+    "expected_response": [
+      "It's 2021-02-26 05:19:33 now. Fascinating exploration at the intersection between art, value, and collective intelligence by @kevinabosch . 1,111 pieces of artwork, each containing a @CommunityXyz DAO, earning @open_koi PSTs relative to attention gained. Contracts on SmartWeave. Should be very interesting!"
+    ]
+  },
+  {
+    "context": "What's the current state of Arweave mining?",
+    "expected_response": [
+      "It's 2021-02-25 10:47:58 now. 3 SPoRA blocks have now been mined. The reward for each has gone to a different, newbie, wallet address. My guess is that we are going to see a renaissance in Arweave mining as the CPU pools leave and home mining with storage becomes profitable..."
+    ]
+  },
+  {
+    "context": "What's your take on NFT permanence and the issue of NFTs disappearing?",
+    "expected_response": [
+      "It's 2021-02-24 12:07:39 now. Great to see @BradyDale @ @CoinDesk covering Arweave and the issue of NFT permanence. Without endowments to sustainably back storage, NFT assets eventually disappear, rendering them worthless. We should accept nothing less than permanence for our NFTs. https://t.co/cuSAs0YwCU"
+    ]
+  },
+  {
+    "context": "What's the significance of tomorrow in the Arweave ecosystem?",
+    "expected_response": [
+      "It's 2021-02-24 08:53:51 now. Tomorrow is a big day in the Arweave ecosystem. The SPoRAs network upgrade will go live in 14 hours. This upgrade will radically increase the number of data replicas in the Arweave network, while also making Arweave substantially more energy efficient. Some points to note."
+    ]
+  },
+  {
+    "context": "What is the profit stream for tokenized art?",
+    "expected_response": [
+      "It's 2021-02-22 13:38:42 now. Attention rewards will be the profit stream for tokenised art."
+    ]
+  },
+  {
+    "context": "What's new in the incentivized gateway network for Arweave?",
+    "expected_response": [
+      "It's 2021-02-19 04:44:52 now. Meanwhile, the next major milestone of Amplify -- the incentivised gateway network for Arweave -- has been released. New this time: Streaming directly from the weave. https://t.co/6QyrdWp1AU"
+    ]
+  },
+  {
+    "context": "What's the current transaction volume on Arweave?",
+    "expected_response": [
+      "It's 2021-02-19 04:19:38 now. Monthly transaction volume just reached an all time high on Arweave. ...and it's the 18th day of the month. https://t.co/dlUBcvCKHp"
+    ]
+  },
+  {
+    "context": "What's new in SmartWeave today?",
+    "expected_response": [
+      "It's 2021-02-17 07:38:53 now. Also new in SmartWeave today: browser extension wallet support. https://t.co/KpSv2XlwAL"
+    ]
+  },
+  {
+    "context": "What is the community-led innovation of the day?",
+    "expected_response": [
+      "It's 2021-02-17 07:19:45 now. Community-led innovation of the day: @johnletey's patch to SmartWeave, enabling the embedding of a smart contract in _any_ asset on Arweave. Turn web pages, images, videos, audio -- _any_ data on the new web -- into a profit sharing token or NFT by adding two tags. 🤯🤯🤯"
+    ]
+  },
+  {
+    "context": "What is the significance of the tweet?",
+    "expected_response": [
+      "It's 2021-02-16 05:29:39 now. Watch this space... @openkoi @vertoexchange"
+    ]
+  },
+  {
+    "context": "What is the new version of Arweave.js and what does it support?",
+    "expected_response": [
+      "It's 2021-02-14 12:12:43 now. New version of Arweave.js, with support for @vertoexchange's new Metamask-style Arweave wallet pushed this afternoon! https://t.co/wbAaenM8le. I think we should be hearing news from the Verto team about a beta version of the wallet very soon..."
+    ]
+  },
+  {
+    "context": "What is the message to the community?",
+    "expected_response": [
+      "It's 2021-02-14 07:48:53 now. It's all hands on-deck to build the decentralised web, and the capital has arrived. Quit your job. Build a profit sharing community. Decentralise the web."
+    ]
+  },
+  {
+    "context": "What are the milestones achieved by Arweave?",
+    "expected_response": [
+      "It's 2021-02-11 12:32:20 now. The Arweave storage endowment just passed $100k tokens locked for the first time. Today we also passed 6m baselayer transactions (with many multiples of this in layer 2 bundled TXs). Congrats everyone!"
+    ]
+  },
+  {
+    "context": "What is the new mining mechanism released by SPoRAs?",
+    "expected_response": [
+      "It's 2021-02-11 06:42:14 now. Extremely happy to announce the release of SPoRAs! This new mining mechanism will radically increase the number of replications of data stored in the network, while transferring more of the compute on the network to storage. This is a major upgrade."
+    ]
+  },
+  {
+    "context": "What is the Machinery that allows decentralised, community vote control of which version of their permaweb app to show on their domain names?",
+    "expected_response": [
+      "It's 2021-02-08 03:57:16 now. https://t.co/02XpAkguMf 👆 Machinery that allows decentralised, community vote control of which version of their permaweb app to show on their domain names. Nice!"
+    ]
+  },
+  {
+    "context": "What happened in the permaweb ecosystem in the last ~12 hours?",
+    "expected_response": [
+      "It's 2021-02-06 07:23:31 now. Here’s a round-up of just some of the things that happened in the permaweb ecosystem in the last ~12 hours. It is getting hard to keep up… Here goes! 1/literally-21 😐"
+    ]
+  },
+  {
+    "context": "What is the current price of a 1000 byte message on Arweave?",
+    "expected_response": [
+      "It's 2021-02-04 14:40:21 now. @Rhett_Creighton $0.00002287828 per 1000 byte message on Arweave, at the moment 😀"
+    ]
+  },
+  {
+    "context": "How can I verify Sam Williams' Arweave address?",
+    "expected_response": [
+      "It's 2021-02-04 10:15:41 now. Hello everyone! Please verify my Arweave address by using ArVerify here: https://t.co/aFEgpBGcPi"
+    ]
+  },
+  {
+    "context": "Have we spoken before? Can I verify you?",
+    "expected_response": [
+      "It's 2021-02-04 08:32:37 now. Have we spoken before? Drop me your https://t.co/vt1GTNULY8 link and I will verify you 😃. Verifiers in the first month will all receive a portion of the ARVERIFY token supply, so I am excited to earn my share 😉."
+    ]
+  },
+  {
+    "context": "What is the fundamental value of Facebook's stock?",
+    "expected_response": [
+      "It's 2021-02-03 09:26:48 now. If Facebook has a stated policy of never issuing dividends, and one person has 58% of the voting power, what fundamental value does $FB have? Many assets now share the attributes of fiat currencies. Their value is only what we believe them to be. It is time for change."
+    ]
+  },
+  {
+    "context": "Who is the founder of Arweave+IPFS bridge?",
+    "expected_response": [
+      "It's 2021-02-01 23:50:40 now. @JaredJacobsen2 @ArweaveMemes @Arweavers @ArweaveTeam At the moment the founder of https://t.co/heQsOteXIo is. You can still hook into the Arweave+IPFS bridge in the backend though, if you so choose -- pushing the AR cost to you/your users."
+    ]
+  },
+  {
+    "context": "Is there a profit-sharing community team working on a censorship-resistant app store on Arweave?",
+    "expected_response": [
+      "It's 2021-01-31 06:26:56 now. @13930445022wf @leifengcrypto @ArweaveTeam @binance @heyibinance There is a profit-sharing community team looking at spinning up a censorship-resistant app store on Arweave already 🙂"
+    ]
+  },
+  {
+    "context": "What is the purpose of verification on ArVerify?",
+    "expected_response": [
+      "It's 2021-01-29 13:52:34 now. Testing out verification on ArVerify. Bot resistance for every app, built directly into the permaweb. @RieweFabian @johnletey @TateBerenbaum  @vilenarios @Cedriking @theweaver19 -- mind throwing me a verification? 😄"
+    ]
+  },
+  {
+    "context": "What is the community-led innovation of the day?",
+    "expected_response": [
+      "It's 2021-01-29 08:09:57 now. Community led innovation of the day (via @al_morris__ ) 🤯🤯🤯: Basically limitless SmartWeave contract interactions per Arweave block👇"
+    ]
+  },
+  {
+    "context": "What is the first fully functional Arweave address using a Ledger?",
+    "expected_response": [
+      "It's 2021-01-28 03:34:28 now. First fully functional Arweave address using a Ledger. @lucacervone (founder of @OpenBitsWorld ) playing around with sending funds and uploading data. https://t.co/pbMpmNDLGv"
+    ]
+  },
+  {
+    "context": "What is the Arweave protocol's use in combating authoritarian censorship around the world?",
+    "expected_response": [
+      "It's 2021-01-27 04:11:25 now. This morning, @nathanielpopper and @nytimes wrote about the Arweave protocol’s uses in combating authoritarian censorship around the world. https://t.co/ItfIPAWAor 1/5"
+    ]
+  },
+  {
+    "context": "What is the final testing of @rosmcmahon_real's new Arweave faucet?",
+    "expected_response": [
+      "It's 2021-01-26 03:31:13 now. Final testing of @rosmcmahon_real  's new Arweave faucet is underway! I'm verifying my Arweave address yWcQduvBhA2h4LOprsT0oNcJJUJ7yR-wN1Kd4BEDGU4 https://t.co/VfdD7eBjx3"
+    ]
+  },
+  {
+    "context": "Why do NFTs need permanence to hold reliable value?",
+    "expected_response": [
+      "It's 2021-01-26 00:55:42 now. After an NFT artist sells their creations, they don't necessarily have a strong incentive to perform upkeep on their storage. This frequently leads to works being lost after sale. NFTs need permanence to hold reliable value. Beautiful works, @danijoy_art ! Where can I bid?"
+    ]
+  },
+  {
+    "context": "What is the plan to decentralize ownership of the Arweave newsletter?",
+    "expected_response": [
+      "It's 2021-01-23 06:04:52 now. Thinking about decentralising ownership of the Arweave newsletter 🤔. It is a great way to reach @Arweavers and is all community-driven content at this point. It makes no sense for the 'core' team to 'own' it. One plan is to make @vertoexchange tradable NFTs for slots. 1/2"
+    ]
+  },
+  {
+    "context": "What is Koi?",
+    "expected_response": [
+      "It's 2021-01-18 04:21:01 now. Koi is a BigDeal™️. https://t.co/RkjQ1lgfvQ. More soon..."
+    ]
+  },
+  {
+    "context": "What is the @ArweaveTeam's qmNxzVF03AEtrTaelQHwG5b8Dmpbph-cAYN-iTk7kTY?",
+    "expected_response": [
+      "It's 2021-01-17 11:35:58 now. @ArweaveTeam qmNxzVF03AEtrTaelQHwG5b8Dmpbph-cAYN-iTk7kTY"
+    ]
+  },
+  {
+    "context": "What is the link shared in the tweet?",
+    "expected_response": [
+      "It's 2021-01-16 01:51:37 now. 😎 https://t.co/bKK1815HVX"
+    ]
+  },
+  {
+    "context": "What is the prediction about profit streams in apps?",
+    "expected_response": [
+      "It's 2021-01-15 11:40:30 now. Prediction: In the future every profit stream, in every app, will be freely tradable. A thread 👇"
+    ]
+  },
+  {
+    "context": "What's new on the permaweb this week?",
+    "expected_response": [
+      "It's 2021-01-13 11:05:19 now. Here's what's new on the permaweb already this week 👇: 1/~infinity."
+    ]
+  },
+  {
+    "context": "Why is free speech important in a democracy?",
+    "expected_response": [
+      "It's 2021-01-09 11:05:07 now. Without free speech, debate cannot occur. Without debate, incorrect views will not be corrected. Incorrect people still vote. Free expression is integral to democracy. A data protocol for an unbiased public square on Arweave, in 2 tweets 👇: 1/5"
+    ]
+  },
+  {
+    "context": "What's the significance of Arweave in the World Economic Forum's report on cryptocurrency use cases?",
+    "expected_response": [
+      "It's 2020-12-18 15:50:21 now. Great to see detailed coverage on Arweave in the World Economic Forum's report on cryptocurrency use cases! The Arweave community has always been substance &gt; hype. Just since August &gt;30 startups have been founded on Arweave and the network has grown &gt;3x https://t.co/uRFVp4f2lU"
+    ]
+  },
+  {
+    "context": "What is Bandplay and how does it work?",
+    "expected_response": [
+      "It's 2020-12-07 23:18:43 now. Imagine if you could invest in the future profits of any album with a couple of clicks. This is Bandplay: Where every album has profit shared via a token. Want a tradable share of every album launched? Just buy into the Bandplay profit sharing community. 🤯"
+    ]
+  },
+  {
+    "context": "What's the significance of the link shared?",
+    "expected_response": [
+      "It's 2020-11-18 04:10:37 now. 👀 https://t.co/YBPpscYHox"
+    ]
+  },
+  {
+    "context": "What is the current status of the @ardriveapp beta?",
+    "expected_response": [
+      "It's 2020-11-10 09:58:14 now. Data uploaded on the @ardriveapp beta since its launch last week! 👀 https://t.co/Tn54cUOZiF"
+    ]
+  },
+  {
+    "context": "How long has the permaweb been live?",
+    "expected_response": [
+      "It's 2020-11-06 12:04:40 now. @trambapoline @DarrenJBeattie The permaweb has been live for over two years now!"
+    ]
+  },
+  {
+    "context": "What is the current situation with Arweave and its core developers?",
+    "expected_response": [
+      "It's 2020-11-05 23:30:47 now. Arweave is a permanent, decentralised archive of history and knowledge. Some network infrastructure in China, as well as the Arweave core developers, were under attack last month. Signs point to these attacks originating from the Chinese government. /1 https://t.co/4KXbfr3s4t https://t.co/pZps7MVEzJ"
+    ]
+  },
+  {
+    "context": "Who discussed their vision for @ardriveapp on a podcast?",
+    "expected_response": [
+      "It's 2020-10-31 10:11:56 now. Incredible to hear @vilenarios discuss his vision for @ardriveapp on A11 crypto's podcast this week! https://t.co/aDfEggwEcB"
+    ]
+  },
+  {
+    "context": "How do Web apps on the Arweave permaweb relate to the rendering system?",
+    "expected_response": [
+      "It's 2020-10-24 22:46:53 now. @HNSOSS Web apps on the Arweave permaweb are kind of like the rendering system, too. Browsers are the screens? 🤔"
+    ]
+  },
+  {
+    "context": "What is Arweave, and how does it store data?",
+    "expected_response": [
+      "It's 2020-10-20 06:24:37 now. Arweave is an information storage network where data is paid for using an endowment-like financial structure. Happy to answer any questions you have!"
+    ]
+  },
+  {
+    "context": "What is the grassroots adoption of Arweave in China?",
+    "expected_response": [
+      "It's 2020-10-16 09:30:35 now. I think I speak for the entire core @ArweaveTeam when I say that we are in awe of the grassroots adoption of Arweave in China."
+    ]
+  },
+  {
+    "context": "Can you discuss the Elixir blockchain project and Pennies?",
+    "expected_response": [
+      "It's 2020-09-19 17:21:02 now. Hey! Can you DM me please? Interested to chat to you about your Elixir blockchain project and... Pennies... In 2014 😅."
+    ]
+  },
+  {
+    "context": "How does the block production process work in Arweave?",
+    "expected_response": [
+      "It's 2020-09-12 10:25:29 now. Assuming equal distribution of hashing power for a moment, if someone in the 60% produced a block it would be rapidly accepted by the rest of the honest players. The cabal could ignore it/not transport it, but this ends in the fork scenario I mentioned previously."
+    ]
+  },
+  {
+    "context": "Can a malicious majority form block production cartels in Arweave?",
+    "expected_response": [
+      "It's 2020-09-12 09:07:41 now. Not any more than Bitcoin and Ethereum (and other PoW chain) nodes can segregate themselves and form block production cartels. It requires a malicious majority acting together."
+    ]
+  },
+  {
+    "context": "What is PermaNews and how does it relate to the Arweave blockchain?",
+    "expected_response": [
+      "It's 2020-05-05 00:55:46 now. PermaNews is a protocol for storing news on the Arweave blockchain. https://t.co/3GJOT9UP8b"
+    ]
+  },
+  {
+    "context": "Can you share an example of a decentralized social media platform built on Arweave?",
+    "expected_response": [
+      "It's 2020-02-09 23:44:49 now. Thanks to @literature for this amazing write-up about building decentralised social media platforms on Arweave! https://t.co/ZJFsRIwp5P"
+    ]
+  },
+  {
+    "context": "What is the Arweave permaweb, and is there a high-quality blogging platform available?",
+    "expected_response": [
+      "It's 2019-05-24 18:53:35 now. Awesome to see that thanks to @Benjo there is now a high quality, permanent blogging platform on the Arweave's permaweb! https://t.co/yJUAcYTzoI"
+    ]
+  },
+  {
+    "context": "What is the HydrOSProject, and what is the significance of the first patch from outside UniKent?",
+    "expected_response": [
+      "It's 2016-12-27 13:12:25 now. Looks like the first patch for #HydrOSProject from outside @UniKent will probably add Swedish keyboard support! Very fitting! @thompson_si"
+    ]
+  }
+]
