@@ -6,6 +6,16 @@ Llama = require("@sam/Llama-Herder")
 DB = DB or nil
 CompetitonPools = CompetitonPools or {}
 TokenProcessId = ""
+RAG_PROCESS_ID = "hMEUOgWi97d9rGT-lHNCbm937bTypMq7qxMWeaUnMLo"
+Phi3Template = [[<|system|>
+                %s<|end|>
+                <|user|>
+                %s<|end|>]]
+
+SasSystemPrompt =  [[You are a helpful assistant that can compute the SAS(semantic answer similarity) metrics.
+                    You can compute a score between 0~100 based on the SAS, 0 means totally different, 100 means almost the same.
+                    Now the user will send you two sentences(sentenceA and sentenceB), please return the SAS score of them.
+                    **Important**You must return as this format: {<the-sas-score>}.]]
 
 Handlers.add(
     "Init",
@@ -70,6 +80,18 @@ local SQL = {
     FIND_USER_REWARDED_TOKENS= [[
       SELECT rewarded_tokens as rewardedTokens from participants WHERE author = '%s'
     ]],
+    GET_UNEVALUATED_EVALUATIONS = [[
+      SELECT * FROM evaluations WHERE inference_start_time IS NULL LIMIT %d;
+    ]],
+    START_EVALUATION = [[
+      UPDATE evaluations SET inference_start_time = CURRENT_TIMESTAMP, inference_reference = '%s' WHERE id = '%s';
+    ]],
+    END_EVALUATION = [[
+    UPDATE evaluations SET inference_end_time = CURRENT_TIMESTAMP, prediction = '%s' WHERE inference_reference = '%s';
+    ]],
+    UPDATE_SCORE = [[
+    UPDATE evaluations SET prediction_sas_score = '%s' WHERE inference_reference = '%s';
+    ]],
     TOTAL_SCORES_BY_PARTICIPANT = [[
       SELECT participant_id as author, SUM(prediction_sas_score) as score, COUNT(*) as count
       , SUM(prediction_sas_score) /  COUNT(*) as averageScore FROM evaluations 
@@ -78,6 +100,42 @@ local SQL = {
     ]]
 }
 
+Handlers.add(
+  "Evaluate",
+  Handlers.utils.hasMatchingTag("Action", "Evaluate"),
+  function (msg)
+    local limit = tonumber(msg.Data) or 2
+    for row in DB:nrows(string.format(SQL.GET_UNEVALUATED_EVALUATIONS, limit)) do
+      local ragData = string.format('{"dataset_hash": "%s","prompt":"%s"}', row.participant_dataset_hash, row.question)
+      ao.Send({
+        Target = RAG_PROCESS_ID, 
+        Action = "Search-Prompt", 
+        Data = ragData
+      })
+
+      local reference = Llama.Reference
+      print("Inference: " .. row.prompt .. "\n")
+      Llama.run(row.prompt, 1, function (answer)
+        print("Answer: " .. answer .. "\n")
+        DB:exec(string.format(
+          SQL.END_EVALUATION,
+          answer, reference
+        ))
+        local expectedResponse = row.correct_answer
+        local sentences = " sentenceA: " ..  answer .. ", sentenceB:" .. expectedResponse .. "."
+        local prompt = string.format(Phi3Template, SasSystemPrompt, sentences)
+        Llama.run(prompt, 1, function(sasScore)
+            print("Sas score:" .. sasScore .. "\n")
+            DB:exec(SQL.UPDATE_SCORE, extractSasScore(sasScore), reference)
+        end)
+      end)
+      DB:exec(string.format(
+        SQL.START_EVALUATION,
+        reference, row.id
+      ))
+      end
+  end
+)
 
 Handlers.add(
   "Load-Data",
@@ -245,14 +303,6 @@ function transfer(author, amount)
     }
   })
 end
-
-Handlers.add(
-  "Evaluate",
-  Handlers.utils.hasMatchingTag("Action", "Evaluate"),
-  function (msg)
-    
-  end
-)
 
 Handlers.add(
     "Get-Dashboard",
