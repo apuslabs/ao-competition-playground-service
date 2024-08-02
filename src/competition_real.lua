@@ -1,0 +1,314 @@
+local json = require("json")
+local ao = require('ao')
+local sqlite3 = require("lsqlite3")
+Llama = require("@sam/Llama-Herder")
+
+DB = DB or nil
+CompetitonPools = CompetitonPools or {}
+TokenProcessId = ""
+
+Handlers.add(
+    "Init",
+    Handlers.utils.hasMatchingTag("Action", "Init"),
+    function ()
+        DB = sqlite3.open_memory()
+
+        DB:exec[[
+            CREATE TABLE participants (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    author TEXT NOT NULL,
+                    upload_dataset_name TEXT NOT NULL,
+                    upload_dataset_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    participant_dataset_hash TEXT,
+                    rewarded_tokens INTEGER DEFAULT 0
+                );
+            
+            CREATE TABLE datasets (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    context TEXT,
+                    question TEXT,
+                    expected_response TEXT
+            );
+
+            CREATE TABLE evaluations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    participant_id INTEGER NOT NULL,
+                    participant_dataset_hash TEXT,
+                    dataset_id INTEGER NOT NULL,
+                    question TEXT NOT NULL,
+                    correct_answer TEXT NOT NULL,
+                    prediction TEXT,
+                    prediction_sas_score INTEGER,
+                    inference_start_time DATETIME,
+                    inference_end_time DATETIME,
+                    inference_reference TEXT,
+                    FOREIGN KEY (participant_id) REFERENCES participants(id)
+                    FOREIGN KEY (dataset_id) REFERENCES datasets(id)
+                );
+        ]]
+        print("OK")
+    end
+)
+
+local SQL = {
+    INSERT_DATASET = [[
+      INSERT INTO datasets(question, expected_response) VALUES ("%s", "%s"); 
+    ]],
+    INSERT_PARTICIPANTS = [[
+      INSERT INTO participants (author, upload_dataset_name, participant_dataset_hash) VALUES('%s', '%s', '%s');  
+    ]],
+    INSERT_EVALUATIONS = [[
+      INSERT INTO evaluations (participant_id, participant_dataset_hash, dataset_id, question, correct_answer);
+    ]],
+    ADD_REWARDED_TOKENS = [[
+      UPDATE participants SET rewarded_tokens = rewarded_tokens + '%s'
+    ]],
+    -- GET_DATASET_ID = [[SELECT id FROM datasets WHERE author = '%s' AND participant_dataset_hash = '%s']],
+    FIND_ALL_DATASET = [[
+      SELECT id, question, expected_response FROM datasets;
+    ]],
+    FIND_USER_REWARDED_TOKENS= [[
+      SELECT rewarded_tokens as rewardedTokens from participants WHERE author = '%s'
+    ]],
+    TOTAL_SCORES_BY_PARTICIPANT = [[
+      SELECT participant_id as author, SUM(prediction_sas_score) as score, COUNT(*) as count
+      , SUM(prediction_sas_score) /  COUNT(*) as averageScore FROM evaluations 
+      GROUP BY participant_id
+      ORDER BY averageScore DESC
+    ]]
+}
+
+
+Handlers.add(
+  "Load-Data",
+  Handlers.utils.hasMatchingTag("Action", "Load-QA-Data"),
+  function(msg)
+    -- Handlers.utils.reply("start Load-Data!!!!!!")(msg)
+    local data = msg.Data
+    assert(data ~= nil, "Data is nil")
+    local DataSets = json.decode(data)
+    for _, DataSetItem in ipairs(DataSets) do
+      local query = string.format(
+        SQL.INSERT_DATASET,
+        DataSetItem.context,
+        DataSetItem.expected_response[1]
+      )
+      DB:exec(query)
+    end
+    print('ok')
+  end
+)
+
+
+Handlers.add(
+  "Create-Pool",
+  function(msg)
+    return msg.Tags.Action == "Credit-Notice" and
+      msg.From == ApusTokenProcess
+  end,
+  function (msg)
+    -- TODO
+    local title = msg.Tags["X-Title"]
+    local description = msg.Tags["X-Description"]
+    local prizePool = msg.Tags["X-Prize-Pool"]
+    local metaData = msg.Tags["X-MetaData"]
+
+    CompetitonPools[1001] = {
+      title = title,
+      description = description,
+      prizePool = prizePool,
+      metaData = metaData
+    }
+    print(CompetitonPools)
+    ao.send({
+        Target = msg.From,
+        Tags = {
+          { name = "Action", value = "Create-Pool-Response" },
+          { name = "status", value = "200" }
+        }})
+      print("OK")
+  end
+)
+
+local function addParticipants(author, datasetName, datasetHash)
+  DB:exec(string.format(
+      SQL.INSERT_PARTICIPANTS,
+      author,
+      datasetName,
+      datasetHash
+  ))
+end
+
+local function initBenchmarkRecords(participantId, participantDatasetHash)
+  for row in DB:nrows(string.format(SQL.FIND_ALL_DATASET)) do
+      DB:exec(string.format(SQL.INSERT_EVALUATIONS, 
+                participantId, participantDatasetHash, row.id, row.question, row.expected_response))
+  end
+end
+Handlers.add(
+  "Join-Pool",
+  Handlers.utils.hasMatchingTag("Action", "Join-Pool"),
+  function (msg)
+    local data = json.decode(msg.Data)
+    local author = msg.From
+    local datasetHash = data.dataset_hash
+    local datasetName = data.dataset_name
+
+    addParticipants(author, datasetHash, datasetName)
+    initBenchmarkRecords(author, datasetHash)
+
+    ao.send({
+        Target = msg.From,
+        Tags = {
+          { name = "Action", value = "Join-Pool-Response" },
+          { name = "status", value = "200" }
+        }})
+      print("OK")
+  end
+)
+
+Handlers.add(
+  "Get-Pool",
+  Handlers.utils.hasMatchingTag("Action", "Get-Pool"),
+  function (msg)
+    -- TODO
+
+    local id = 1001
+    local pool = CompetitonPools[id]
+    ao.send({
+        Target = msg.From,
+        Tags = {
+              { name = "Action", value = "Create-Pool-Response" },
+              { name = "status", value = "200" }
+        },
+        Data = json.encode({
+            title= pool['title'],
+            prize_pool= pool['prizePool'],
+            meta_data = pool['metaData'] 
+        })
+      })
+      print("OK")
+  end
+)
+
+local reward = {35, 20, 10, 5, 5, 5, 5, 5, 5, 5}
+
+local function computeReward(rank)
+  local prizaTotal = 100000
+  if rank <= 10 then
+    return reward[rank] * prizaTotal / 100
+  else
+    return 300
+  end
+end
+
+local function adjustUserRewarded(author, amount)
+  for rewaredTokens in DB:nrows(string.format(SQL.FIND_USER_REWARDED_TOKENS, author)) do
+    return amount - rewaredTokens
+  end
+  return 0
+end
+
+Handlers.add(
+    "Allocate-Rewards",
+    Handlers.utils.hasMatchingTag("Action", "Allocate-Rewards-Response"),
+    function (msg)
+      local rank = 0
+      for item in DB:nrows(SQL.TOTAL_SCORES_BY_PARTICIPANT) do 
+          rank = rank + 1
+          local amount = computeReward(rank)
+          amount = adjustUserRewarded(item.participant_id)
+          if amount >= 0 then
+            transfer(item.participant_id, amount)
+            DB:exec(SQL.ADD_REWARDED_TOKENS, amount)
+          end
+      end
+
+      ao.send({
+            Target = msg.From,
+            Tags = {
+                  { name = "Action", value = "Allocate-Rewards-Response" },
+                  { name = "status", value = "200" }
+            }
+      })
+      print("OK")
+    end
+)
+
+function transfer(author, amount)
+  ao.send({
+    Target = TokenProcessId,
+    Tags = {
+        { name = "Action", value = "Transfer" },
+        { name = "Recipient", value = author },
+        { name = "Quantity", value = amount }
+    }
+  })
+end
+
+Handlers.add(
+  "Evaluate",
+  Handlers.utils.hasMatchingTag("Action", "Evaluate"),
+  function (msg)
+    
+  end
+)
+
+Handlers.add(
+    "Get-Dashboard",
+    Handlers.utils.hasMatchingTag("Action", "Get-Dashboard"),
+    function (msg)
+        -- TODO @Json
+        ao.send({
+            Target = msg.From,
+            Tags = {
+                  { name = "Action", value = "Get-Dashboard-Response" },
+                  { name = "status", value = "200" }
+            },
+            Data = json.encode({
+                participants = 1500,
+                granted_reward = 5000,
+                my_rank = 3,
+                my_reward = 300
+            })
+      })
+      print("OK")
+    end
+)
+
+Handlers.add(
+    "Get-Leaderboard",
+    Handlers.utils.hasMatchingTag("Action", "Get-Leaderboard"),
+    function (msg)
+        -- TODO @Json
+        local data = json.encode({
+            {
+                rank = 1,
+                dataset_id = 10,
+                dataset_name = "a good dataset",
+                dataset_upload_time = 1722254056,
+                score = 65,
+                author = "ewewrerr",
+                granted_reward = 0
+            },
+            {
+                rank = 2,
+                dataset_id = 12,
+                dataset_name = "a bad dataset",
+                dataset_upload_time = 1722254059,
+                score = 60,
+                author = "ewewrerreewdddd",
+                granted_reward = 0
+            }
+        });
+        ao.send({
+            Target = msg.From,
+            Tags = {
+                  { name = "Action", value = "Get-Leaderboard-Response" },
+                  { name = "status", value = "200" }
+            },
+            Data = data
+      })
+      print("OK")
+    end
+)
