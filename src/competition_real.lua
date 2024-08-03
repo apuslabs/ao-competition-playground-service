@@ -5,7 +5,7 @@ Llama = require("@sam/Llama-Herder")
 
 DB = DB or nil
 CompetitonPools = CompetitonPools or {}
-TokenProcessId = "lpJ5Edz_8DbNnVDL0XdbsY9vCOs45NACzfI4jvo4Ba8"
+TokenProcessId = "SYvALuV_pYI2punTt_Qy-8jrFFTGNEkY7mgGGWZXxCM"
 EmbeddingProcessId = "hMEUOgWi97d9rGT-lHNCbm937bTypMq7qxMWeaUnMLo"
 Phi3Template = [[<|system|>
                 %s<|end|>
@@ -63,6 +63,18 @@ Handlers.add(
                     FOREIGN KEY (participant_id) REFERENCES participants(id)
                     FOREIGN KEY (dataset_id) REFERENCES datasets(id)
                 );
+
+            CREATE TABLE chatGroundEvaluations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    dataset_hash TEXT,
+                    prompt TEXT,
+                    token INTEGER,
+                    response TEXT,
+                    inference_start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    inference_end_time DATETIME,
+                    inference_reference TEXT,
+                    client_reference TEXT
+            );
         ]]
         print("OK")
     end
@@ -72,6 +84,9 @@ local SQL = {
     INSERT_DATASET = [[
       INSERT INTO datasets(question, expected_response) VALUES ('%s', '%s'); 
     ]],
+    FIND_ALL_PARTICIPANTS = [[
+      SELECT * FROM participants;
+    ]], 
     INSERT_PARTICIPANTS = [[
       INSERT INTO participants (author, upload_dataset_name, participant_dataset_hash) VALUES('%s', '%s', '%s');  
     ]],
@@ -107,29 +122,122 @@ local SQL = {
       , SUM(prediction_sas_score) /  COUNT(*) as averageScore FROM evaluations 
       GROUP BY participant_id
       ORDER BY averageScore DESC
+    ]],
+    INSERT_CHAT_GROUND_EVALUATION = [[
+      INSERT INTO chatGroundEvaluations(dataset_hash, prompt, token, inference_reference) VALUES('%s', '%s', '%d', '%s');
     ]]
 }
 
+Handlers.add(
+  "DEBUG-DB",
+  Handlers.utils.hasMatchingTag("Action", "DEBUG-DB"),
+  function (msg)
+    print("start debug DB")
+
+    for row in DB:nrows("select count(*) as cnt from participants;") do
+      print("participants Row number" .. Dump(row))
+    end
+
+    for row in DB:nrows("select * from participants;") do
+      print("participants" .. Dump(row))
+    end
+
+
+    for row in DB:nrows("select count(*) as cnt from datasets;") do
+      print("datasets Row number" .. Dump(row))
+    end
+
+    for row in DB:nrows("select * from datasets;") do
+      print("datasets" .. Dump(row))
+    end
+
+
+    for row in DB:nrows("select count(*) as cnt from evaluations;") do
+      print("evaluations Row number" .. Dump(row))
+    end
+
+    for row in DB:nrows("select * from evaluations;") do
+        print("row start" .. Dump(row))
+        evaluations_cnt = evaluations_cnt + 1
+        -- evaluations[evaluations_cnt] = Dump(row)
+    end
+  end
+)
+
+Handlers.add(
+  "Get-Participants",
+   Handlers.utils.hasMatchingTag("Action", "Get-Participants"),
+   function (msg)
+      Handlers.utils.reply("start participants")
+      local rsp = {}
+      for row in DB:nrows(SQL.FIND_ALL_PARTICIPANTS) do
+          Handlers.utils.reply(type(row))
+          rsp[#rsp+1] = row
+      end
+      ao.Send({
+        Target = msg.From,
+        Action = "Get-Participants-Response",
+        Data = json.encode(rsp)
+      })
+   end
+)
+
+ChatQuestionReference = 0
+
+Handlers.add(
+  "Chat-Question",
+  Handlers.utils.hasMatchingTag("Action", "Chat-Question"),
+  function (msg)
+    local data = json.decode(msg.Data)
+    local hash =  data.dataset_hash
+    local prompt = data.prompt
+    local token = data.token
+
+    ChatQuestionReference = ChatQuestionReference + 1
+    DB:exec(string.format(SQL.INSERT_CHAT_GROUND_EVALUATION, hash, prompt, token, ChatQuestionReference))
+
+    -- TODO
+
+    ao.Send({
+      Target = msg.From,
+      Tags = {
+          { name = "Action", value = "Chat-Question-Response" },
+          { name = "Reference", value = tostring(ChatQuestionReference) },
+          { name = "status", value = "200" }
+      }
+    })
+  end
+)
+
 SearchPromptReference = 0
+function SendEmeddingRequest(ragData)
+    ChatQuestionReference = ChatQuestionReference + 1
+    ao.Send({
+      Target = EmbeddingProcessId,
+      Data = ragData,
+      Tags = {
+        { name = "Action", value = "Search-Prompt" },
+        { name = "Reference", value = ChatQuestionReference }
+      },
+    })
+    return ChatQuestionReference
+end
+
+
 Handlers.add(
   "Evaluate",
   Handlers.utils.hasMatchingTag("Action", "Evaluate"),
   function (msg)
     local limit = tonumber(msg.Data) or 2
+    print("start evaluate".. Dump(msg) .. tostring(limit))
     for row in DB:nrows(string.format(SQL.GET_UNEVALUATED_EVALUATIONS, limit)) do
+      print("Row ".. Dump(row))
       local ragData = string.format('{"dataset_hash": "%s","prompt":"%s"}', row.participant_dataset_hash, row.question)
-      SearchPromptReference = SearchPromptReference + 1
-      ao.Send({
-        Target = EmbeddingProcessId,
-        Data = ragData,
-        Tags = {
-          { name = "Action", value = "Search-Prompt" },
-          { name = "Reference", value = SearchPromptReference }
-        },
-      })
+      local reference = SendEmeddingRequest(ragData)
+      print(reference)
       DB:exec(string.format(
         SQL.START_EVALUATION,
-        SearchPromptReference, row.id
+        reference, row.id
       ))
       end
   end
@@ -157,7 +265,7 @@ Handlers.add(
 Handlers.add(
   "Balance-Response",
   function(msg)
-    return msg.Tags.from == TokenProcessId and
+    return msg.From == TokenProcessId and
        msg.Tags.Account == ao.id and msg.Tags.Balance ~= nil
   end,
   function (msg)
@@ -167,8 +275,8 @@ Handlers.add(
 )
 
 Handlers.add(
-  "Load-Data",
-  Handlers.utils.hasMatchingTag("Action", "Load-Data"),
+  "Load-Dataset",
+  Handlers.utils.hasMatchingTag("Action", "Load-Dataset"),
   function(msg)
     local data = msg.Data
     assert(data ~= nil, "Data is nil")
@@ -177,7 +285,7 @@ Handlers.add(
       local query = string.format(
         SQL.INSERT_DATASET,
         DataSetItem.context,
-        DataSetItem.expected_response[1]
+        DataSetItem.response[1]
       )
       DB:exec(query)
     end
@@ -194,6 +302,7 @@ Handlers.add(
   end,
   function (msg)
     -- TODO
+    print("msg Tags:" .. Dump(msg))
     local title = msg.Tags["X-Title"]
     local description = msg.Tags["X-Description"]
     local prizePool = msg.Tags["X-Prize-Pool"]
@@ -253,7 +362,7 @@ Handlers.add(
 
 
 function UpdateBalance()
-  ao.Send({
+  ao.send({
     Target = TokenProcessId,
     Tags= {
       { name = "Action", value = "Balance" }
