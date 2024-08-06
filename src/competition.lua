@@ -110,7 +110,6 @@ Handlers.add(
             CREATE TABLE IF NOT EXISTS evaluations (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     author TEXT,
-                    participant_id INTEGER NOT NULL,
                     participant_dataset_hash TEXT,
                     dataset_id INTEGER NOT NULL,
                     question TEXT NOT NULL,
@@ -120,7 +119,6 @@ Handlers.add(
                     inference_start_time DATETIME,
                     inference_end_time DATETIME,
                     inference_reference TEXT,
-                    FOREIGN KEY (participant_id) REFERENCES participants(id),
                     FOREIGN KEY (dataset_id) REFERENCES datasets(id)
                   );
             CREATE INDEX IF NOT EXISTS evaluations_reference ON evaluations (inference_reference);
@@ -478,7 +476,7 @@ Handlers.add(
           }
           local allPrompt = string.format(Phi3Template, SasSystemPrompt, json.encode(body))
           print(allPrompt)
-          Llama.run(allPrompt, 80, function(sasScore)
+          Llama.run(allPrompt, 35, function(sasScore)
               print('get scores from Llama')
               print(Dump(sasScore))
               -- local rsp = json.decode(sasScore)
