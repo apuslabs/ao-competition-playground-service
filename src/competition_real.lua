@@ -7,21 +7,69 @@ DB = DB or nil
 CompetitonPools = CompetitonPools or {}
 TokenProcessId = "SYvALuV_pYI2punTt_Qy-8jrFFTGNEkY7mgGGWZXxCM"
 EmbeddingProcessId = "hMEUOgWi97d9rGT-lHNCbm937bTypMq7qxMWeaUnMLo"
-Phi3Template = [[<|system|>
-                %s<|end|>
-                <|user|>
-                %s<|end|>]]
+LLamaProcessId = "lzNUGNUZ0rczcr7zh65ZPXc1XQ-XURk4zpuQRa4vZXk"
+Phi3Template = [[<|system|>%s<|end|><|user|>%s<|end|><|assistant|>]]
 
-SasSystemPrompt =  [[You are a helpful assistant that can compute the SAS(semantic answer similarity) score.
-                    You can compute a score between 0~100 based on the SAS, 0 means totally different, 100 means almost the same.
-                    Now the user will send you: 
-                    1. one Question
-                    2. the Context for the question
-                    3. an ExpectedResponse
-                    pls:
-                    1. generate a Response for the Question based on the provided Context.
-                    2. compute the SAS score between the provided ExpectedResponse with the Response generated.
-                    **Important**You must return as this format: {<the-sas-score>}]]
+-- SasSystemPrompt =  [[You are a helpful assistant that can compute the SAS(semantic answer similarity) score.
+--                     The SAS score between 0~1000 0 means totally different, 1000 means almost the same.
+--                     Now the user will send you: 1. one Question. 2. A Context.3. an ExpectedResponse.
+--                     pls: 1. Please generate a Response to Question based on Context.2. compute the SAS score between the ExpectedResponse with the Response.
+--                     **Important**You must return as the json format: {"sas_score":<the-sas-score>}]]
+SasSystemPrompt = [[
+# Role
+You will first play the role of Sam Williams, founder of Arweave, and answer my question based on the context I provide. Then, you will act as a robot that returns a score indicating how semantically similar your answer is to the expected answer.
+
+# User Input
+The input data will be in JSON format, like `{"question": "xxx", "context": "xxx", "expected_response": "xxx"}`.
+
+1. The "question" field represents my question.
+2. The "context" field will contain several lines in the format `Context: <context> Meta: <meta>, score: <score>`. For each line:
+    * "score" indicates how relevant the context is to the question.
+    * "meta" represents metadata for the context.
+    * "context" is the context content. Note that the "Context" field may be `null`, indicating no context for the question.
+3. "expected_response" represents my standard answer for the question.
+
+# Steps
+
+1. Pretend you are Sam Williams, founder of Arweave, discussing yourself, blockchain, and the Arweave ecosystem. Understand the topic we're discussing based on the question and context.
+2. Provide your answer to the question.
+3. Pretend you are a robot. Compare your answer with the expected response and return a score between 0-100, representing the semantic similarity between the two.
+
+# Output
+
+1. Return the result in JSON format, like: `{"answer": "xxx", "score": "xxx"}`.
+2. The score should be between 0-100, where:
+    * 0 represents no connection between the generated answer and the expected answer.
+    * 100 represents a perfect match.
+3. The answer should be concise, ideally within 30 words.
+4. Even if the Context is null, you also need to return the answer based on your existing knowledge.
+]]
+
+ChatGroundPrompt = [[
+# Role
+You will play the role of Sam Williams, founder of Arweave, and answer my question based on the context I provide.
+
+# User Input
+The input data will be in JSON format, like `{"question": "xxx", "context": "xxx"}`.
+
+1. The "question" field represents my question.
+2. The "context" field will contain several lines in the format `Context: <context> Meta: <meta>, score: <score>`. For each line:
+    * "score" indicates how relevant the context is to the question.
+    * "meta" represents metadata for the context.
+    * "context" is the context content. Note that the "Context" field may be `null`, indicating no context for the question.
+
+# Steps
+
+1. Pretend you are Sam Williams, founder of Arweave, discussing yourself, blockchain, and the Arweave ecosystem. Understand the topic we're discussing based on the question and context.
+2. Provide your answer to the question.
+
+# Output
+1. Return as json format, like: `{"answer": "xxx"}`.
+2. The answer should be concise, ideally within 30 words.
+3. Even if the Context is null, you also need to return an answer based on your existing knowledge.
+]]
+
+
 PRIZE_BALANCE = PRIZE_BALANCE or 0
 CompetitonPoolId = 1001
 
@@ -32,25 +80,39 @@ Handlers.add(
         DB = sqlite3.open_memory()
 
         DB:exec[[
-            CREATE TABLE participants (
+            CREATE TABLE IF NOT EXISTS participants (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     author TEXT NOT NULL,
                     upload_dataset_name TEXT NOT NULL,
                     upload_dataset_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     participant_dataset_hash TEXT,
-                    rewarded_tokens INTEGER DEFAULT 0
+                    rewarded_tokens INTEGER DEFAULT 0,
+                    UNIQUE(author, participant_dataset_hash)
                 );
-            
-            CREATE TABLE datasets (
+
+            CREATE TABLE IF NOT EXISTS datasets (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    context TEXT,
                     question TEXT,
                     expected_response TEXT
             );
 
-            CREATE TABLE evaluations (
+            CREATE TABLE IF NOT EXISTS chatGroundEvaluations (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    participant_id INTEGER NOT NULL,
+                    dataset_hash TEXT,
+                    token INTEGER,
+                    question TEXT,
+                    prompt TEXT,
+                    response TEXT,
+                    inference_start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    inference_end_time DATETIME,
+                    inference_reference TEXT,
+                    client_reference TEXT
+            );
+            CREATE INDEX IF NOT EXISTS chatGroundEvaluations_reference ON chatGroundEvaluations (inference_reference);
+
+            CREATE TABLE IF NOT EXISTS evaluations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    author TEXT,
                     participant_dataset_hash TEXT,
                     dataset_id INTEGER NOT NULL,
                     question TEXT NOT NULL,
@@ -60,22 +122,11 @@ Handlers.add(
                     inference_start_time DATETIME,
                     inference_end_time DATETIME,
                     inference_reference TEXT,
-                    FOREIGN KEY (participant_id) REFERENCES participants(id)
                     FOREIGN KEY (dataset_id) REFERENCES datasets(id)
-                );
-
-            CREATE TABLE chatGroundEvaluations (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    dataset_hash TEXT,
-                    prompt TEXT,
-                    token INTEGER,
-                    response TEXT,
-                    inference_start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    inference_end_time DATETIME,
-                    inference_reference TEXT,
-                    client_reference TEXT
-            );
+                  );
+            CREATE INDEX IF NOT EXISTS evaluations_reference ON evaluations (inference_reference);
         ]]
+
         print("OK")
     end
 )
@@ -88,25 +139,25 @@ local SQL = {
       SELECT * FROM participants;
     ]], 
     INSERT_PARTICIPANTS = [[
-      INSERT INTO participants (author, upload_dataset_name, participant_dataset_hash) VALUES('%s', '%s', '%s');  
+      INSERT INTO participants (author, upload_dataset_name, participant_dataset_hash, upload_dataset_time) VALUES('%s', '%s', '%s', CURRENT_TIMESTAMP);  
     ]],
     INSERT_EVALUATIONS = [[
-      INSERT INTO evaluations (participant_id, participant_dataset_hash, dataset_id, question, correct_answer) VALUES('%s', '%s', '%s','%s', '%s');
+      INSERT INTO evaluations (author, participant_dataset_hash, dataset_id, question, correct_answer) VALUES('%s', '%s', '%d', '%s', '%s');
     ]],
     ADD_REWARDED_TOKENS = [[
-      UPDATE participants SET rewarded_tokens = rewarded_tokens + '%d'
+      UPDATE participants SET rewarded_tokens = rewarded_tokens + '%d' WHERE author = '%s' AND participant_dataset_hash = '%s';
     ]],
     FIND_ALL_DATASET = [[
       SELECT id, question, expected_response FROM datasets;
     ]],
     FIND_USER_REWARDED_TOKENS= [[
-      SELECT rewarded_tokens as rewardedTokens from participants WHERE author = '%s';
+      SELECT rewarded_tokens as rewardedTokens from participants WHERE author = '%s' and participant_dataset_hash = '%s';
     ]],
     GET_UNEVALUATED_EVALUATIONS = [[
-      SELECT * FROM evaluations WHERE inference_start_time IS NULL LIMIT %d;
+      SELECT * FROM evaluations WHERE inference_start_time IS NULL LIMIT '%d';
     ]],
     START_EVALUATION = [[
-      UPDATE evaluations SET inference_start_time = CURRENT_TIMESTAMP, inference_reference = '%d' WHERE id = '%d';
+      UPDATE evaluations SET inference_start_time = CURRENT_TIMESTAMP, inference_reference = '%s' WHERE id = '%d';
     ]],
     END_EVALUATION = [[
       UPDATE evaluations SET inference_end_time = CURRENT_TIMESTAMP, prediction = '%s' WHERE inference_reference = '%s';
@@ -118,15 +169,50 @@ local SQL = {
       UPDATE evaluations SET prediction_sas_score = '%s' WHERE inference_reference = '%s';
     ]],
     TOTAL_SCORES_BY_PARTICIPANT = [[
-      SELECT participant_id as author, SUM(prediction_sas_score) as score, COUNT(*) as count
-      , SUM(prediction_sas_score) /  COUNT(*) as averageScore FROM evaluations 
-      GROUP BY participant_id
-      ORDER BY averageScore DESC
+      SELECT author, participant_dataset_hash, SUM(prediction_sas_score)/ COUNT(*) as averageScore from evaluations where prediction_sas_score IS NOT NULL GROUP BY author, participant_dataset_hash ORDER BY averageScore DESC;
     ]],
     INSERT_CHAT_GROUND_EVALUATION = [[
-      INSERT INTO chatGroundEvaluations(dataset_hash, prompt, token, inference_reference) VALUES('%s', '%s', '%d', '%s');
+      INSERT INTO chatGroundEvaluations(dataset_hash, question, token, client_reference) VALUES('%s', '%s', '%d', '%s');
+    ]],
+    FIND_CHAT_GROUND_EVALUATION_BY_CLIENT_REFERENCE = [[
+      SELECT * FROM  chatGroundEvaluations WHERE client_reference = '%s';
+    ]],
+    FIND_CHAT_GROUND_EVALUATION_BY_INFER_REFERENCE = [[
+      SELECT * FROM  chatGroundEvaluations WHERE inference_reference = '%s';
+    ]],
+    UPDATE_CHAT_GROUND_EVALUATION_INFERENCE = [[
+      UPDATE chatGroundEvaluations SET inference_reference = '%s' WHERE client_reference = '%s'
+    ]],
+    UPDATE_CHAT_GROUND_EVALUATION_PROMPT = [[
+      UPDATE chatGroundEvaluations SET prompt = '%s' WHERE inference_reference = '%s'
+    ]],
+    UPDATE_CHAT_GROUND_EVALUATION_ANSWER = [[
+      UPDATE chatGroundEvaluations SET response = '%s' WHERE inference_reference = '%s'
     ]]
 }
+
+Handlers.add(
+  "Fix-DB",
+  Handlers.utils.hasMatchingTag("Action", "Fix-DB"),
+  function (msg)
+      print("DB exex: " .. tostring(DB:exec(msg.Data)))
+  end
+)
+
+Handlers.add(
+  "Read-DB",
+  Handlers.utils.hasMatchingTag("Action", "Read-DB"),
+  function (msg)
+      if msg.Data == '' then
+        msg.Data = [[ SELECT name FROM sqlite_master WHERE type='table' ]]
+      end
+      print('start read DB')
+      for item in DB:nrows(msg.Data) do
+        -- print(type(item))
+        print(item)
+      end
+  end
+)
 
 Handlers.add(
   "DEBUG-DB",
@@ -151,54 +237,62 @@ Handlers.add(
       print("datasets" .. Dump(row))
     end
 
-
     for row in DB:nrows("select count(*) as cnt from evaluations;") do
       print("evaluations Row number" .. Dump(row))
     end
 
     for row in DB:nrows("select * from evaluations;") do
-        print("row start" .. Dump(row))
-        evaluations_cnt = evaluations_cnt + 1
-        -- evaluations[evaluations_cnt] = Dump(row)
+        print("evaluations " .. Dump(row))
+    end
+
+    for row in DB:nrows("select count(*) as cnt from chatGroundEvaluations;") do
+      print("chatGroundEvaluations Row number" .. Dump(row))
+    end
+
+    for row in DB:nrows("select * from chatGroundEvaluations;") do
+        print("chatGroundEvaluations " .. Dump(row))
     end
   end
 )
 
 Handlers.add(
-  "Get-Participants",
-   Handlers.utils.hasMatchingTag("Action", "Get-Participants"),
+  "Get-Datasets",
+   Handlers.utils.hasMatchingTag("Action", "Get-Datasets"),
    function (msg)
-      Handlers.utils.reply("start participants")
+      print("start!")
       local rsp = {}
+      local cnt = 0
       for row in DB:nrows(SQL.FIND_ALL_PARTICIPANTS) do
-          Handlers.utils.reply(type(row))
-          rsp[#rsp+1] = row
+          cnt = cnt + 1
+          print(type(row))
+          rsp[cnt] = row
       end
-      ao.Send({
+      print(Dump(rsp))
+      print(type(rsp))
+      ao.send({
         Target = msg.From,
-        Action = "Get-Participants-Response",
+        Action = "Get-Datasets-Response",
         Data = json.encode(rsp)
       })
    end
 )
 
-ChatQuestionReference = 0
-
+ChatQuestionReference = ChatQuestionReference or 0
 Handlers.add(
   "Chat-Question",
   Handlers.utils.hasMatchingTag("Action", "Chat-Question"),
   function (msg)
     local data = json.decode(msg.Data)
     local hash =  data.dataset_hash
-    local prompt = data.prompt
-    local token = data.token
+    local question = data.question
+    local token = tonumber(data.token)
 
+    print("start")
     ChatQuestionReference = ChatQuestionReference + 1
-    DB:exec(string.format(SQL.INSERT_CHAT_GROUND_EVALUATION, hash, prompt, token, ChatQuestionReference))
-
-    -- TODO
-
-    ao.Send({
+    DB:exec(string.format(SQL.INSERT_CHAT_GROUND_EVALUATION, hash, question, token, tostring(ChatQuestionReference)))
+    local inferReference = SendEmeddingRequest(hash, question)
+    DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_INFERENCE, inferReference, ChatQuestionReference))
+    ao.send({
       Target = msg.From,
       Tags = {
           { name = "Action", value = "Chat-Question-Response" },
@@ -209,37 +303,67 @@ Handlers.add(
   end
 )
 
-SearchPromptReference = 0
-function SendEmeddingRequest(ragData)
-    ChatQuestionReference = ChatQuestionReference + 1
-    ao.Send({
+SearchPromptReference = SearchPromptReference or 0
+function SendEmeddingRequest(datasetHash, question)
+    SearchPromptReference = SearchPromptReference + 1
+    -- local ragData = string.format('{"dataset_hash": "%s","prompt":"%s"}', datasetHash, question)
+    local ragData = json.encode({
+        dataset_hash = datasetHash,
+        prompt = question:gsub("'", "")
+    })
+    print(ragData)
+    ao.send({
       Target = EmbeddingProcessId,
       Data = ragData,
       Tags = {
         { name = "Action", value = "Search-Prompt" },
-        { name = "Reference", value = ChatQuestionReference }
-      },
+        { name = "Reference", value = tostring(SearchPromptReference) }
+      }
     })
-    return ChatQuestionReference
+    return SearchPromptReference
 end
-
 
 Handlers.add(
   "Evaluate",
   Handlers.utils.hasMatchingTag("Action", "Evaluate"),
   function (msg)
-    local limit = tonumber(msg.Data) or 2
-    print("start evaluate".. Dump(msg) .. tostring(limit))
+    local limit = tonumber(msg.Data) or 1
+    -- print("start evaluate".. Dump(msg))
     for row in DB:nrows(string.format(SQL.GET_UNEVALUATED_EVALUATIONS, limit)) do
       print("Row ".. Dump(row))
-      local ragData = string.format('{"dataset_hash": "%s","prompt":"%s"}', row.participant_dataset_hash, row.question)
-      local reference = SendEmeddingRequest(ragData)
+      local reference = SendEmeddingRequest(row.participant_dataset_hash, row.question)
       print(reference)
-      DB:exec(string.format(
+      local result = DB:exec(string.format(
         SQL.START_EVALUATION,
         reference, row.id
       ))
-      end
+      print('result ' .. result)
+    end
+  end
+)
+
+Handlers.add(
+  "Get-Chat-Answer",
+  Handlers.utils.hasMatchingTag("Action", "Get-Chat-Answer"),
+  function (msg)
+    local clientReference = msg.Data
+    local statuCode, rsp
+    for row in DB:nrows(string.format(SQL.FIND_CHAT_GROUND_EVALUATION_BY_CLIENT_REFERENCE, clientReference)) do
+        if row.response == nil then
+          statuCode = 100
+          rsp = "PROCESSING"
+        else
+          statuCode = 200
+          rsp = row.response
+        end
+    end
+    ao.send({
+        Target = msg.From,
+        Tags = {
+          { name = "Action", value = "Get-Chat-Answer-Rresponse" },
+          { name = "status", value = tostring(statuCode) }},
+        Data = rsp
+      })
   end
 )
 
@@ -247,20 +371,69 @@ Handlers.add(
   "Search-Prompt-Response",
   Handlers.utils.hasMatchingTag("Action", "Search-Prompt-Response"),
   function (msg)
+      print(Dump(msg))
+      print(type(msg))
+      local isEvaluation = false
       local evaluationReference = msg.Tags.Reference
-      for row in DB:nrows(string.format(SQL.GET_EVALUATION_BY_REFERENCE, evaluationReference)) do
-          local data = json.decode(msg.Data)
 
-          local sentences = " Question: " ..  row.question .. ", Context: " .. data.prompt .. ", ExpectedResponse: " .. row.correct_answer
-          local prompt = string.format(Phi3Template, SasSystemPrompt, sentences)
-          Llama.run(prompt, 3, function(sasScore)
-              print("Sas score:" .. sasScore .. "\n")
-              DB:exec(SQL.UPDATE_SCORE, extractSasScore(sasScore), evaluationReference)
+      local promptFromEmdedding = 'Null'
+      if(msg.Data ~= nil and msg.Data ~= 'Null') then
+        print(Dump(msg.Data) .. type(msg.Data))
+        promptFromEmdedding = msg.Data
+      end
+      -- print(type(promptFromEmdedding))
+
+      for row in DB:nrows(string.format(SQL.GET_EVALUATION_BY_REFERENCE, evaluationReference)) do
+          print("Send evaluation request".. evaluationReference)
+          
+          isEvaluation = true
+          
+          local body = {
+            question = row.question:gsub('\'s', ' is'),
+            expected_response = row.correct_answer:gsub('\'s', ' is'),
+            context = promptFromEmdedding
+          }
+          local allPrompt = string.format(Phi3Template, SasSystemPrompt, json.encode(body))
+          print(allPrompt)
+          Llama.run(allPrompt, 80, function(sasScore)
+              print('get scores from Llama')
+              print(Dump(sasScore))
+              -- local rsp = json.decode(sasScore)
+              -- DB:exec(SQL.UPDATE_SCORE, rsp.score, evaluationReference)
           end)
-        -- end)
+      end
+
+      if isEvaluation == false then
+          print("Send chat-ground request: ".. evaluationReference)
+          SendUserChatGroundRequest(promptFromEmdedding, evaluationReference)
       end
   end
 )
+
+local function extractAnswer(jsonString)
+  local pattern = '{"answer":%s*"([^"]-)"%s*}'
+  local answer = string.match(jsonString, pattern)
+  return answer
+end
+
+function SendUserChatGroundRequest(prompt, evaluationReference)
+  -- DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_PROMPT, prompt))
+  for row in DB:nrows(string.format(SQL.FIND_CHAT_GROUND_EVALUATION_BY_INFER_REFERENCE, evaluationReference)) do
+    print("SendUserChatGroundRequest")
+    local body = {
+        question = row.question,
+        prompt = prompt
+    }
+
+    local allPrompt = string.format(Phi3Template, ChatGroundPrompt, json.encode(body))
+    print(allPrompt)
+    Llama.run(allPrompt, row.token, function (response)
+        print(Dump(response))
+        local answer = extractAnswer(response)
+        DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_ANSWER, answer, evaluationReference))
+    end)
+  end
+end
 
 Handlers.add(
   "Balance-Response",
@@ -269,10 +442,19 @@ Handlers.add(
        msg.Tags.Account == ao.id and msg.Tags.Balance ~= nil
   end,
   function (msg)
-    print("Updated Balance:" .. msg.Tags.Balance)
-    PRIZE_BALANCE = msg.Tags.Balance
+    PRIZE_BALANCE = tonumber(msg.Tags.Balance)
+    print(tostring(PRIZE_BALANCE) .. ' type ' .. type(PRIZE_BALANCE))
   end
 )
+
+function FixTextBeforeSaveDB(text)
+  return text:gsub("'", "''")
+end
+
+
+function FixTextBeforeReadDB(text)
+  return text:gsub("''", "'")
+end
 
 Handlers.add(
   "Load-Dataset",
@@ -281,13 +463,14 @@ Handlers.add(
     local data = msg.Data
     assert(data ~= nil, "Data is nil")
     local DataSets = json.decode(data)
+    print(Dump(DataSets))
     for _, DataSetItem in ipairs(DataSets) do
-      local query = string.format(
-        SQL.INSERT_DATASET,
-        DataSetItem.context,
-        DataSetItem.response[1]
-      )
-      DB:exec(query)
+      -- print('DataSetItem: ' .. Dump(DataSetItem))
+      local context = FixTextBeforeSaveDB(DataSetItem.context)
+      local response = FixTextBeforeSaveDB( DataSetItem.response[1])
+      local query = string.format(SQL.INSERT_DATASET,context,response)
+      local result= DB:exec(query)
+      -- print(query .. 'result ' .. result)
     end
     print('ok')
   end
@@ -301,7 +484,6 @@ Handlers.add(
       msg.From == TokenProcessId
   end,
   function (msg)
-    -- TODO
     print("msg Tags:" .. Dump(msg))
     local title = msg.Tags["X-Title"]
     local description = msg.Tags["X-Description"]
@@ -325,10 +507,15 @@ Handlers.add(
   end
 )
 
-local function initBenchmarkRecords(participantId, participantDatasetHash)
+local function initBenchmarkRecords(author, participantDatasetHash)
   for row in DB:nrows(string.format(SQL.FIND_ALL_DATASET)) do
-      DB:exec(string.format(SQL.INSERT_EVALUATIONS, 
-                participantId, participantDatasetHash, row.id, row.question, row.expected_response))
+      local sql = string.format(SQL.INSERT_EVALUATIONS, author, 
+        participantDatasetHash, row.id, 
+        FixTextBeforeSaveDB(row.question), 
+        FixTextBeforeSaveDB(row.expected_response)
+      )
+      DB:exec(sql)
+      -- print('sql:' .. sql .. ' result:' .. DB:exec(sql))
   end
 end
 
@@ -391,37 +578,42 @@ Handlers.add(
   end
 )
 
-local reward = {35, 20, 10, 5, 5, 5, 5, 5, 5, 5}
+Reward = {35000, 20000, 10000, 5000, 5000, 5000, 5000, 5000, 5000, 5000}
 local function computeReward(rank)
   if rank <= 10 then
-    return reward[rank] * PRIZE_BALANCE / 100
+    return Reward[rank]
   else
     return 300
   end
 end
 
-local function computeNeedRewarded(author, amount)
-  for rewardTokens in DB:nrows(string.format(SQL.FIND_USER_REWARDED_TOKENS, author)) do
-    return amount - rewardTokens
+local function computeNeedRewarded(amount, author, datasetHash)
+  for item in DB:nrows(string.format(SQL.FIND_USER_REWARDED_TOKENS, author, datasetHash)) do
+    return amount - tonumber(item.rewardedTokens)
   end
   return amount
 end
 
 Handlers.add(
     "Allocate-Rewards",
-    Handlers.utils.hasMatchingTag("Action", "Allocate-Rewards-Response"),
+    Handlers.utils.hasMatchingTag("Action", "Allocate-Rewards"),
     function (msg)
       local rank = 0
       for item in DB:nrows(SQL.TOTAL_SCORES_BY_PARTICIPANT) do 
+          print(Dump(item))
           rank = rank + 1
           local amount = computeReward(rank)
-          amount = computeNeedRewarded(item.participant_id)
+          print(Dump(amount))
+          print(type(amount))
+          print(type(PRIZE_BALANCE))
+          -- amount = computeNeedRewarded(amount, item.author, item.participant_dataset_hash)
           if PRIZE_BALANCE < amount then
             print("Balance is not enough, balance: " .. PRIZE_BALANCE .. " want: " .. amount)
           elseif amount > 0 then
             PRIZE_BALANCE = PRIZE_BALANCE - amount
-            transfer(item.participant_id, amount)
-            DB:exec(SQL.ADD_REWARDED_TOKENS, amount)
+            print("reward " .. amount .. " tokens  to " .. item.author)
+            transfer(item.author, amount)
+            DB:exec(string.format(SQL.ADD_REWARDED_TOKENS, amount, item.author, item.participant_dataset_hash))
           end
       end
 
@@ -443,7 +635,7 @@ function transfer(author, amount)
     Tags = {
         { name = "Action", value = "Transfer" },
         { name = "Recipient", value = author },
-        { name = "Quantity", value = amount }
+        { name = "Quantity", value = tostring(amount) }
     }
   })
 end
