@@ -110,6 +110,7 @@ Handlers.add(
             CREATE TABLE IF NOT EXISTS evaluations (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     author TEXT,
+                    participant_id INTEGER NOT NULL,
                     participant_dataset_hash TEXT,
                     dataset_id INTEGER NOT NULL,
                     question TEXT NOT NULL,
@@ -119,6 +120,7 @@ Handlers.add(
                     inference_start_time DATETIME,
                     inference_end_time DATETIME,
                     inference_reference TEXT,
+                    FOREIGN KEY (participant_id) REFERENCES participants(id),
                     FOREIGN KEY (dataset_id) REFERENCES datasets(id)
                   );
             CREATE INDEX IF NOT EXISTS evaluations_reference ON evaluations (inference_reference);
@@ -406,6 +408,9 @@ Handlers.add(
   Handlers.utils.hasMatchingTag("Action", "Evaluate"),
   function (msg)
     local limit = tonumber(msg.Data) or 1
+    if limit > 2 then
+      limit = 2
+    end
     print("start evaluate".. Dump(msg))
     for row in DB:nrows(string.format(SQL.GET_UNEVALUATED_EVALUATIONS, limit)) do
       print("Row ".. Dump(row))
