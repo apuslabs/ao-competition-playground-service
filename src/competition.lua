@@ -110,6 +110,7 @@ Handlers.add(
             CREATE TABLE IF NOT EXISTS evaluations (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     author TEXT,
+                    participant_id INTEGER NOT NULL,
                     participant_dataset_hash TEXT,
                     dataset_id INTEGER NOT NULL,
                     question TEXT NOT NULL,
@@ -119,6 +120,7 @@ Handlers.add(
                     inference_start_time DATETIME,
                     inference_end_time DATETIME,
                     inference_reference TEXT,
+                    FOREIGN KEY (participant_id) REFERENCES participants(id),
                     FOREIGN KEY (dataset_id) REFERENCES datasets(id)
                   );
             CREATE INDEX IF NOT EXISTS evaluations_reference ON evaluations (inference_reference);
@@ -135,8 +137,11 @@ local SQL = {
     FIND_ALL_PARTICIPANTS = [[
       SELECT * FROM participants;
     ]], 
+    FIND_PARTICIPANT_BY_HASH = [[
+      SELECT * FROM participants WHERE participant_dataset_hash = '%s'; 
+    ]],
     INSERT_PARTICIPANTS = [[
-      INSERT INTO participants (author, upload_dataset_name, participant_dataset_hash) VALUES('%s', '%s', '%s');  
+      INSERT INTO participants (participant_id, author, upload_dataset_name, participant_dataset_hash) VALUES('%d', '%s', '%s', '%s');  
     ]],
     INSERT_EVALUATIONS = [[
       INSERT INTO evaluations (author, participant_dataset_hash, dataset_id, question, correct_answer) VALUES('%s', '%s', '%d', '%s', '%s');
@@ -589,8 +594,12 @@ Handlers.add(
 )
 
 local function initBenchmarkRecords(author, participantDatasetHash)
+  local participantId
+  for row in DB:nrows(string.format(SQL.FIND_PARTICIPANT_BY_HASH, participantDatasetHash)) do
+    participantId = tonumber(row.id)
+  end
   for row in DB:nrows(string.format(SQL.FIND_ALL_DATASET)) do
-      local sql = string.format(SQL.INSERT_EVALUATIONS, author, 
+      local sql = string.format(SQL.INSERT_EVALUATIONS, participantId, author, 
         participantDatasetHash, row.id, 
         FixTextBeforeSaveDB(row.question), 
         FixTextBeforeSaveDB(row.expected_response)
