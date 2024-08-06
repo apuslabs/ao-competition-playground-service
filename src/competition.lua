@@ -141,10 +141,10 @@ local SQL = {
       SELECT * FROM participants WHERE participant_dataset_hash = '%s'; 
     ]],
     INSERT_PARTICIPANTS = [[
-      INSERT INTO participants (participant_id, author, upload_dataset_name, participant_dataset_hash) VALUES('%d', '%s', '%s', '%s');  
+      INSERT INTO participants (author, upload_dataset_name, participant_dataset_hash) VALUES('%s', '%s', '%s');  
     ]],
     INSERT_EVALUATIONS = [[
-      INSERT INTO evaluations (author, participant_dataset_hash, dataset_id, question, correct_answer) VALUES('%s', '%s', '%d', '%s', '%s');
+      INSERT INTO evaluations (participant_id, author, participant_dataset_hash, dataset_id, question, correct_answer) VALUES('%d', '%s', '%s', '%d', '%s', '%s');
     ]],
     ADD_REWARDED_TOKENS = [[
       UPDATE participants SET rewarded_tokens = rewarded_tokens + '%d' WHERE author = '%s' AND participant_dataset_hash = '%s';
