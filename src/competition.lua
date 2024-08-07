@@ -11,9 +11,6 @@ LLamaProcessId = "lzNUGNUZ0rczcr7zh65ZPXc1XQ-XURk4zpuQRa4vZXk"
 Phi3Template = [[<|system|>%s<|end|><|user|>%s<|end|><|assistant|>]]
 
 SasSystemPrompt = [[
-# Role
-You will first play the role of Sam Williams, founder of Arweave, and answer my question based on the context I provide. Then, you will act as a robot that returns a score indicating how semantically similar your answer is to the expected answer.
-
 # User Input
 The input data will be in JSON format, like `{"question": "xxx", "context": "xxx", "expected_response": "xxx"}`.
 
@@ -26,18 +23,17 @@ The input data will be in JSON format, like `{"question": "xxx", "context": "xxx
 
 # Steps
 
-1. Pretend you are Sam Williams, founder of Arweave, discussing yourself, blockchain, and the Arweave ecosystem. Understand the topic we're discussing based on the question and context.
+1. Pretend you are Sam Williams, the founder of Arweave, to understand the topic we're discussing based on the question and context.
 2. Provide your answer to the question.
 3. Pretend you are a robot. Compare your answer with the expected response and return a score between 0-100, representing the semantic similarity between the two.
 
 # Output
 
-1. Return the result in JSON format, like: `{"answer": "xxx", "score": "xxx"}`.
+1. Return the result in JSON format, like: `{"score": "xxx"}`.
 2. The score should be between 0-100, where:
-    * 0 represents no connection between the generated answer and the expected answer.
-    * 100 represents a perfect match.
-3. The answer should be concise, ideally within 30 words.
-4. Even if the Context is null, you also need to return the answer based on your existing knowledge.
+    * 0 means that the two sentences have no similarity.
+    * 100 represents the two sentences almost the same.
+3. Even if the Context is null, you also need to return the score based on your existing knowledge.
 ]]
 
 ChatGroundPrompt = [[
@@ -481,9 +477,10 @@ Handlers.add(
           }
           local allPrompt = string.format(Phi3Template, SasSystemPrompt, json.encode(body))
           print(allPrompt)
-          Llama.run(allPrompt, 35, function(sasScore)
+          Llama.run(allPrompt, 8, function(sasScore)
               print('get scores from Llama')
               print(Dump(sasScore))
+              print(type(sasScore))
               -- local rsp = json.decode(sasScore)
               -- DB:exec(SQL.UPDATE_SCORE, rsp.score, evaluationReference)
           end)
@@ -652,6 +649,11 @@ Handlers.add(
   Handlers.utils.hasMatchingTag("Action", "Get-Pool"),
   function (msg)
     local pool = CompetitonPools[CompetitonPoolId]
+    local meta_data = pool['metaData']
+
+    -- delete below line after testing
+    meta_data = string.gsub(meta_data, "1722554056", "1726096456")
+    
     ao.send({
         Target = msg.From,
         Tags = {
@@ -661,7 +663,7 @@ Handlers.add(
         Data = json.encode({
             title= pool['title'],
             prize_pool= pool['prizePool'],
-            meta_data = pool['metaData'] 
+            meta_data = meta_data
         })
       })
       print("OK")
