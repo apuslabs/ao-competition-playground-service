@@ -9,3 +9,5 @@ src/libs/blueprints/*
 
 .vscode
 .idea/
+
+dist

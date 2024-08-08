@@ -1,15 +1,15 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
+    "target": "ES2020",
+    "module": "CommonJS",
+    "skipDefaultLibCheck": true,
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./scripts",
     "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
   "exclude": ["node_modules", "**/*.spec.ts"]
 }
