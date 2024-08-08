@@ -3,15 +3,6 @@ import { msgResultWrapper, commonSigner } from "./wallet"
 
 const msgResultCommon = msgResultWrapper(commonSigner)
 
-
-async function GetcompetitionPoolLeaderboard() {
-    const result = await msgResultCommon(PoolProcess, {
-        Action: "Get-Leaderboard"
-    })
-    console.log(result)
-}
-
-
 async function Evaluate() {
     const result = await msgResultCommon(PoolProcess, {
         Action: "Evaluate"
@@ -34,7 +25,6 @@ function runTaskAtInterval(task: () => Promise<void>, interval: number) {
 }
 
 const main = async () => {
-    //    const leaderboardInterval = 3 * 1000; // 3秒钟
 
     const evaluateInterval = 60 * 60 * 1000; // 60分钟
     const allocateInterval = 12 * 60 * 60 * 1000; // 12小时
