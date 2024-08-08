@@ -4,6 +4,7 @@ import { msgResultWrapper, commonSigner } from "./wallet"
 const msgResultCommon = msgResultWrapper(commonSigner)
 
 async function Evaluate() {
+    console.log(`Running Evaluate at ${new Date().toISOString()}`);
     const result = await msgResultCommon(PoolProcess, {
         Action: "Evaluate"
     }, 2)
@@ -11,6 +12,7 @@ async function Evaluate() {
 }
 
 async function AllocateRewards() {
+    console.log(`Running AllocateRewards at ${new Date().toISOString()}`);
     const result = await msgResultCommon(PoolProcess, {
         Action: "Allocate-Rewards"
     }, 2)
