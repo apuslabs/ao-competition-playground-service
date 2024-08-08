@@ -9,6 +9,7 @@
     "test": "tests"
   },
   "devDependencies": {
+    "@types/node": "^22.1.0",
     "ts-node": "^10.9.2"
   },
   "scripts": {
