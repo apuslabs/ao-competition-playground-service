@@ -123,7 +123,7 @@ Handlers.add(
             CREATE INDEX IF NOT EXISTS evaluations_reference ON evaluations (inference_reference);
         ]]
 
-        print("OK")
+        print("DB init")
     end
 )
 
@@ -286,7 +286,6 @@ Handlers.add(
       if msg.Data == '' then
         msg.Data = [[ SELECT name FROM sqlite_master WHERE type='table' ]]
       end
-      print('start read DB')
       for item in DB:nrows(msg.Data) do
         -- print(type(item))
         print(item)
@@ -298,39 +297,38 @@ Handlers.add(
   "DEBUG-DB",
   Handlers.utils.hasMatchingTag("Action", "DEBUG-DB"),
   function (msg)
-    print("start debug DB")
+	print("DEBUG-DB")
 
+	print("participants")
     for row in DB:nrows("select count(*) as cnt from participants;") do
-      print("participants Row number" .. Dump(row))
+      print("rows: " .. Dump(row))
     end
-
     for row in DB:nrows("select * from participants;") do
-      print("participants" .. Dump(row))
+      print(Dump(row))
     end
 
-
+	print("datasets")
     for row in DB:nrows("select count(*) as cnt from datasets;") do
-      print("datasets Row number" .. Dump(row))
+      print("rows: " .. Dump(row))
     end
-
     for row in DB:nrows("select * from datasets;") do
-      print("datasets" .. Dump(row))
+      print(Dump(row))
     end
 
+	print("evaluations")
     for row in DB:nrows("select count(*) as cnt from evaluations;") do
-      print("evaluations Row number" .. Dump(row))
+      print("rows: " .. Dump(row))
     end
-
     for row in DB:nrows("select * from evaluations;") do
-        print("evaluations " .. Dump(row))
+        print(Dump(row))
     end
 
+	print("chatGroundEvaluations")
     for row in DB:nrows("select count(*) as cnt from chatGroundEvaluations;") do
-      print("chatGroundEvaluations Row number" .. Dump(row))
+      print("rows: " .. Dump(row))
     end
-
     for row in DB:nrows("select * from chatGroundEvaluations;") do
-        print("chatGroundEvaluations " .. Dump(row))
+        print(Dump(row))
     end
   end
 )
@@ -339,16 +337,14 @@ Handlers.add(
   "Get-Datasets",
    Handlers.utils.hasMatchingTag("Action", "Get-Datasets"),
    function (msg)
-      print("start!")
+	print("Get-Datasets")
       local rsp = {}
       local cnt = 0
       for row in DB:nrows(SQL.FIND_ALL_PARTICIPANTS) do
           cnt = cnt + 1
-          print(type(row))
           rsp[cnt] = row
       end
-      print(Dump(rsp))
-      print(type(rsp))
+	  print(Dump(rsp))
       ao.send({
         Target = msg.From,
         Action = "Get-Datasets-Response",
@@ -367,7 +363,6 @@ Handlers.add(
     local question = data.question
     local token = tonumber(data.token)
 
-    print("start")
     ChatQuestionReference = ChatQuestionReference + 1
     DB:exec(string.format(SQL.INSERT_CHAT_GROUND_EVALUATION, hash, FixTextBeforeSaveDB(question), token, tostring(ChatQuestionReference)))
     local inferReference = SendEmeddingRequest(hash, question)
@@ -391,7 +386,7 @@ function SendEmeddingRequest(datasetHash, question)
         dataset_hash = datasetHash,
         prompt = question
     })
-    print(ragData)
+	print("SendEmeddingRequest: " .. ragData)
     ao.send({
       Target = EmbeddingProcessId,
       Data = ragData,
@@ -407,20 +402,21 @@ Handlers.add(
   "Evaluate",
   Handlers.utils.hasMatchingTag("Action", "Evaluate"),
   function (msg)
+	print("Start Evaluate")
+	print("Msg: " .. Dump(msg))
     local limit = tonumber(msg.Data) or 1
     if limit > 2 then
       limit = 2
     end
-    print("start evaluate".. Dump(msg))
     for row in DB:nrows(string.format(SQL.GET_UNEVALUATED_EVALUATIONS, limit)) do
-      print("Row ".. Dump(row))
+      print("Row: ".. Dump(row))
       local reference = SendEmeddingRequest(row.participant_dataset_hash, row.question)
-      print(reference)
+      print("Reference: " .. reference)
       local result = DB:exec(string.format(
         SQL.START_EVALUATION,
         reference, row.id
       ))
-      print('result ' .. result)
+	  print("DB exec result: " .. result)
     end
   end
 )
@@ -454,14 +450,13 @@ Handlers.add(
   "Search-Prompt-Response",
   Handlers.utils.hasMatchingTag("Action", "Search-Prompt-Response"),
   function (msg)
-      print(Dump(msg))
-      print(type(msg))
+	print("Search-Prompt-Response")
+	print("Msg: " .. Dump(msg))
       local isEvaluation = false
       local evaluationReference = msg.Tags.Reference
 
       local promptFromEmdedding = 'Null'
       if(msg.Data ~= nil and msg.Data ~= 'Null') then
-        print(Dump(msg.Data) .. type(msg.Data))
         promptFromEmdedding = msg.Data
       end
       -- print(type(promptFromEmdedding))
@@ -490,7 +485,6 @@ Handlers.add(
       end
 
       if isEvaluation == false then
-          print("Send chat-ground request: ".. evaluationReference)
           SendUserChatGroundRequest(promptFromEmdedding, evaluationReference)
       end
   end
@@ -500,11 +494,12 @@ Handlers.add(
   "Inference-Response",
   Handlers.utils.hasMatchingTag("Action", "Inference-Response"),
   function (msg)
+	print("Inference-Response")
+	print("Msg: " .. Dump(msg))
      local workType = msg.Tags.WorkerType
      local reference = msg.Tags.Reference
 
      if workType == 'Evaluate' then
-      print(Dump(msg))
       local data = msg.Data or "-1"
       local score = tonumber(data)
       DB:exec(string.format(SQL.UPDATE_SCORE, score, FixTextBeforeSaveDB(reference)))
@@ -521,14 +516,15 @@ Handlers.add(
 -- end
 
 function SendUserChatGroundRequest(prompt, evaluationReference)
+	print("SendUserChatGroundRequest(" .. evaluationReference .. "): " .. prompt)
   -- DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_PROMPT, prompt))
   for row in DB:nrows(string.format(SQL.FIND_CHAT_GROUND_EVALUATION_BY_INFER_REFERENCE, evaluationReference)) do
-    print("SendUserChatGroundRequest")
     local body = {
         question = row.question,
         context = prompt
     }
 
+	print("InferenceMessage(" .. evaluationReference .. "): " .. json.encode(body))
     Send({
       Target = LLMProcessId,
       Tags = {
@@ -557,7 +553,7 @@ Handlers.add(
   end,
   function (msg)
     PRIZE_BALANCE = tonumber(msg.Tags.Balance)
-    print(tostring(PRIZE_BALANCE) .. ' type ' .. type(PRIZE_BALANCE))
+	print("Balance-Response: " .. PRIZE_BALANCE)
   end
 )
 
@@ -574,10 +570,11 @@ Handlers.add(
   "Load-Dataset",
   Handlers.utils.hasMatchingTag("Action", "Load-Dataset"),
   function(msg)
+	print("Load-Dataset")
     local data = msg.Data
     assert(data ~= nil, "Data is nil")
     local DataSets = json.decode(data)
-    print(Dump(DataSets))
+	print("DataSets: " .. Dump(DataSets))
     for _, DataSetItem in ipairs(DataSets) do
       -- print('DataSetItem: ' .. Dump(DataSetItem))
       local context = FixTextBeforeSaveDB(DataSetItem.context)
@@ -586,7 +583,7 @@ Handlers.add(
       local result= DB:exec(query)
       -- print(query .. 'result ' .. result)
     end
-    print('ok')
+	print("Load-Dataset END")
   end
 )
 
@@ -598,7 +595,8 @@ Handlers.add(
       msg.From == TokenProcessId
   end,
   function (msg)
-    print("msg Tags:" .. Dump(msg))
+	print("Create-Pool")
+	print("Msg: " .. Dump(msg))
     local title = msg.Tags["X-Title"]
     local description = msg.Tags["X-Description"]
     local prizePool = msg.Tags["X-Prize-Pool"]
@@ -610,14 +608,14 @@ Handlers.add(
       prizePool = prizePool,
       metaData = metaData
     }
-    print(CompetitonPools)
+	print("CompetitonPools: " .. Dump(CompetitonPools))
     ao.send({
         Target = msg.From,
         Tags = {
           { name = "Action", value = "Create-Pool-Response" },
           { name = "status", value = "200" }
         }})
-      print("OK")
+		print("Create-Pool END")
   end
 )
 
@@ -661,7 +659,7 @@ Handlers.add(
           { name = "Action", value = "Join-Pool-Response" },
           { name = "status", value = "200" }
         }})
-    print("OK")
+		print("Join-Pool END")
   end
 )
 
@@ -697,7 +695,7 @@ Handlers.add(
             meta_data = meta_data
         })
       })
-      print("OK")
+	  print("Get-Pool END")
   end
 )
 
