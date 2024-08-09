@@ -5,25 +5,23 @@ const msgResultCommon = msgResultWrapper(commonSigner);
 
 async function Evaluate() {
   console.log(`Running Evaluate at ${new Date().toISOString()}`);
-  const result = await msgResultCommon(
+  await msgResultCommon(
     PoolProcess,
     {
       Action: "Evaluate",
     },
-    9
+    18
   );
-  console.log(result);
 }
 
 async function AllocateRewards() {
   console.log(`Running AllocateRewards at ${new Date().toISOString()}`);
-  const result = await msgResultCommon(
+  await msgResultCommon(
     PoolProcess,
     {
       Action: "Allocate-Rewards",
     }
   );
-  console.log(result);
 }
 
 function runTaskAtInterval(task: () => Promise<void>, interval: number) {
