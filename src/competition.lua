@@ -144,7 +144,7 @@ local SQL = {
       	INSERT INTO evaluations (participant_id, author, participant_dataset_hash, dataset_id, question, correct_answer) VALUES('%d', '%s', '%s', '%d', '%s', '%s');
     ]],
 	ADD_REWARDED_TOKENS = [[
-      	UPDATE participants SET rewarded_tokens = rewarded_tokens + '%d' WHERE author = '%s' AND participant_dataset_hash = '%s';
+      	UPDATE participants SET rewarded_tokens = '%d' WHERE author = '%s' AND participant_dataset_hash = '%s';
     ]],
 	FIND_ALL_DATASET = [[
       	SELECT id, question, expected_response FROM datasets;
@@ -726,13 +726,14 @@ Handlers.add(
 			rank = rank + 1
 			local amount = computeReward(rank)
 			print("Author: " .. item.author .. " Rank: " .. rank .. "Score: " .. item.total_score .. " Reward: " .. amount)
-			if PRIZE_BALANCE < amount then
-				print("Balance is not enough, balance: " .. PRIZE_BALANCE .. " want: " .. amount)
-			elseif amount > 0 then
-				PRIZE_BALANCE = PRIZE_BALANCE - amount
-				transfer(item.author, amount)
-				DB:exec(string.format(SQL.ADD_REWARDED_TOKENS, amount, item.author, item.participant_dataset_hash))
-			end
+			-- if PRIZE_BALANCE < amount then
+			-- 	print("Balance is not enough, balance: " .. PRIZE_BALANCE .. " want: " .. amount)
+			-- elseif amount > 0 then
+			-- 	PRIZE_BALANCE = PRIZE_BALANCE - amount
+			DB:exec(string.format(SQL.ADD_REWARDED_TOKENS, amount, item.author, item.participant_dataset_hash))
+				-- TODO: transfer after competition ended
+				-- transfer(item.author, amount)
+			-- end
 		end
 
 		ao.send({
@@ -742,8 +743,6 @@ Handlers.add(
 				{ name = "status", value = "200" }
 			}
 		})
-
-		print("OK")
 	end
 )
 
