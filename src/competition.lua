@@ -176,35 +176,19 @@ local SQL = {
             rank;
 	]],
 	FIND_USER_RANK = [[
-        WITH RankedScores AS (
+		WITH RankedScores AS (
             SELECT
-                e.participant_id AS participant_id,
-                p.upload_dataset_name AS dataset_name,
-                p.upload_dataset_time AS dataset_upload_time,
-                d.id AS dataset_id,
-                p.author,
-                p.rewarded_tokens AS granted_reward,
-                SUM(e.prediction_sas_score) AS total_score,
-                COUNT(e.prediction_sas_score) AS count,
-                SUM(e.prediction_sas_score) / COUNT(e.prediction_sas_score) AS averageScore,
-                ROW_NUMBER() OVER (ORDER BY SUM(e.prediction_sas_score) / COUNT(e.prediction_sas_score) DESC) AS rank
+				p.author,
+                ROW_NUMBER() OVER (ORDER BY SUM(e.prediction_sas_score) DESC) AS rank
             FROM
-                evaluations e
+                participants p
             JOIN
-                participants p ON e.participant_id = p.id
-            JOIN
-                datasets d ON e.dataset_id = d.id
+                evaluations e ON e.participant_id = p.id
             GROUP BY
-                e.participant_id
+                p.id
         )
         SELECT
-            rank,
-            dataset_id,
-            dataset_name,
-            dataset_upload_time,
-            averageScore AS score,
-            author,
-            granted_reward
+            rank
         FROM
             RankedScores
         WHERE
@@ -695,9 +679,7 @@ Handlers.add(
 		local tempReward = 0
 
 		local from = ParseMsgFrom(msg)
-		print("from " .. Dump(from))
 
-		print("Get-Dashboard begin")
 		for row in DB:nrows(SQL.TOTAL_PARTICIPANT_REWARDED_TOKENS) do
 			tempParticipants = row.total_participants
 			tempRewardedTokens = row.total_rewarded_tokens
@@ -705,15 +687,13 @@ Handlers.add(
 
 		for row in DB:nrows(string.format(SQL.FIND_USER_REWARDED_TOKENS, from)) do
 			tempReward = row.rewardedTokens
-			print("tempReward" .. Dump(tempReward))
 		end
 
 		for row in DB:nrows(string.format(SQL.FIND_USER_RANK, from)) do
 			tempRank = row.rank
-			print("temp Rank" .. Dump(tempRank))
 		end
 
-		print("Get-Dashboard END")
+		print("Get-Dashboard(" .. from .. "): " .. Dump(row))
 		ao.send({
 			Target = from,
 			Tags = {
@@ -727,7 +707,6 @@ Handlers.add(
 				my_reward = tempReward
 			})
 		})
-		print("OK")
 	end
 )
 
