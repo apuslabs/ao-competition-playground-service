@@ -25,7 +25,7 @@ Handlers.add(
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				author TEXT NOT NULL,
 				upload_dataset_name TEXT NOT NULL,
-				upload_dataset_time DATETIME,
+				upload_dataset_time INTEGER,
 				participant_dataset_hash TEXT,
 				rewarded_tokens INTEGER DEFAULT 0,
 				UNIQUE(participant_dataset_hash)
@@ -87,7 +87,7 @@ local SQL = {
      	SELECT * FROM participants WHERE participant_dataset_hash = '%s';
     ]],
 	INSERT_PARTICIPANTS = [[
-    	INSERT INTO participants (author, upload_dataset_name, participant_dataset_hash) VALUES('%s', '%s', '%s');
+    	INSERT INTO participants (author, upload_dataset_name, participant_dataset_hash, upload_dataset_time) VALUES('%s', '%s', '%s', %d);
     ]],
 	INSERT_EVALUATIONS = [[
       	INSERT INTO evaluations (participant_id, author, participant_dataset_hash, dataset_id, question, correct_answer) VALUES('%d', '%s', '%s', '%d', '%s', '%s');
@@ -155,7 +155,7 @@ local SQL = {
 				p.participant_dataset_hash AS dataset_id,
 				p.rewarded_tokens AS granted_reward,
 				SUM(e.prediction_sas_score) AS total_score,
-                ROW_NUMBER() OVER (ORDER BY SUM(e.prediction_sas_score) DESC) AS rank
+                ROW_NUMBER() OVER (ORDER BY SUM(e.prediction_sas_score) DESC, p.upload_dataset_time) AS rank
             FROM
                 participants p
             JOIN
@@ -179,7 +179,7 @@ local SQL = {
 		WITH RankedScores AS (
             SELECT
 				p.author,
-                ROW_NUMBER() OVER (ORDER BY SUM(e.prediction_sas_score) DESC) AS rank
+                ROW_NUMBER() OVER (ORDER BY SUM(e.prediction_sas_score) DESC, p.upload_dataset_time) AS rank
             FROM
                 participants p
             JOIN
@@ -562,7 +562,8 @@ Handlers.add(
 			SQL.INSERT_PARTICIPANTS,
 			author,
 			datasetName,
-			datasetHash
+			datasetHash,
+			msg.Timestamp
 		))
 		initBenchmarkRecords(author, datasetHash)
 
@@ -633,16 +634,14 @@ Handlers.add(
 	"Allocate-Rewards",
 	Handlers.utils.hasMatchingTag("Action", "Allocate-Rewards"),
 	function(msg)
-		local rank = 0
-		for item in DB:nrows(SQL.TOTAL_SCORES_BY_PARTICIPANT) do
-			rank = rank + 1
-			local amount = computeReward(rank)
-			print("Author: " .. item.author .. " Rank: " .. rank .. "Score: " .. item.total_score .. " Reward: " .. amount)
+		for item in DB:nrows(SQL.TOTAL_PARTICIPANTS_RANK) do
+			local amount = computeReward(item.rank)
+			print(json.encode(item))
 			-- if PRIZE_BALANCE < amount then
 			-- 	print("Balance is not enough, balance: " .. PRIZE_BALANCE .. " want: " .. amount)
 			-- elseif amount > 0 then
 			-- 	PRIZE_BALANCE = PRIZE_BALANCE - amount
-			DB:exec(string.format(SQL.ADD_REWARDED_TOKENS, amount, item.author, item.participant_dataset_hash))
+			DB:exec(string.format(SQL.ADD_REWARDED_TOKENS, amount, item.author, item.dataset_id))
 				-- TODO: transfer after competition ended
 				-- transfer(item.author, amount)
 			-- end
