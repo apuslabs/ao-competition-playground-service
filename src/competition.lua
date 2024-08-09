@@ -369,7 +369,7 @@ Handlers.add(
 
     print("start")
     ChatQuestionReference = ChatQuestionReference + 1
-    DB:exec(string.format(SQL.INSERT_CHAT_GROUND_EVALUATION, hash, question, token, tostring(ChatQuestionReference)))
+    DB:exec(string.format(SQL.INSERT_CHAT_GROUND_EVALUATION, hash, FixTextBeforeSaveDB(question), token, tostring(ChatQuestionReference)))
     local inferReference = SendEmeddingRequest(hash, question)
     DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_INFERENCE, inferReference, ChatQuestionReference))
     ao.send({
@@ -389,7 +389,7 @@ function SendEmeddingRequest(datasetHash, question)
     -- local ragData = string.format('{"dataset_hash": "%s","prompt":"%s"}', datasetHash, question)
     local ragData = json.encode({
         dataset_hash = datasetHash,
-        prompt = question:gsub("'", "")
+        prompt = question
     })
     print(ragData)
     ao.send({
@@ -443,7 +443,7 @@ Handlers.add(
     ao.send({
         Target = msg.From,
         Tags = {
-          { name = "Action", value = "Get-Chat-Answer-Rresponse" },
+          { name = "Action", value = "Get-Chat-Answer-Response" },
           { name = "status", value = tostring(statuCode) }},
         Data = rsp
       })
@@ -507,9 +507,9 @@ Handlers.add(
       print(Dump(msg))
       local data = msg.Data or "-1"
       local score = tonumber(data)
-      DB:exec(string.format(SQL.UPDATE_SCORE, score, reference))
+      DB:exec(string.format(SQL.UPDATE_SCORE, score, FixTextBeforeSaveDB(reference)))
      elseif  workType == 'Chat' then
-        DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_ANSWER, msg.Data, reference))
+        DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_ANSWER, FixTextBeforeSaveDB(msg.Data), reference))
      end
   end
 )
@@ -581,7 +581,7 @@ Handlers.add(
     for _, DataSetItem in ipairs(DataSets) do
       -- print('DataSetItem: ' .. Dump(DataSetItem))
       local context = FixTextBeforeSaveDB(DataSetItem.context)
-      local response = FixTextBeforeSaveDB( DataSetItem.response[1])
+      local response = FixTextBeforeSaveDB(DataSetItem.response[1])
       local query = string.format(SQL.INSERT_DATASET,context,response)
       local result= DB:exec(query)
       -- print(query .. 'result ' .. result)
