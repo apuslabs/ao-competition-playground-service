@@ -171,7 +171,7 @@ local SQL = {
       	UPDATE evaluations SET prediction_sas_score = '%d' WHERE inference_reference = '%s';
     ]],
 	TOTAL_SCORES_BY_PARTICIPANT = [[
-      	SELECT author, participant_dataset_hash, SUM(prediction_sas_score)/ COUNT(*) as averageScore from evaluations where prediction_sas_score IS NOT NULL GROUP BY author, participant_dataset_hash ORDER BY averageScore DESC;
+      	SELECT author, participant_dataset_hash, SUM(prediction_sas_score) as total_score from evaluations where prediction_sas_score IS NOT NULL GROUP BY author, participant_dataset_hash ORDER BY total_score DESC;
     ]],
 	INSERT_CHAT_GROUND_EVALUATION = [[
       	INSERT INTO chatGroundEvaluations(dataset_hash, question, token, client_reference) VALUES('%s', '%s', '%d', '%s');
@@ -405,11 +405,11 @@ Handlers.add(
 	Handlers.utils.hasMatchingTag("Action", "Evaluate"),
 	function(msg)
 		print("Start Evaluate")
-		print("Msg: " .. Dump(msg))
+		print("Msg: " .. Dump(msg.Tags) .. Dump(msg.Data))
 		local limit = tonumber(msg.Data) or 1
-		if limit > 2 then
-			limit = 2
-		end
+		-- if limit > 2 then
+		-- 	limit = 2
+		-- end
 		for row in DB:nrows(string.format(SQL.GET_UNEVALUATED_EVALUATIONS, limit)) do
 			print("Row: " .. Dump(row))
 			local reference = SendEmeddingRequest(row.participant_dataset_hash, row.question)
@@ -453,7 +453,7 @@ Handlers.add(
 	Handlers.utils.hasMatchingTag("Action", "Search-Prompt-Response"),
 	function(msg)
 		print("Search-Prompt-Response")
-		print("Msg: " .. Dump(msg))
+		print("Msg: " .. Dump(msg.Tags) .. Dump(msg.Data))
 		local isEvaluation = false
 		local evaluationReference = msg.Tags.Reference
 
@@ -496,7 +496,7 @@ Handlers.add(
 	Handlers.utils.hasMatchingTag("Action", "Inference-Response"),
 	function(msg)
 		print("Inference-Response")
-		print("Msg: " .. Dump(msg))
+		print("Msg: " .. Dump(msg.Tags) .. Dump(msg.Data))
 		local workType = msg.Tags.WorkerType
 		local reference = msg.Tags.Reference
 
@@ -517,7 +517,7 @@ Handlers.add(
 -- end
 
 function SendUserChatGroundRequest(prompt, evaluationReference)
-	print("SendUserChatGroundRequest(" .. evaluationReference .. "): " .. prompt)
+	print("SendUserChatGroundRequest(" .. evaluationReference .. ")")
 	-- DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_PROMPT, prompt))
 	for row in DB:nrows(string.format(SQL.FIND_CHAT_GROUND_EVALUATION_BY_INFER_REFERENCE, evaluationReference)) do
 		local body = {
@@ -596,7 +596,7 @@ Handlers.add(
 	end,
 	function(msg)
 		print("Create-Pool")
-		print("Msg: " .. Dump(msg))
+		print("Msg: " .. Dump(msg.Tags) .. Dump(msg.Data))
 		local title = msg.Tags["X-Title"]
 		local description = msg.Tags["X-Description"]
 		local prizePool = msg.Tags["X-Prize-Pool"]
@@ -723,18 +723,13 @@ Handlers.add(
 	function(msg)
 		local rank = 0
 		for item in DB:nrows(SQL.TOTAL_SCORES_BY_PARTICIPANT) do
-			print(Dump(item))
 			rank = rank + 1
 			local amount = computeReward(rank)
-			print(Dump(amount))
-			print(type(amount))
-			print(type(PRIZE_BALANCE))
-			-- amount = computeNeedRewarded(amount, item.author, item.participant_dataset_hash)
+			print("Author: " .. item.author .. " Rank: " .. rank .. "Score: " .. item.total_score .. " Reward: " .. amount)
 			if PRIZE_BALANCE < amount then
 				print("Balance is not enough, balance: " .. PRIZE_BALANCE .. " want: " .. amount)
 			elseif amount > 0 then
 				PRIZE_BALANCE = PRIZE_BALANCE - amount
-				print("reward " .. amount .. " tokens  to " .. item.author)
 				transfer(item.author, amount)
 				DB:exec(string.format(SQL.ADD_REWARDED_TOKENS, amount, item.author, item.participant_dataset_hash))
 			end
