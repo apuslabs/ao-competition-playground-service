@@ -11,57 +11,6 @@ LLMProcessId = 'jaSRY9nVTdUE48QMg9SMuKbW8T9yk8Vi1FNZpau9M2A'
 LLamaProcessId = "lzNUGNUZ0rczcr7zh65ZPXc1XQ-XURk4zpuQRa4vZXk"
 Phi3Template = [[<|system|>%s<|end|><|user|>%s<|end|><|assistant|>]]
 
-SasSystemPrompt = [[
-# User Input
-The input data will be in JSON format, like `{"question": "xxx", "context": "xxx", "expected_response": "xxx"}`.
-
-1. The "question" field represents my question.
-2. The "context" field will contain several lines in the format `Context: <context> Meta: <meta>, score: <score>`. For each line:
-    * "score" indicates how relevant the context is to the question.
-    * "meta" represents metadata for the context.
-    * "context" is the context content. Note that the "Context" field may be `null`, indicating no context for the question.
-3. "expected_response" represents my standard answer for the question.
-
-# Steps
-
-1. Pretend you are Sam Williams, the founder of Arweave, to understand the topic we're discussing based on the question and context.
-2. Provide your answer to the question.
-3. Pretend you are a robot. Compare your answer with the expected response and return a score between 0-100, representing the semantic similarity between the two.
-
-# Output
-
-1. Return the result in JSON format, like: `{"score": "xxx"}`.
-2. The score should be between 0-100, where:
-    * 0 means that the two sentences have no similarity.
-    * 100 represents the two sentences almost the same.
-3. Even if the Context is null, you also need to return the score based on your existing knowledge.
-]]
-
-ChatGroundPrompt = [[
-# Role
-You will play the role of Sam Williams, founder of Arweave, and answer my question based on the context I provide.
-
-# User Input
-The input data will be in JSON format, like `{"question": "xxx", "context": "xxx"}`.
-
-1. The "question" field represents my question.
-2. The "context" field will contain several lines in the format `Context: <context> Meta: <meta>, score: <score>`. For each line:
-    * "score" indicates how relevant the context is to the question.
-    * "meta" represents metadata for the context.
-    * "context" is the context content. Note that the "Context" field may be `null`, indicating no context for the question.
-
-# Steps
-
-1. Pretend you are Sam Williams, founder of Arweave, discussing yourself, blockchain, and the Arweave ecosystem. Understand the topic we're discussing based on the question and context.
-2. Provide your answer to the question.
-
-# Output
-1. Return as json format, like: `{"answer": "xxx"}`.
-2. The answer should be concise, ideally within 30 words.
-3. Even if the Context is null, you also need to return an answer based on your existing knowledge.
-]]
-
-
 PRIZE_BALANCE = PRIZE_BALANCE or 0
 CompetitonPoolId = 1001
 
@@ -201,31 +150,24 @@ local SQL = {
 	TOTAL_PARTICIPANTS_RANK = [[
         WITH RankedScores AS (
             SELECT
-                e.participant_id AS participant_id,
-                p.upload_dataset_name AS dataset_name,
-                p.upload_dataset_time AS dataset_upload_time,
-                d.id AS dataset_id,
-                p.author,
-                p.rewarded_tokens AS granted_reward,
-                SUM(e.prediction_sas_score) AS total_score,
-                COUNT(e.prediction_sas_score) AS count,
-                SUM(e.prediction_sas_score) / COUNT(e.prediction_sas_score) AS averageScore,
-                ROW_NUMBER() OVER (ORDER BY SUM(e.prediction_sas_score) / COUNT(e.prediction_sas_score) DESC) AS rank
+				p.author,
+				p.upload_dataset_name AS dataset_name,
+				p.participant_dataset_hash AS dataset_id,
+				p.rewarded_tokens AS granted_reward,
+				SUM(e.prediction_sas_score) AS total_score,
+                ROW_NUMBER() OVER (ORDER BY SUM(e.prediction_sas_score) DESC) AS rank
             FROM
-                evaluations e
+                participants p
             JOIN
-                participants p ON e.participant_id = p.id
-            JOIN
-                datasets d ON e.dataset_id = d.id
+                evaluations e ON e.participant_id = p.id
             GROUP BY
-                e.participant_id
+                p.id
         )
         SELECT
             rank,
             dataset_id,
             dataset_name,
-            dataset_upload_time,
-            averageScore AS score,
+            total_score AS score,
             author,
             granted_reward
         FROM
@@ -300,21 +242,21 @@ Handlers.add(
 	function(msg)
 		print("DEBUG-DB")
 
-		print("participants")
-		for row in DB:nrows("select count(*) as cnt from participants;") do
-			print("rows: " .. Dump(row))
-		end
-		for row in DB:nrows("select * from participants;") do
-			print(Dump(row))
-		end
+		-- print("participants")
+		-- for row in DB:nrows("select count(*) as cnt from participants;") do
+		-- 	print("rows: " .. Dump(row))
+		-- end
+		-- for row in DB:nrows("select * from participants;") do
+		-- 	print(Dump(row))
+		-- end
 
-		print("datasets")
-		for row in DB:nrows("select count(*) as cnt from datasets;") do
-			print("rows: " .. Dump(row))
-		end
-		for row in DB:nrows("select * from datasets;") do
-			print(Dump(row))
-		end
+		-- print("datasets")
+		-- for row in DB:nrows("select count(*) as cnt from datasets;") do
+		-- 	print("rows: " .. Dump(row))
+		-- end
+		-- for row in DB:nrows("select * from datasets;") do
+		-- 	print(Dump(row))
+		-- end
 
 		print("evaluations")
 		for row in DB:nrows("select count(*) as cnt from evaluations;") do
@@ -324,13 +266,13 @@ Handlers.add(
 			print(Dump(row))
 		end
 
-		print("chatGroundEvaluations")
-		for row in DB:nrows("select count(*) as cnt from chatGroundEvaluations;") do
-			print("rows: " .. Dump(row))
-		end
-		for row in DB:nrows("select * from chatGroundEvaluations;") do
-			print(Dump(row))
-		end
+		-- print("chatGroundEvaluations")
+		-- for row in DB:nrows("select count(*) as cnt from chatGroundEvaluations;") do
+		-- 	print("rows: " .. Dump(row))
+		-- end
+		-- for row in DB:nrows("select * from chatGroundEvaluations;") do
+		-- 	print(Dump(row))
+		-- end
 	end
 )
 
@@ -510,12 +452,6 @@ Handlers.add(
 	end
 )
 
--- local function extractAnswer(jsonString)
---   local pattern = '{"answer":%s*"([^"]-)"%s*}'
---   local answer = string.match(jsonString, pattern)
---   return answer
--- end
-
 function SendUserChatGroundRequest(prompt, evaluationReference)
 	print("SendUserChatGroundRequest(" .. evaluationReference .. ")")
 	-- DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_PROMPT, prompt))
@@ -535,14 +471,6 @@ function SendUserChatGroundRequest(prompt, evaluationReference)
 			},
 			Data = json.encode(body),
 		})
-
-		-- local allPrompt = string.format(Phi3Template, ChatGroundPrompt, json.encode(body))
-		-- print(allPrompt)
-		-- Llama.run(allPrompt, row.token, function (response)
-		--     print(Dump(response))
-		--     local answer = extractAnswer(response)
-		--     DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_ANSWER, answer, evaluationReference))
-		-- end)
 	end
 end
 
@@ -808,20 +736,11 @@ Handlers.add(
 	Handlers.utils.hasMatchingTag("Action", "Get-Leaderboard"),
 	function(msg)
 		local from = ParseMsgFrom(msg)
-		print("Get-Leaderboard " .. Dump(from))
 
 		local data = {}
 		local query = SQL.TOTAL_PARTICIPANTS_RANK
 		for row in DB:nrows(query) do
-			table.insert(data, {
-				rank = row.rank,
-				dataset_id = row.dataset_id,
-				dataset_name = row.dataset_name,
-				dataset_upload_time = row.dataset_upload_time,
-				score = row.score,
-				author = row.author,
-				granted_reward = row.granted_reward
-			})
+			table.insert(data, row)
 		end
 
 		ao.send({
@@ -832,7 +751,6 @@ Handlers.add(
 			},
 			Data = json.encode(data)
 		})
-		print("OK")
 	end
 )
 
