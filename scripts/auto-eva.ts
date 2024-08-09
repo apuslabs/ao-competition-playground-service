@@ -4,27 +4,26 @@ import { msgResultWrapper, commonSigner } from "./wallet";
 const msgResultCommon = msgResultWrapper(commonSigner);
 
 async function Evaluate() {
-    console.log(`Running Evaluate at ${new Date().toISOString()}`);
-    const result = await msgResultCommon(
-        PoolProcess,
-        {
-            Action: "Evaluate",
-        },
-        2
-    );
-    console.log(result);
+  console.log(`Running Evaluate at ${new Date().toISOString()}`);
+  const result = await msgResultCommon(
+    PoolProcess,
+    {
+      Action: "Evaluate",
+    },
+    9
+  );
+  console.log(result);
 }
 
 async function AllocateRewards() {
-    console.log(`Running AllocateRewards at ${new Date().toISOString()}`);
-    const result = await msgResultCommon(
-        PoolProcess,
-        {
-            Action: "Allocate-Rewards",
-        },
-        2
-    );
-    console.log(result);
+  console.log(`Running AllocateRewards at ${new Date().toISOString()}`);
+  const result = await msgResultCommon(
+    PoolProcess,
+    {
+      Action: "Allocate-Rewards",
+    }
+  );
+  console.log(result);
 }
 
 function runTaskAtInterval(task: () => Promise<void>, interval: number) {
@@ -35,7 +34,7 @@ function runTaskAtInterval(task: () => Promise<void>, interval: number) {
 }
 
 const evaluateInterval = 60 * 60 * 1000; // 60分钟
-const allocateInterval = 12 * 60 * 60 * 1000; // 12小时
+const allocateInterval = 60 * 60 * 1000; // 60分钟
 
 runTaskAtInterval(Evaluate, evaluateInterval);
 runTaskAtInterval(AllocateRewards, allocateInterval);
