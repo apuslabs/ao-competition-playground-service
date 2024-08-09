@@ -7,6 +7,7 @@ DB = DB or nil
 CompetitonPools = CompetitonPools or {}
 TokenProcessId = "SYvALuV_pYI2punTt_Qy-8jrFFTGNEkY7mgGGWZXxCM"
 EmbeddingProcessId = "hMEUOgWi97d9rGT-lHNCbm937bTypMq7qxMWeaUnMLo"
+LLMProcessId = 'jaSRY9nVTdUE48QMg9SMuKbW8T9yk8Vi1FNZpau9M2A'
 LLamaProcessId = "lzNUGNUZ0rczcr7zh65ZPXc1XQ-XURk4zpuQRa4vZXk"
 Phi3Template = [[<|system|>%s<|end|><|user|>%s<|end|><|assistant|>]]
 
@@ -167,7 +168,7 @@ local SQL = {
       SELECT * FROM evaluations WHERE inference_reference = '%s';
     ]],
     UPDATE_SCORE = [[
-      UPDATE evaluations SET prediction_sas_score = '%s' WHERE inference_reference = '%s';
+      UPDATE evaluations SET prediction_sas_score = '%d' WHERE inference_reference = '%s';
     ]],
     TOTAL_SCORES_BY_PARTICIPANT = [[
       SELECT author, participant_dataset_hash, SUM(prediction_sas_score)/ COUNT(*) as averageScore from evaluations where prediction_sas_score IS NOT NULL GROUP BY author, participant_dataset_hash ORDER BY averageScore DESC;
@@ -368,7 +369,7 @@ Handlers.add(
 
     print("start")
     ChatQuestionReference = ChatQuestionReference + 1
-    DB:exec(string.format(SQL.INSERT_CHAT_GROUND_EVALUATION, hash, question, token, tostring(ChatQuestionReference)))
+    DB:exec(string.format(SQL.INSERT_CHAT_GROUND_EVALUATION, hash, FixTextBeforeSaveDB(question), token, tostring(ChatQuestionReference)))
     local inferReference = SendEmeddingRequest(hash, question)
     DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_INFERENCE, inferReference, ChatQuestionReference))
     ao.send({
@@ -388,7 +389,7 @@ function SendEmeddingRequest(datasetHash, question)
     -- local ragData = string.format('{"dataset_hash": "%s","prompt":"%s"}', datasetHash, question)
     local ragData = json.encode({
         dataset_hash = datasetHash,
-        prompt = question:gsub("'", "")
+        prompt = question
     })
     print(ragData)
     ao.send({
@@ -442,7 +443,7 @@ Handlers.add(
     ao.send({
         Target = msg.From,
         Tags = {
-          { name = "Action", value = "Get-Chat-Answer-Rresponse" },
+          { name = "Action", value = "Get-Chat-Answer-Response" },
           { name = "status", value = tostring(statuCode) }},
         Data = rsp
       })
@@ -467,23 +468,25 @@ Handlers.add(
 
       for row in DB:nrows(string.format(SQL.GET_EVALUATION_BY_REFERENCE, evaluationReference)) do
           print("Send evaluation request".. evaluationReference)
-          
           isEvaluation = true
-          
           local body = {
             question = row.question:gsub('\'s', ' is'),
             expected_response = row.correct_answer:gsub('\'s', ' is'),
             context = promptFromEmdedding
           }
-          local allPrompt = string.format(Phi3Template, SasSystemPrompt, json.encode(body))
-          print(allPrompt)
-          Llama.run(allPrompt, 8, function(sasScore)
-              print('get scores from Llama')
-              print(Dump(sasScore))
-              print(type(sasScore))
-              -- local rsp = json.decode(sasScore)
-              -- DB:exec(SQL.UPDATE_SCORE, rsp.score, evaluationReference)
-          end)
+          -- local allPrompt = string.format(Phi3Template, SasSystemPrompt, json.encode(body))
+          -- print(allPrompt)
+
+          Send({
+            Target = LLMProcessId,
+            Tags = {
+                Action = "Inference",
+                WorkerType = "Evaluate",
+                Reference = evaluationReference,
+            },
+            Data = json.encode(body),
+          })
+
       end
 
       if isEvaluation == false then
@@ -493,11 +496,29 @@ Handlers.add(
   end
 )
 
-local function extractAnswer(jsonString)
-  local pattern = '{"answer":%s*"([^"]-)"%s*}'
-  local answer = string.match(jsonString, pattern)
-  return answer
-end
+Handlers.add(
+  "Inference-Response",
+  Handlers.utils.hasMatchingTag("Action", "Inference-Response"),
+  function (msg)
+     local workType = msg.Tags.WorkerType
+     local reference = msg.Tags.Reference
+
+     if workType == 'Evaluate' then
+      print(Dump(msg))
+      local data = msg.Data or "-1"
+      local score = tonumber(data)
+      DB:exec(string.format(SQL.UPDATE_SCORE, score, FixTextBeforeSaveDB(reference)))
+     elseif  workType == 'Chat' then
+        DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_ANSWER, FixTextBeforeSaveDB(msg.Data), reference))
+     end
+  end
+)
+
+-- local function extractAnswer(jsonString)
+--   local pattern = '{"answer":%s*"([^"]-)"%s*}'
+--   local answer = string.match(jsonString, pattern)
+--   return answer
+-- end
 
 function SendUserChatGroundRequest(prompt, evaluationReference)
   -- DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_PROMPT, prompt))
@@ -505,16 +526,26 @@ function SendUserChatGroundRequest(prompt, evaluationReference)
     print("SendUserChatGroundRequest")
     local body = {
         question = row.question,
-        prompt = prompt
+        context = prompt
     }
 
-    local allPrompt = string.format(Phi3Template, ChatGroundPrompt, json.encode(body))
-    print(allPrompt)
-    Llama.run(allPrompt, row.token, function (response)
-        print(Dump(response))
-        local answer = extractAnswer(response)
-        DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_ANSWER, answer, evaluationReference))
-    end)
+    Send({
+      Target = LLMProcessId,
+      Tags = {
+         Action = "Inference",
+         WorkerType = "Chat",
+         Reference = evaluationReference,
+      },
+      Data = json.encode(body),
+   })
+
+    -- local allPrompt = string.format(Phi3Template, ChatGroundPrompt, json.encode(body))
+    -- print(allPrompt)
+    -- Llama.run(allPrompt, row.token, function (response)
+    --     print(Dump(response))
+    --     local answer = extractAnswer(response)
+    --     DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_ANSWER, answer, evaluationReference))
+    -- end)
   end
 end
 
@@ -550,7 +581,7 @@ Handlers.add(
     for _, DataSetItem in ipairs(DataSets) do
       -- print('DataSetItem: ' .. Dump(DataSetItem))
       local context = FixTextBeforeSaveDB(DataSetItem.context)
-      local response = FixTextBeforeSaveDB( DataSetItem.response[1])
+      local response = FixTextBeforeSaveDB(DataSetItem.response[1])
       local query = string.format(SQL.INSERT_DATASET,context,response)
       local result= DB:exec(query)
       -- print(query .. 'result ' .. result)
@@ -741,27 +772,28 @@ Handlers.add(
     local tempRank = 0
     local tempReward = 0
 
+    local from = ParseMsgFrom(msg)
+    print("from " .. Dump(from))
+
     print("Get-Dashboard begin")
     for row in DB:nrows(SQL.TOTAL_PARTICIPANT_REWARDED_TOKENS) do
       tempParticipants = row.total_participants
       tempRewardedTokens = row.total_rewarded_tokens
     end
 
-    local sender = msg.Tags["Sender"]
-    print("sender" .. Dump(sender))
-    for row in DB:nrows(string.format(SQL.FIND_USER_REWARDED_TOKENS, sender)) do
+    for row in DB:nrows(string.format(SQL.FIND_USER_REWARDED_TOKENS, from)) do
       tempReward = row.rewardedTokens
       print("tempReward" .. Dump(tempReward))
     end
 
-    for row in DB:nrows(string.format(SQL.FIND_USER_RANK, sender)) do
+    for row in DB:nrows(string.format(SQL.FIND_USER_RANK, from)) do
       tempRank = row.rank
       print("temp Rank" .. Dump(tempRank))
     end
 
     print("Get-Dashboard END")
     ao.send({
-      Target = msg.From,
+      Target = from,
       Tags = {
         { name = "Action", value = "Get-Dashboard-Response" },
         { name = "status", value = "200" }
@@ -781,6 +813,9 @@ Handlers.add(
   "Get-Leaderboard",
   Handlers.utils.hasMatchingTag("Action", "Get-Leaderboard"),
   function(msg)
+    local from = ParseMsgFrom(msg)
+    print("Get-Leaderboard " .. Dump(from))
+
     local data = {}
     local query = SQL.TOTAL_PARTICIPANTS_RANK
     for row in DB:nrows(query) do
@@ -796,7 +831,7 @@ Handlers.add(
     end
 
     ao.send({
-      Target = msg.From,
+      Target = from,
       Tags = {
         { name = "Action", value = "Get-Leaderboard-Response" },
         { name = "status", value = "200" }
@@ -806,3 +841,10 @@ Handlers.add(
     print("OK")
   end
 )
+
+function ParseMsgFrom(msg)
+  if msg.Tags.FromAddress ~= nil then
+    return msg.Tags.FromAddress
+  end
+    return msg.From
+end
