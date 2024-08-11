@@ -319,6 +319,7 @@ function SendEmeddingRequest(datasetHash, question)
 		Target = EmbeddingProcessId,
 		Data = ragData,
 		Tags = {
+			--https://github.com/apuslabs/ao-rag-embedding
 			{ name = "Action",    value = "Search-Prompt" },
 			{ name = "Reference", value = tostring(SearchPromptReference) }
 		}
