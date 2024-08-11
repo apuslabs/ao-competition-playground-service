@@ -1,13 +1,13 @@
 local json = require("json")
 local ao = require('ao')
 local sqlite3 = require("lsqlite3")
-Llama = require("@sam/Llama-Herder")
+--Llama = require("@sam/Llama-Herder")
 
 DB = DB or nil
 CompetitonPools = CompetitonPools or {}
-TokenProcessId = "SYvALuV_pYI2punTt_Qy-8jrFFTGNEkY7mgGGWZXxCM"
-EmbeddingProcessId = "hMEUOgWi97d9rGT-lHNCbm937bTypMq7qxMWeaUnMLo"
-LLMProcessId = 'jaSRY9nVTdUE48QMg9SMuKbW8T9yk8Vi1FNZpau9M2A'
+TokenProcessId = "al1xXXnWnfJD8qyZJvttVGq60z1VPGn4M5y6uCcMBUM"
+EmbeddingProcessId = "jjEkZTRO_tL4BrhMm34TLXM_wg3zoXINK6fIbp3OSUo"
+LLMProcessId = 'tgSFV4I0LvTmGw6RPjY4WZi1mDZ5r_2nt_7SDEjS9Hs'
 LLamaProcessId = "lzNUGNUZ0rczcr7zh65ZPXc1XQ-XURk4zpuQRa4vZXk"
 Phi3Template = [[<|system|>%s<|end|><|user|>%s<|end|><|assistant|>]]
 
