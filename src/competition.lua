@@ -709,6 +709,23 @@ Handlers.add(
 	end
 )
 
+function MoveAuthorToFront(data, authorToMove)
+  -- Find the index of the record with the specified author
+  local indexToMove = nil
+  for i, record in ipairs(data) do
+      if record.author == authorToMove then
+          indexToMove = i
+          break
+      end
+  end
+
+  -- If found, move it to the front
+  if indexToMove then
+      local recordToMove = table.remove(data, indexToMove)
+      table.insert(data, 1, recordToMove)
+  end
+end
+
 Handlers.add(
 	"Get-Leaderboard",
 	Handlers.utils.hasMatchingTag("Action", "Get-Leaderboard"),
@@ -721,6 +738,7 @@ Handlers.add(
 			table.insert(data, row)
 		end
 
+		MoveAuthorToFront(data, from)
 		ao.send({
 			Target = from,
 			Tags = {
