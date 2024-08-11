@@ -198,27 +198,27 @@ local SQL = {
 	]]
 }
 
-Handlers.add(
-	"Fix-DB",
-	Handlers.utils.hasMatchingTag("Action", "Fix-DB"),
-	function(msg)
-		print("DB exex: " .. tostring(DB:exec(msg.Data)))
-	end
-)
+--Handlers.add(
+--	"Fix-DB",
+--	Handlers.utils.hasMatchingTag("Action", "Fix-DB"),
+--	function(msg)
+--		print("DB exex: " .. tostring(DB:exec(msg.Data)))
+--	end
+--)
 
-Handlers.add(
-	"Read-DB",
-	Handlers.utils.hasMatchingTag("Action", "Read-DB"),
-	function(msg)
-		if msg.Data == '' then
-			msg.Data = [[ SELECT name FROM sqlite_master WHERE type='table' ]]
-		end
-		for item in DB:nrows(msg.Data) do
-			-- print(type(item))
-			print(item)
-		end
-	end
-)
+--Handlers.add(
+--	"Read-DB",
+--	Handlers.utils.hasMatchingTag("Action", "Read-DB"),
+--	function(msg)
+--		if msg.Data == '' then
+--			msg.Data = [[ SELECT name FROM sqlite_master WHERE type='table' ]]
+--		end
+--		for item in DB:nrows(msg.Data) do
+--			-- print(type(item))
+--			print(item)
+--		end
+--	end
+--)
 
 Handlers.add(
 	"DEBUG-DB",
@@ -242,13 +242,13 @@ Handlers.add(
 		-- 	print(Dump(row))
 		-- end
 
-		print("evaluations")
-		for row in DB:nrows("select count(*) as cnt from evaluations;") do
-			print("rows: " .. Dump(row))
-		end
-		for row in DB:nrows("select * from evaluations;") do
-			print(Dump(row))
-		end
+		--print("evaluations")
+		--for row in DB:nrows("select count(*) as cnt from evaluations;") do
+		--	print("rows: " .. Dump(row))
+		--end
+		--for row in DB:nrows("select * from evaluations;") do
+		--	print(Dump(row))
+		--end
 
 		-- print("chatGroundEvaluations")
 		-- for row in DB:nrows("select count(*) as cnt from chatGroundEvaluations;") do
