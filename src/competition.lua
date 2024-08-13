@@ -119,9 +119,6 @@ local SQL = {
 	UPDATE_SCORE = [[
       	UPDATE evaluations SET prediction_sas_score = '%d' WHERE inference_reference = '%s';
     ]],
-	TOTAL_SCORES_BY_PARTICIPANT = [[
-      	SELECT author, participant_dataset_hash, SUM(prediction_sas_score) as total_score from evaluations where prediction_sas_score IS NOT NULL GROUP BY author, participant_dataset_hash ORDER BY total_score DESC;
-    ]],
 	INSERT_CHAT_GROUND_EVALUATION = [[
       	INSERT INTO chatGroundEvaluations(dataset_hash, question, token, client_reference) VALUES('%s', '%s', '%d', '%s');
     ]],
@@ -152,10 +149,13 @@ local SQL = {
             SELECT
 				p.author,
 				p.upload_dataset_name AS dataset_name,
+				p.upload_dataset_time AS upload_time,
 				p.participant_dataset_hash AS dataset_id,
 				p.rewarded_tokens AS granted_reward,
 				SUM(e.prediction_sas_score) AS total_score,
-                ROW_NUMBER() OVER (ORDER BY SUM(e.prediction_sas_score) DESC, p.upload_dataset_time) AS rank
+                ROW_NUMBER() OVER (ORDER BY SUM(e.prediction_sas_score) DESC, p.upload_dataset_time) AS rank,
+				COUNT(e.id) AS total_evaluations,
+				SUM(CASE WHEN e.prediction_sas_score IS NOT NULL THEN 1 ELSE 0 END) AS completed_evaluations
             FROM
                 participants p
             JOIN
@@ -167,9 +167,11 @@ local SQL = {
             rank,
             dataset_id,
             dataset_name,
+			upload_time,
             total_score AS score,
             author,
-            granted_reward
+            granted_reward,
+			(CAST(completed_evaluations AS FLOAT) / total_evaluations) AS completion_progress
         FROM
             RankedScores
         ORDER BY
@@ -710,23 +712,6 @@ Handlers.add(
 	end
 )
 
-function MoveAuthorToFront(data, authorToMove)
-  -- Find the index of the record with the specified author
-  local indexToMove = nil
-  for i, record in ipairs(data) do
-      if record.author == authorToMove then
-          indexToMove = i
-          break
-      end
-  end
-
-  -- If found, move it to the front
-  if indexToMove then
-      local recordToMove = table.remove(data, indexToMove)
-      table.insert(data, 1, recordToMove)
-  end
-end
-
 Handlers.add(
 	"Get-Leaderboard",
 	Handlers.utils.hasMatchingTag("Action", "Get-Leaderboard"),
@@ -738,8 +723,8 @@ Handlers.add(
 		for row in DB:nrows(query) do
 			table.insert(data, row)
 		end
+		print(data)
 
-		MoveAuthorToFront(data, from)
 		ao.send({
 			Target = from,
 			Tags = {

@@ -11,3 +11,5 @@ src/libs/blueprints/*
 .idea/
 
 dist
+
+.DS_Store
