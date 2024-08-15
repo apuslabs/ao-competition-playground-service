@@ -621,8 +621,10 @@ Reward = { 35000, 20000, 10000, 5000, 5000, 5000, 5000, 5000, 5000, 5000 }
 local function computeReward(rank)
 	if rank <= 10 then
 		return Reward[rank]
-	else
+	elseif rank <=200 then
 		return 300
+	else
+		return 0
 	end
 end
 
