@@ -283,6 +283,52 @@ Handlers.add(
 )
 
 ChatQuestionReference = ChatQuestionReference or 0
+UserChatStatistics = UserChatStatistics or {}
+DatasetChatStatistics = DatasetChatStatistics or {}
+
+function UserChat(msg)
+	local from = msg.From
+	local timestamp = msg.Timestamp
+	if UserChatStatistics[from] == nil then
+		UserChatStatistics[from] = {}
+	end
+	if UserChatStatistics[from] then
+		table.insert(UserChatStatistics[from], timestamp)
+	end
+end
+
+function DatasetChat(hash, msg)
+	local timestamp = msg.Timestamp
+	if DatasetChatStatistics[hash] == nil then
+		DatasetChatStatistics[hash] = {}
+	end
+	if DatasetChatStatistics[hash] then
+		table.insert(DatasetChatStatistics[hash], timestamp)
+	end
+end
+
+Handlers.add(
+	"Chat-Statistics",
+	Handlers.utils.hasMatchingTag("Action", "Chat-Statistics"),
+	function (msg)
+		if (msg.From ~= ao.id and msg.From ~= Owner) then
+			assert(false, "Permission denied")
+			return
+		end
+		ao.send({
+			Target = msg.From,
+			Tags = {
+				{ name = "Action", value = "Chat-Statistics-Response" },
+				{ name = "status", value = "200" }
+			},
+			Data = json.encode({
+				UserChatStatistics = UserChatStatistics,
+				DatasetChatStatistics = DatasetChatStatistics
+			})
+		})
+	end
+)
+
 Handlers.add(
 	"Chat-Question",
 	Handlers.utils.hasMatchingTag("Action", "Chat-Question"),
@@ -305,6 +351,8 @@ Handlers.add(
 				{ name = "status",    value = "200" }
 			}
 		})
+		UserChat(msg)
+		DatasetChat(hash, msg)
 	end
 )
 
