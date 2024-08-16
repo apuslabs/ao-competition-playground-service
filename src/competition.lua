@@ -606,8 +606,8 @@ Handlers.add(
 	function(msg)
 		local data = json.decode(msg.Data)
 		local author = msg.From
-		local datasetHash = data.dataset_hash
-		local datasetName = data.dataset_name
+		local datasetHash = FixTextBeforeSaveDB(data.dataset_hash)
+		local datasetName = FixTextBeforeSaveDB(data.dataset_name)
 
 		DB:exec(string.format(
 			SQL.INSERT_PARTICIPANTS,
