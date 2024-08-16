@@ -8,3 +8,8 @@ src/libs/blueprints/*
 !src/libs/blueprints/apm.lua
 
 .vscode
+.idea/
+
+dist
+
+.DS_Store
