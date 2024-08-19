@@ -1,5 +1,5 @@
-import { EMBEDDING_PROCESS } from "./config";
-import { msgResult } from "./wallet";
+import { EMBEDDING_PROCESS } from "./ao/config";
+import { msgResult } from "./ao/wallet";
 import crypto from "crypto"
 
 

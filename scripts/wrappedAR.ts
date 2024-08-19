@@ -1,5 +1,5 @@
-import { SiqaProcess, WrappedARProcess } from "./config";
-import { msgResultWrapper, originSigner } from "./wallet";
+import { SiqaProcess, WrappedARProcess } from "./ao/config";
+import { msgResultWrapper, originSigner } from "./ao/wallet";
 
 const msgResult = msgResultWrapper(originSigner)
 

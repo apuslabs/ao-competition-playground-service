@@ -1,5 +1,5 @@
-import { ModelID, PoolProcess, SiqaProcess, WrappedARProcess } from "./config"
-import { moneySigner, msgResultWrapper, originSigner } from "./wallet"
+import { ModelID, PoolProcess, SiqaProcess, WrappedARProcess } from "./ao/config"
+import { moneySigner, msgResultWrapper, originSigner } from "./ao/wallet"
 
 const msgResultOrigin = msgResultWrapper(originSigner)
 const msgResultMoney = msgResultWrapper(moneySigner)

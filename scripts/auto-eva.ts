@@ -1,11 +1,9 @@
-import { ModelID, PoolProcess, SiqaProcess, WrappedARProcess } from "./config";
-import { msgResultWrapper, commonSigner } from "./wallet";
-
-const msgResultCommon = msgResultWrapper(commonSigner);
+import { PoolProcess } from "./ao/config";
+import { msgResult } from "./ao/wallet";
 
 async function Evaluate() {
   console.log(`Running Evaluate at ${new Date().toISOString()}`);
-  await msgResultCommon(
+  await msgResult(
     PoolProcess,
     {
       Action: "Evaluate",
@@ -16,7 +14,7 @@ async function Evaluate() {
 
 async function AllocateRewards() {
   console.log(`Running AllocateRewards at ${new Date().toISOString()}`);
-  await msgResultCommon(
+  await msgResult(
     PoolProcess,
     {
       Action: "Allocate-Rewards",

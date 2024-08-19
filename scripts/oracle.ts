@@ -1,5 +1,5 @@
-import { EMBEDDING_PROCESS, EMBEDDING_SERVICE } from "./config";
-import { dryrun, msgResult } from "./wallet";
+import { EMBEDDING_PROCESS, EMBEDDING_SERVICE } from "./ao/config";
+import { dryrun, msgResult } from "./ao/wallet";
 import axios from 'axios'
 
 axios.defaults.baseURL = EMBEDDING_SERVICE
