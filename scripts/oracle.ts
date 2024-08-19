@@ -45,21 +45,32 @@ async function setDocumentsEmbedded(embeddingDocs: Docuemnt[]) {
   return data
 }
 
-function autoEmbeddingDocs() {
-  setInterval(async () => {
-    console.log(`Auto embedding process started at: ${new Date().toISOString()}`)
-    const toEmbeddedDocs = await getUnembeddedDocuments();
-    console.debug(JSON.stringify(toEmbeddedDocs))
-    if (toEmbeddedDocs.length) {
-      try {
-        const embeddingDocs = await embedDocuments(toEmbeddedDocs);
-        console.log(`Successfully embedded ${embeddingDocs} documents`);
-      } catch (e) {
-        console.error("Failed to embed documents", e);
-      }
-      await setDocumentsEmbedded(toEmbeddedDocs);
+function executeWithRetry(asyncFunc: () => Promise<void>, intervalMs: number) {
+  async function wrapper() {
+    try {
+      await asyncFunc();
+    } catch (e) {
+      console.error("An error occurred during execution", e);
+    } finally {
+      setTimeout(wrapper, intervalMs);
     }
-  }, 1000 * 60)
+  }
+  // Initial call to start the process
+  setTimeout(wrapper, intervalMs);
+}
+
+async function embeddingDocs() {
+  console.log(`Auto embedding process started at: ${new Date().toISOString()}`);
+  const toEmbeddedDocs = await getUnembeddedDocuments();
+  if (toEmbeddedDocs.length) {
+    try {
+      const embeddingDocs = await embedDocuments(toEmbeddedDocs);
+      console.log(`Successfully embedded ${embeddingDocs} documents`);
+    } catch (e) {
+      console.error("Failed to embed documents", e);
+    }
+    await setDocumentsEmbedded(toEmbeddedDocs);
+  }
 }
 
 
@@ -118,14 +129,14 @@ function autoRetrievePrompts() {
   setInterval(() => {
     getToRetrievePrompt()
   }, 2000)
-  setInterval(async () => {
+  executeWithRetry(async () => {
     await retrievePrompt()
     await setPromptRetrieved()
   }, 5000)
 }
 
 async function main() {
-  autoEmbeddingDocs()
+  executeWithRetry(embeddingDocs, 5000)
   autoRetrievePrompts()
 }
 
