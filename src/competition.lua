@@ -597,11 +597,33 @@ local function initBenchmarkRecords(author, participantDatasetHash)
 	end
 end
 
+local lastSubmissionTime = 0
+local fiveMinutes = 5 * 60
 
 Handlers.add(
 	"Join-Pool",
 	Handlers.utils.hasMatchingTag("Action", "Join-Pool"),
 	function(msg)
+		local currentTime = math.floor(msg.Timestamp / 1000)
+		print(currentTime)
+		print(lastSubmissionTime)
+        if (currentTime - lastSubmissionTime) < fiveMinutes then
+            ao.send({
+                Target = msg.From,
+                Tags = {
+                    { name = "Action", value = "Join-Pool-Response" },
+                    { name = "status", value = "429" }
+                },
+				Data = "Processing data. Try again in five minutes."
+            })
+			print("Processing data. Try again in five minutes.")
+            return
+        end
+
+		print(currentTime)
+		print(lastSubmissionTime)
+		lastSubmissionTime = currentTime
+
 		local data = json.decode(msg.Data)
 		local author = msg.From
 		local datasetHash = FixTextBeforeSaveDB(data.dataset_hash)
