@@ -598,7 +598,7 @@ local function initBenchmarkRecords(author, participantDatasetHash)
 end
 
 local lastSubmissionTime = 0
-local fiveMinutes = 5 * 60
+local fiveMinutes = 1 * 60
 
 Handlers.add(
 	"Join-Pool",
