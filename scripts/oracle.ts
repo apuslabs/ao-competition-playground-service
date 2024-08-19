@@ -98,8 +98,10 @@ async function getToRetrievePrompt() {
 async function retrievePrompt() {
   const toRetrievePrompts = Object.values(PromptPool).filter(p => !p.retrieve_result)
   if (!toRetrievePrompts.length) return
+  // only process 50 prompts at a time
+  const toRetrievePrompts50 = toRetrievePrompts.slice(0, 50)
   // group by dataset_hash
-  const groupedPrompts = toRetrievePrompts.reduce((acc, doc) => {
+  const groupedPrompts = toRetrievePrompts50.reduce((acc, doc) => {
     (acc[doc.dataset_hash] = acc[doc.dataset_hash] || []).push({
       prompt: doc.prompt_text, reference: doc.reference
     }); return acc;}, {} as Record<string, any[]>)
@@ -132,7 +134,7 @@ function autoRetrievePrompts() {
   executeWithRetry(async () => {
     await retrievePrompt()
     await setPromptRetrieved()
-  }, 5000)
+  }, 2000)
 }
 
 async function main() {
