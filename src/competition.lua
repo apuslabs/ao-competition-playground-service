@@ -266,14 +266,12 @@ Handlers.add(
 	"Get-Datasets",
 	Handlers.utils.hasMatchingTag("Action", "Get-Datasets"),
 	function(msg)
-		print("Get-Datasets")
 		local rsp = {}
 		local cnt = 0
 		for row in DB:nrows(SQL.FIND_ALL_PARTICIPANTS) do
 			cnt = cnt + 1
 			rsp[cnt] = row
 		end
-		print(Dump(rsp))
 		ao.send({
 			Target = msg.From,
 			Action = "Get-Datasets-Response",
@@ -364,7 +362,7 @@ function SendEmeddingRequest(datasetHash, question)
 		dataset_hash = datasetHash,
 		prompt = question
 	})
-	print("SendEmeddingRequest: " .. ragData)
+	-- print("SendEmeddingRequest: " .. ragData)
 	ao.send({
 		Target = EmbeddingProcessId,
 		Data = ragData,
@@ -377,25 +375,26 @@ function SendEmeddingRequest(datasetHash, question)
 	return SearchPromptReference
 end
 
+
 Handlers.add(
 	"Evaluate",
 	Handlers.utils.hasMatchingTag("Action", "Evaluate"),
 	function(msg)
-		print("Start Evaluate")
-		print("Msg: " .. Dump(msg.Tags) .. Dump(msg.Data))
+		-- print("Start Evaluate")
+		-- print("Msg: " .. Dump(msg.Tags) .. Dump(msg.Data))
 		local limit = tonumber(msg.Data) or 1
 		-- if limit > 2 then
 		-- 	limit = 2
 		-- end
 		for row in DB:nrows(string.format(SQL.GET_UNEVALUATED_EVALUATIONS, limit)) do
-			print("Row: " .. Dump(row))
+			-- print("Row: " .. Dump(row))
 			local reference = SendEmeddingRequest(row.participant_dataset_hash, row.question)
-			print("Reference: " .. reference)
+			-- print("Reference: " .. reference)
 			local result = DB:exec(string.format(
 				SQL.START_EVALUATION,
 				reference, row.id
 			))
-			print("DB exec result: " .. result)
+			-- print("DB exec result: " .. result)
 		end
 	end
 )
@@ -429,8 +428,8 @@ Handlers.add(
 	"Search-Prompt-Response",
 	Handlers.utils.hasMatchingTag("Action", "Search-Prompt-Response"),
 	function(msg)
-		print("Search-Prompt-Response")
-		print("Msg: " .. Dump(msg.Tags) .. Dump(msg.Data))
+		-- print("Search-Prompt-Response")
+		-- print("Msg: " .. Dump(msg.Tags) .. Dump(msg.Data))
 		local isEvaluation = false
 		local evaluationReference = msg.Tags.Reference
 
@@ -441,7 +440,7 @@ Handlers.add(
 		-- print(type(promptFromEmdedding))
 
 		for row in DB:nrows(string.format(SQL.GET_EVALUATION_BY_REFERENCE, evaluationReference)) do
-			print("Send evaluation request" .. evaluationReference)
+			-- print("Send evaluation request" .. evaluationReference)
 			isEvaluation = true
 			local body = {
 				question = row.question:gsub('\'s', ' is'),
@@ -472,10 +471,9 @@ Handlers.add(
 	"Inference-Response",
 	Handlers.utils.hasMatchingTag("Action", "Inference-Response"),
 	function(msg)
-		print("Inference-Response")
-		print("Msg: " .. Dump(msg.Tags) .. Dump(msg.Data))
-		local workType = msg.Tags.WorkerType
-		local reference = msg.Tags.Reference
+		local workType = msg.Tags.WorkerType or ""
+		local reference = msg.Tags.Reference or ""
+		print("Inference-Response: " .. workType .. " " .. reference .. " " .. Dump(msg.Data))
 
 		if workType == 'Evaluate' then
 			local data = msg.Data or "-1"
@@ -488,7 +486,7 @@ Handlers.add(
 )
 
 function SendUserChatGroundRequest(prompt, evaluationReference)
-	print("SendUserChatGroundRequest(" .. evaluationReference .. ")")
+	-- print("SendUserChatGroundRequest(" .. evaluationReference .. ")")
 	-- DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_PROMPT, prompt))
 	for row in DB:nrows(string.format(SQL.FIND_CHAT_GROUND_EVALUATION_BY_INFER_REFERENCE, evaluationReference)) do
 		local body = {
@@ -496,7 +494,7 @@ function SendUserChatGroundRequest(prompt, evaluationReference)
 			context = prompt
 		}
 
-		print("InferenceMessage(" .. evaluationReference .. "): " .. json.encode(body))
+		-- print("InferenceMessage(" .. evaluationReference .. "): " .. json.encode(body))
 		Send({
 			Target = LLMProcessId,
 			Tags = {
@@ -517,7 +515,7 @@ Handlers.add(
 	end,
 	function(msg)
 		PRIZE_BALANCE = tonumber(msg.Tags.Balance)
-		print("Balance-Response: " .. PRIZE_BALANCE)
+		-- print("Balance-Response: " .. PRIZE_BALANCE)
 	end
 )
 
@@ -533,11 +531,11 @@ Handlers.add(
 	"Load-Dataset",
 	Handlers.utils.hasMatchingTag("Action", "Load-Dataset"),
 	function(msg)
-		print("Load-Dataset")
+		-- print("Load-Dataset")
 		local data = msg.Data
 		assert(data ~= nil, "Data is nil")
 		local DataSets = json.decode(data)
-		print("DataSets: " .. Dump(DataSets))
+		-- print("DataSets: " .. Dump(DataSets))
 		for _, DataSetItem in ipairs(DataSets) do
 			-- print('DataSetItem: ' .. Dump(DataSetItem))
 			local context = FixTextBeforeSaveDB(DataSetItem.context)
@@ -546,7 +544,7 @@ Handlers.add(
 			local result = DB:exec(query)
 			-- print(query .. 'result ' .. result)
 		end
-		print("Load-Dataset END")
+		-- print("Load-Dataset END")
 	end
 )
 
@@ -558,8 +556,8 @@ Handlers.add(
 			msg.From == TokenProcessId
 	end,
 	function(msg)
-		print("Create-Pool")
-		print("Msg: " .. Dump(msg.Tags) .. Dump(msg.Data))
+		-- print("Create-Pool")
+		-- print("Msg: " .. Dump(msg.Tags) .. Dump(msg.Data))
 		local title = msg.Tags["X-Title"]
 		local description = msg.Tags["X-Description"]
 		local prizePool = msg.Tags["X-Prize-Pool"]
@@ -571,7 +569,7 @@ Handlers.add(
 			prizePool = prizePool,
 			metaData = metaData
 		}
-		print("CompetitonPools: " .. Dump(CompetitonPools))
+		-- print("CompetitonPools: " .. Dump(CompetitonPools))
 		ao.send({
 			Target = msg.From,
 			Tags = {
@@ -579,7 +577,7 @@ Handlers.add(
 				{ name = "status", value = "200" }
 			}
 		})
-		print("Create-Pool END")
+		-- print("Create-Pool END")
 	end
 )
 
@@ -625,7 +623,6 @@ Handlers.add(
 				{ name = "status", value = "200" }
 			}
 		})
-		print("Join-Pool END")
 	end
 )
 
@@ -689,7 +686,6 @@ Handlers.add(
 	function(msg)
 		for item in DB:nrows(SQL.TOTAL_PARTICIPANTS_RANK) do
 			local amount = computeReward(item.rank)
-			print(json.encode(item))
 			-- if PRIZE_BALANCE < amount then
 			-- 	print("Balance is not enough, balance: " .. PRIZE_BALANCE .. " want: " .. amount)
 			-- elseif amount > 0 then
@@ -745,7 +741,7 @@ Handlers.add(
 			tempRank = row.rank
 		end
 
-		print("Get-Dashboard(" .. from .. "): " .. Dump(row))
+		-- print("Get-Dashboard(" .. from .. "): " .. Dump(row))
 		ao.send({
 			Target = from,
 			Tags = {
@@ -773,7 +769,6 @@ Handlers.add(
 		for row in DB:nrows(query) do
 			table.insert(data, row)
 		end
-		print(data)
 
 		ao.send({
 			Target = from,
