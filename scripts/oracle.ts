@@ -84,6 +84,7 @@ interface Prompt {
 }
 
 const PromptPool: Record<string, Prompt> = {}
+const ErrorPool: Record<string, Prompt> = {}
 
 async function getToRetrievePrompt() {
   const result = await dryrun(EMBEDDING_PROCESS, { Action: "GET-TORETRIEVE-PROMPT" });
@@ -98,8 +99,8 @@ async function getToRetrievePrompt() {
 async function retrievePrompt() {
   const toRetrievePrompts = Object.values(PromptPool).filter(p => !p.retrieve_result)
   if (!toRetrievePrompts.length) return
-  // only process 50 prompts at a time
-  const toRetrievePrompts50 = toRetrievePrompts.slice(0, 50)
+  // only process 1 prompts at a time
+  const toRetrievePrompts50 = toRetrievePrompts.slice(0, 1)
   // group by dataset_hash
   const groupedPrompts = toRetrievePrompts50.reduce((acc, doc) => {
     (acc[doc.dataset_hash] = acc[doc.dataset_hash] || []).push({
@@ -120,10 +121,17 @@ async function retrievePrompt() {
 async function setPromptRetrieved() {
   const toSetPrompt = Object.values(PromptPool).filter(p => !!p.retrieve_result)
   if (!toSetPrompt.length) return
-  await msgResult(EMBEDDING_PROCESS, { Action: "Set-Retrieve-Result" }, toSetPrompt);
-  console.log(`Successfully set retrieve result for ${toSetPrompt.length} prompts`);
-  for (const prompt of toSetPrompt) {
-    delete PromptPool[prompt.reference];
+  try {
+    await msgResult(EMBEDDING_PROCESS, { Action: "Set-Retrieve-Result" }, toSetPrompt);
+    console.log(`Successfully set retrieve result for ${toSetPrompt.length} prompts`);
+    for (const prompt of toSetPrompt) {
+      delete PromptPool[prompt.reference];
+    }
+  } catch {
+    for (const prompt of toSetPrompt) {
+      ErrorPool[prompt.reference] = prompt
+      delete PromptPool[prompt.reference]
+    }
   }
 }
 
@@ -134,7 +142,7 @@ function autoRetrievePrompts() {
   executeWithRetry(async () => {
     await retrievePrompt()
     await setPromptRetrieved()
-  }, 2000)
+  }, 100)
 }
 
 async function main() {
