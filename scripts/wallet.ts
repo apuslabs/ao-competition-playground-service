@@ -17,22 +17,44 @@ const moneyWallet = JSON.parse(
 
 export const originSigner = createDataItemSigner(wallet);
 export const moneySigner = createDataItemSigner(moneyWallet);
-export const commonSigner = createDataItemSigner(wallet);
 
-export const msgResultWrapper = (signer: any) => async (process: string, tags: Record<string, string>, data?: string | Record<string, any> | number) => {
+export const jasonSigner = createDataItemSigner(wallet);
+
+export const msgResultWrapper = (signer: any, debug?: boolean) => async (process: string, tags: Record<string, string>, data?: string | Record<string, any> | number) => {
   const action = tags.Action ?? "Msg"
-  console.group(`${action} ${process}`);
+  debug && console.group(`${action} ${process}`);
   const msgId = await ao.message({
     process,
     tags: obj2tags(tags),
     data: typeof data === "string" ? data : typeof data === "number" ? data.toString() : JSON.stringify(data),
     signer: signer
   });
-  console.log("Msg ID:", msgId);
+  debug && console.log("Msg ID:", msgId);
   const result = await ao.result({
     process: process,
     message: msgId,
   });
-  console.log(result);
-  console.groupEnd();
+  debug && console.log(result);
+  debug && console.groupEnd();
+  return result
 }
+
+export const msgResult = msgResultWrapper(originSigner)
+export const msgResultDebug = msgResultWrapper(originSigner, true)
+
+export const dryrunWrapper = (signer: any, debug?: boolean) => async (process: string, tags: Record<string, string>, data?: string | Record<string, any> | number) => {
+  const action = tags.Action ?? "Dryrun"
+  debug && console.group(`${action} ${process}`);
+  const result = await ao.dryrun({
+    process,
+    tags: obj2tags(tags),
+    data: typeof data === "string" ? data : typeof data === "number" ? data.toString() : JSON.stringify(data),
+    signer: signer,
+  });
+  debug && console.log(result);
+  debug && console.groupEnd();
+  return result
+}
+
+export const dryrun = dryrunWrapper(originSigner)
+export const dryrunDebug = dryrunWrapper(originSigner, true)

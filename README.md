@@ -261,3 +261,80 @@ Make sure you use your own `authority` Tags of the process and forward the messa
 # Contributing
 
 We welcome contributions! If you find a bug or have suggestions, please open an issue. If you'd like to contribute code, please fork the repository and submit a pull request.
+
+# Llama-Herder
+## Evaluate
+
+```lua
+Send({
+   Target = "jaSRY9nVTdUE48QMg9SMuKbW8T9yk8Vi1FNZpau9M2A",
+   Tags = {
+      Action = "Inference",
+      WorkerType = "Evaluate",
+      Reference = "<Reference>",
+   },
+   Data = json.encode({question = "xxx", expected_response = "xxx", context = "xxx"}),
+})
+```
+
+### Response
+
+```lua
+Send({
+   Target = msg.From,
+   Tags = {
+      Action = "Inference-Response",
+      WorkerType = "Evaluate",
+      Reference = "<User Reference>",
+   },
+   Data = "<score:0-10>"
+})
+```
+
+## Chat
+
+```lua
+Send({
+   Target = "jaSRY9nVTdUE48QMg9SMuKbW8T9yk8Vi1FNZpau9M2A",
+   Tags = {
+      Action = "Inference",
+      WorkerType = "Chat",
+      Reference = "<Reference>",
+   },
+   Data = json.encode({question = "xxx", context = "xxx"}),
+})
+```
+
+### Response
+
+```lua
+Send({
+   Target = msg.From,
+   Tags = {
+      Action = "Inference-Response",
+      WorkerType = "Chat",
+      Reference = "<User Reference>",
+   },
+   Data = "<answer:max 40 tokens>"
+})
+```
+
+# Embedding Service
+
+aos text-embedding-service --module=ghSkge2sIUD_F00ym5sEimC63BDBuBrq4b5OcwxOjiw
+
+
+## How to use
+
+Create-Dataset
+```
+Send({ Target = 'hMEUOgWi97d9rGT-lHNCbm937bTypMq7qxMWeaUnMLo', Action = "Create-Dataset", Data='{"hash":"673322f20121f3dc36538578295819386f1ef2b8","list":[{"content":"This contains variable declarations","meta":{"title":"one"}},{"content":"This contains another sort of variable declarations","meta":{"title":"two"}},{"content":"This has nothing to do with variable declarations","meta":{"title":"three"}},{"content":"A random doc","meta":{"title":"four"}}]}' })
+```
+
+Search-Prompt
+```
+Send({ Target = 'hMEUOgWi97d9rGT-lHNCbm937bTypMq7qxMWeaUnMLo', Action = "Search-Prompt", Data = '{"dataset_hash": "673322f20121f3dc36538578295819386f1ef2b8","prompt":"variable declarations"}' })
+```
+
+## Process ID
+hMEUOgWi97d9rGT-lHNCbm937bTypMq7qxMWeaUnMLo

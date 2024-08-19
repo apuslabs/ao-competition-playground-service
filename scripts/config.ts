@@ -12,3 +12,6 @@ export const PoolProcess = "Zv4NMG3qYgCtLLd9UTp8c0lhUjAnok2bVJahSwe1CkM"
 export const ModelID = "ISrbGzQot05rs_HKC08O_SmkipYQnqgB1yC3mjZZeEo"
 // const RouterProcess = "glGRJ4CqL-mL29RN8udCTro2-7svs7hfqH9Vf4WXAn4"
 // const WorkerProcess = "Ourv4yTMcfTmyqy3KnilgmajzpZcGWBnRkm-BKe-Md8"
+
+export const EMBEDDING_PROCESS = "0I4lfmafx816miHSJ78KFoQE9vc0pu79Czgp0VNWO84"
+export const EMBEDDING_SERVICE = "http://127.0.0.1:8082"

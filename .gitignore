@@ -13,3 +13,8 @@ src/libs/blueprints/*
 dist
 
 .DS_Store
+
+.venv
+__pycache__
+
+chroma
