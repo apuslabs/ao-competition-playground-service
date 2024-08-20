@@ -8,7 +8,7 @@ async function Evaluate() {
     {
       Action: "Evaluate",
     },
-    18
+    240
   );
 }
 
@@ -35,12 +35,12 @@ const allocateInterval = 60 * 60 * 1000; // 60分钟
 runTaskAtInterval(Evaluate, evaluateInterval);
 runTaskAtInterval(AllocateRewards, allocateInterval);
 
-process.on("SIGINT", () => {
-    console.log("Process interrupted. Exiting gracefully...");
-    process.exit();
-});
+// process.on("SIGINT", () => {
+//     console.log("Process interrupted. Exiting gracefully...");
+//     process.exit();
+// });
 
-process.on("SIGTERM", () => {
-    console.log("Process terminated. Exiting gracefully...");
-    process.exit();
-});
+// process.on("SIGTERM", () => {
+//     console.log("Process terminated. Exiting gracefully...");
+//     process.exit();
+// });
