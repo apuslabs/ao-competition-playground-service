@@ -16,6 +16,10 @@ Herder = Herder or {
 }
 Busy = Busy or {}
 Queue = Queue or {}
+TimeoutHerder = TimeoutHerder or {
+    Evaluate = {},
+    Chat = {}
+}
 
 Colors = {
     red = "\27[31m",
@@ -35,16 +39,29 @@ local function isAllowed(client)
 end
 
 function DispatchWork(msg)
-    -- check Busy table, if worker is over 1 hour, remove from Busy and add back to Herd
+    -- check Busy table for if worker is over 1 hour
     for worker, work in pairs(Busy) do
         if (msg.Timestamp - work.timestamp) > 3600000 then
+            local wType = work.workerType
             print("[" .. Colors.gray .. "TIMEOUT" .. Colors.reset .. " ]" ..
-                " Type: " .. Colors.green .. work.workerType .. Colors.reset ..
+                " Type: " .. Colors.green .. wType .. Colors.reset ..
                 " | Client: " .. Colors.blue .. string.sub(work.client, 1, 6) .. Colors.reset ..
                 " | Client ref: " .. Colors.blue .. string.sub(work.userReference, 1, 10) .. Colors.reset ..
                 " | Worker: " .. Colors.green .. string.sub(worker, 1, 6) .. Colors.reset
             )
-            table.insert(Herder[work.workerType], worker)
+            TimeoutHerder[wType][worker] = TimeoutHerder[wType][worker] or 0
+            if (TimeoutHerder[wType][worker] >= 2) then
+                -- if more then twice, print and don't add back to Herder
+                print("[" .. Colors.gray .. "REMOVING WORKER" .. Colors.reset .. " ]" ..
+                    " Type: " .. Colors.green .. wType .. Colors.reset ..
+                    " | Worker: " .. Colors.green .. string.sub(worker, 1, 6) .. Colors.reset
+                )
+                TimeoutHerder[wType][worker] = nil
+            else
+                -- if less then twice, record and add back to Herder
+                TimeoutHerder[wType][worker] = TimeoutHerder[wType][worker] + 1
+                table.insert(Herder[wType], worker)
+            end
             Busy[worker] = nil
         end
     end
