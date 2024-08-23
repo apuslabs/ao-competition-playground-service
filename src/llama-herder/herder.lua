@@ -62,6 +62,19 @@ function DispatchWork(msg)
                 TimeoutHerder[wType][worker] = TimeoutHerder[wType][worker] + 1
                 table.insert(Herder[wType], worker)
             end
+
+            resData = tostring(0)    
+            if wType == 'Chat' then
+                resData =""
+            end
+            ao.send({
+                Target = work.client,
+                Action = "Inference-Response",
+                WorkerType = work.workerType,
+                Reference = work.userReference,
+                Data = resData
+            })
+            
             Busy[worker] = nil
         end
     end
