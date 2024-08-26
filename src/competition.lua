@@ -208,19 +208,19 @@ local SQL = {
 --	end
 --)
 
---Handlers.add(
---	"Read-DB",
---	Handlers.utils.hasMatchingTag("Action", "Read-DB"),
---	function(msg)
---		if msg.Data == '' then
---			msg.Data = [[ SELECT name FROM sqlite_master WHERE type='table' ]]
---		end
---		for item in DB:nrows(msg.Data) do
---			-- print(type(item))
---			print(item)
---		end
---	end
---)
+-- Handlers.add(
+-- 	"Read-DB",
+-- 	Handlers.utils.hasMatchingTag("Action", "Read-DB"),
+-- 	function(msg)
+-- 		if msg.Data == '' then
+-- 			msg.Data = [[ SELECT name FROM sqlite_master WHERE type='table' ]]
+-- 		end
+-- 		for item in DB:nrows(msg.Data) do
+-- 			-- print(type(item))
+-- 			print(item)
+-- 		end
+-- 	end
+-- )
 
 Handlers.add(
 	"DEBUG-DB",
@@ -598,30 +598,40 @@ local function initBenchmarkRecords(author, participantDatasetHash)
 end
 
 local lastSubmissionTime = 0
-local fiveMinutes = 1 * 60
+local oneMinutes = 1 * 60
 
 Handlers.add(
 	"Join-Pool",
 	Handlers.utils.hasMatchingTag("Action", "Join-Pool"),
 	function(msg)
+		
+		local metaDataTable = json.decode(Members[1001].metaData)
+		local endTime = tonumber(metaDataTable.competition_time["end"]) * 1000
+		if msg.Timestamp > endTime then
+			ao.send({
+                Target = msg.From,
+                Tags = {
+                    { name = "Action", value = "Join-Pool-Response" },
+                    { name = "status", value = "403" }
+                },
+				Data = "The event has ended, and joining is no longer allowed."
+            })
+            return
+		  end
+
 		local currentTime = math.floor(msg.Timestamp / 1000)
-		print(currentTime)
-		print(lastSubmissionTime)
-        if (currentTime - lastSubmissionTime) < fiveMinutes then
+        if (currentTime - lastSubmissionTime) < oneMinutes then
             ao.send({
                 Target = msg.From,
                 Tags = {
                     { name = "Action", value = "Join-Pool-Response" },
                     { name = "status", value = "429" }
                 },
-				Data = "Processing data. Try again in five minutes."
+				Data = "Processing data. Try again in one minutes."
             })
-			print("Processing data. Try again in five minutes.")
             return
         end
 
-		print(currentTime)
-		print(lastSubmissionTime)
 		lastSubmissionTime = currentTime
 
 		local data = json.decode(msg.Data)
