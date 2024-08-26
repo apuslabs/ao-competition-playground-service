@@ -605,7 +605,7 @@ Handlers.add(
 	Handlers.utils.hasMatchingTag("Action", "Join-Pool"),
 	function(msg)
 		
-		local metaDataTable = json.decode(Members[1001].metaData)
+		local metaDataTable = json.decode(CompetitonPools[1001].metaData)
 		local endTime = tonumber(metaDataTable.competition_time["end"]) * 1000
 		if msg.Timestamp > endTime then
 			ao.send({
