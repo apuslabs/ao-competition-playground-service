@@ -16,7 +16,7 @@ CompetitonPoolId = 1001
 
 Handlers.add(
 	"Init",
-	Handlers.utils.hasMatchingTag("Action", "Init"),
+	{ Action = "Init" },
 	function()
 		DB = sqlite3.open_memory()
 
@@ -224,7 +224,7 @@ local SQL = {
 
 Handlers.add(
 	"DEBUG-DB",
-	Handlers.utils.hasMatchingTag("Action", "DEBUG-DB"),
+	{ Action = "DEBUG-DB" },
 	function(msg)
 		print("DEBUG-DB")
 
@@ -264,7 +264,7 @@ Handlers.add(
 
 Handlers.add(
 	"Get-Datasets",
-	Handlers.utils.hasMatchingTag("Action", "Get-Datasets"),
+	{ Action = "Get-Datasets" },
 	function(msg)
 		local rsp = {}
 		local cnt = 0
@@ -307,7 +307,7 @@ end
 
 Handlers.add(
 	"Chat-Statistics",
-	Handlers.utils.hasMatchingTag("Action", "Chat-Statistics"),
+	{ Action = "Chat-Statistics" },
 	function (msg)
 		if (msg.From ~= ao.id and msg.From ~= Owner) then
 			assert(false, "Permission denied")
@@ -329,7 +329,7 @@ Handlers.add(
 
 Handlers.add(
 	"Chat-Question",
-	Handlers.utils.hasMatchingTag("Action", "Chat-Question"),
+	{ Action = "Chat-Question" },
 	function(msg)
 		local data = json.decode(msg.Data)
 		local hash = data.dataset_hash
@@ -378,7 +378,7 @@ end
 
 Handlers.add(
 	"Evaluate",
-	Handlers.utils.hasMatchingTag("Action", "Evaluate"),
+	{ Action = "Evaluate" },
 	function(msg)
 		-- print("Start Evaluate")
 		-- print("Msg: " .. Dump(msg.Tags) .. Dump(msg.Data))
@@ -401,7 +401,7 @@ Handlers.add(
 
 Handlers.add(
 	"Get-Chat-Answer",
-	Handlers.utils.hasMatchingTag("Action", "Get-Chat-Answer"),
+	{ Action = "Get-Chat-Answer" },
 	function(msg)
 		local clientReference = msg.Data
 		local statuCode, rsp
@@ -426,7 +426,7 @@ Handlers.add(
 
 Handlers.add(
 	"Search-Prompt-Response",
-	Handlers.utils.hasMatchingTag("Action", "Search-Prompt-Response"),
+	{ Action = "Search-Prompt-Response" },
 	function(msg)
 		-- print("Search-Prompt-Response")
 		-- print("Msg: " .. Dump(msg.Tags) .. Dump(msg.Data))
@@ -469,7 +469,7 @@ Handlers.add(
 
 Handlers.add(
 	"Inference-Response",
-	Handlers.utils.hasMatchingTag("Action", "Inference-Response"),
+	{ Action = "Inference-Response" },
 	function(msg)
 		local workType = msg.Tags.WorkerType or ""
 		local reference = msg.Tags.Reference or ""
@@ -529,7 +529,7 @@ end
 
 Handlers.add(
 	"Load-Dataset",
-	Handlers.utils.hasMatchingTag("Action", "Load-Dataset"),
+	{ Action = "Load-Dataset" },
 	function(msg)
 		-- print("Load-Dataset")
 		local data = msg.Data
@@ -602,7 +602,7 @@ local oneMinutes = 1 * 60
 
 Handlers.add(
 	"Join-Pool",
-	Handlers.utils.hasMatchingTag("Action", "Join-Pool"),
+	{ Action = "Join-Pool" },
 	function(msg)
 		
 		local metaDataTable = json.decode(CompetitonPools[1001].metaData)
@@ -670,7 +670,7 @@ end
 
 Handlers.add(
 	"Get-Pool",
-	Handlers.utils.hasMatchingTag("Action", "Get-Pool"),
+	{ Action = "Get-Pool" },
 	function(msg)
 		local pool = CompetitonPools[CompetitonPoolId]
 		local meta_data = pool['metaData']
@@ -714,7 +714,7 @@ end
 
 Handlers.add(
 	"Allocate-Rewards",
-	Handlers.utils.hasMatchingTag("Action", "Allocate-Rewards"),
+	{ Action = "Allocate-Rewards" },
 	function(msg)
 		for item in DB:nrows(SQL.TOTAL_PARTICIPANTS_RANK) do
 			local amount = computeReward(item.rank)
@@ -751,7 +751,7 @@ end
 
 Handlers.add(
 	"Get-Dashboard",
-	Handlers.utils.hasMatchingTag("Action", "Get-Dashboard"),
+	{ Action = "Get-Dashboard" },
 	function(msg)
 		local tempParticipants = 0
 		local tempRewardedTokens = 0
@@ -792,7 +792,7 @@ Handlers.add(
 
 Handlers.add(
 	"Get-Leaderboard",
-	Handlers.utils.hasMatchingTag("Action", "Get-Leaderboard"),
+	{ Action = "Get-Leaderboard" },
 	function(msg)
 		local from = ParseMsgFrom(msg)
 
