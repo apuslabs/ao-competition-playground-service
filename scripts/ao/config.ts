@@ -13,5 +13,5 @@ export const ModelID = "ISrbGzQot05rs_HKC08O_SmkipYQnqgB1yC3mjZZeEo"
 // const RouterProcess = "glGRJ4CqL-mL29RN8udCTro2-7svs7hfqH9Vf4WXAn4"
 // const WorkerProcess = "Ourv4yTMcfTmyqy3KnilgmajzpZcGWBnRkm-BKe-Md8"
 
-export const EMBEDDING_PROCESS = "9VLokL76v41BIAbDOvN5cpVm1OGkKIi5aVw1BaelPFM"
+export const EMBEDDING_PROCESS = "4pX6ABsJAJR8RWq_6tpGWfX29rFgIblvTqh6mWNKrro"
 export const EMBEDDING_SERVICE = "http://127.0.0.1:8082"
