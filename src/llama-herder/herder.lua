@@ -32,6 +32,7 @@ Colors = {
 InferenceAllowList = {
     ["xLlcWNqzvVJHOYpgFP9QV-FSF4mcmPtk8xjverzRK3U"] = true,
     ["Zv4NMG3qYgCtLLd9UTp8c0lhUjAnok2bVJahSwe1CkM"] = true,
+    ["pNSXgR1gIp6zzoXZv4mfSLQfuWVzvPsLZHg8-oi_DZo"] = true,
 }
 
 local function isAllowed(client)
