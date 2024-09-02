@@ -117,7 +117,7 @@ end
 
 Handlers.add(
     "Init",
-    Handlers.utils.hasMatchingTag("Action", "Init"),
+    { Action = "Init" },
     function(msg)
         if msg.From ~= ao.id then
             return print("Init not allowed: " .. msg.From)
@@ -138,7 +138,7 @@ Handlers.add(
 
 Handlers.add(
     "Inference",
-    Handlers.utils.hasMatchingTag("Action", "Inference"),
+    { Action = "Inference" },
     function(msg)
         if not InferenceAllowList[msg.From] then
             print("Inference not allowed: " .. msg.From)

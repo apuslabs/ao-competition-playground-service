@@ -9,7 +9,7 @@ end
 
 Handlers.add(
     "Init",
-    Handlers.utils.hasMatchingTag("Action", "Init"),
+    { Action = "Init" },
     function()
         -- DataSets = weave.getJsonData(DataTxID)
         DB = sqlite3.open_memory()
@@ -64,7 +64,7 @@ local SQL = {
 local lastSubmissionTime = 0
 local fiveMinutes = 1 * 60
 
-Handlers.add("Create-Dataset", Handlers.utils.hasMatchingTag("Action", "Create-Dataset"), function(msg)
+Handlers.add("Create-Dataset", { Action = "Create-Dataset" }, function(msg)
     local currentTime = math.floor(msg.Timestamp / 1000)
     if (currentTime - lastSubmissionTime) < fiveMinutes then
         ao.send({
@@ -101,7 +101,7 @@ Handlers.add("Create-Dataset", Handlers.utils.hasMatchingTag("Action", "Create-D
     print("Dataset created successfully")
 end)
 
-Handlers.add("Get-Unembeded-Documents", Handlers.utils.hasMatchingTag("Action", "Get-Unembeded-Documents"),
+Handlers.add("Get-Unembeded-Documents", { Action = "Get-Unembeded-Documents" },
     function(msg)
         local docs = {}
         for row in DB:nrows(SQL.GET_UNEMBEDED_DOCUMENTS) do
@@ -110,7 +110,7 @@ Handlers.add("Get-Unembeded-Documents", Handlers.utils.hasMatchingTag("Action", 
         Handlers.utils.reply(json.encode(docs))(msg)
     end)
 
-Handlers.add("Embedding-Data", Handlers.utils.hasMatchingTag("Action", "Embedding-Data"), function(msg)
+Handlers.add("Embedding-Data", { Action = "Embedding-Data" }, function(msg)
     local ids = json.decode(msg.Data)
     assert(ids, "Invalid data")
     assert(type(ids) == "table", "Data should be a table of IDs")
@@ -124,7 +124,7 @@ Handlers.add("Embedding-Data", Handlers.utils.hasMatchingTag("Action", "Embeddin
     Handlers.utils.reply(json.encode(#id_list))(msg)
 end)
 
-Handlers.add("Search-Prompt", Handlers.utils.hasMatchingTag("Action", "Search-Prompt"), function(msg)
+Handlers.add("Search-Prompt", { Action = "Search-Prompt" }, function(msg)
     local data = json.decode(msg.Data)
     assert(msg.Tags.Reference and #msg.Tags.Reference ~= 0, "Missing reference in tags")
     local PromptReference = msg.Tags.Reference
@@ -136,7 +136,7 @@ Handlers.add("Search-Prompt", Handlers.utils.hasMatchingTag("Action", "Search-Pr
     print(msg.From .. " Prompt " .. PromptReference .. " added successfully")
 end)
 
-Handlers.add("GET-TORETRIEVE-PROMPT", Handlers.utils.hasMatchingTag("Action", "GET-TORETRIEVE-PROMPT"), function(msg)
+Handlers.add("GET-TORETRIEVE-PROMPT", { Action = "GET-TORETRIEVE-PROMPT" }, function(msg)
     local prompts = {}
     for row in DB:nrows(SQL.GET_TORETRIEVE_PROMPT) do
         table.insert(prompts, row)
@@ -144,7 +144,7 @@ Handlers.add("GET-TORETRIEVE-PROMPT", Handlers.utils.hasMatchingTag("Action", "G
     Handlers.utils.reply(json.encode(prompts))(msg)
 end)
 
-Handlers.add("Set-Retrieve-Result", Handlers.utils.hasMatchingTag("Action", "Set-Retrieve-Result"), function(msg)
+Handlers.add("Set-Retrieve-Result",{ Action = "Set-Retrieve-Result" } , function(msg)
     local data = json.decode(msg.Data)
     for _, item in ipairs(data) do
         -- assert(item.id, "Missing id in item")
@@ -168,7 +168,7 @@ Handlers.add("Set-Retrieve-Result", Handlers.utils.hasMatchingTag("Action", "Set
     end
 end)
 
-Handlers.add("GET-Retrieve-Result", Handlers.utils.hasMatchingTag("Action", "GET-Retrieve-Result"), function(msg)
+Handlers.add("GET-Retrieve-Result", { Action = "GET-Retrieve-Result" }, function(msg)
     assert(msg.Tags.Reference and #msg.Tags.Reference ~= 0, "Missing reference in tags")
     assert(msg.Tags.Sender and #msg.Tags.Sender ~= 0, "Missing sender in tags")
     local prompts = {}
