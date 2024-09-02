@@ -1,5 +1,5 @@
 local json = require("json")
-local ao = require('ao')
+local ao = require('.ao')
 local sqlite3 = require("lsqlite3")
 --Llama = require("@sam/Llama-Herder")
 

@@ -32,10 +32,26 @@ Colors = {
 InferenceAllowList = {
     ["xLlcWNqzvVJHOYpgFP9QV-FSF4mcmPtk8xjverzRK3U"] = true,
     ["Zv4NMG3qYgCtLLd9UTp8c0lhUjAnok2bVJahSwe1CkM"] = true,
+    ["pNSXgR1gIp6zzoXZv4mfSLQfuWVzvPsLZHg8-oi_DZo"] = true,
 }
 
 local function isAllowed(client)
     return InferenceAllowList[client] == true or client == ao.id or client == Owner
+end
+
+function countHerder()
+    local freeEvaluator = #Herder["Evaluate"]
+    local freeChat = #Herder["Chat"]
+    local busyEvaluator = 0
+    local busyChat = 0
+    for _, work in pairs(Busy) do
+        if work.workerType == "Evaluate" then
+            busyEvaluator = busyEvaluator + 1
+        elseif work.workerType == "Chat" then
+            busyChat = busyChat + 1
+        end
+    end
+    return "Free evaluator: " .. freeEvaluator .. " | Busy evaluator: " .. busyEvaluator .. " | Free chat: " .. freeChat .. " | Busy chat: " .. busyChat
 end
 
 function DispatchWork(msg)
@@ -50,13 +66,13 @@ function DispatchWork(msg)
                 " | Worker: " .. Colors.green .. string.sub(worker, 1, 6) .. Colors.reset
             )
             TimeoutHerder[wType][worker] = TimeoutHerder[wType][worker] or 0
-            if (TimeoutHerder[wType][worker] >= 2) then
+            if (TimeoutHerder[wType][worker] >= 3) then
                 -- if more then twice, print and don't add back to Herder
                 print("[" .. Colors.gray .. "REMOVING WORKER" .. Colors.reset .. " ]" ..
                     " Type: " .. Colors.green .. wType .. Colors.reset ..
                     " | Worker: " .. Colors.green .. string.sub(worker, 1, 6) .. Colors.reset
                 )
-                TimeoutHerder[wType][worker] = nil
+                -- TimeoutHerder[wType][worker] = nil
             else
                 -- if less then twice, record and add back to Herder
                 TimeoutHerder[wType][worker] = TimeoutHerder[wType][worker] + 1
