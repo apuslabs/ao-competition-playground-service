@@ -344,9 +344,9 @@ Handlers.add(
         ao.send({
             Target = msg.From,
             Tags = {
-                { name = "Action",    value = "Chat-Question-Response" },
-                { name = "Reference", value = tostring(ChatQuestionReference) },
-                { name = "status",    value = "200" }
+                { name = "Action",      value = "Chat-Question-Response" },
+                { name = "X-Reference", value = tostring(ChatQuestionReference) },
+                { name = "status",      value = "200" }
             }
         })
         UserChat(msg)
@@ -362,17 +362,17 @@ function SendEmeddingRequest(datasetHash, question)
         dataset_hash = datasetHash,
         prompt = question
     })
-    -- print("SendEmeddingRequest: " .. ragData)
+    print("SendEmeddingRequest: " .. "v2" .. tostring(SearchPromptReference))
     ao.send({
         Target = EmbeddingProcessId,
         Data = ragData,
         Tags = {
             --https://github.com/apuslabs/ao-rag-embedding
-            { name = "Action",    value = "Search-Prompt" },
-            { name = "Reference", value = tostring(SearchPromptReference) }
+            { name = "Action",      value = "Search-Prompt" },
+            { name = "X-Reference", value = "v2" .. tostring(SearchPromptReference) }
         }
     })
-    return SearchPromptReference
+    return "v2" .. tostring(SearchPromptReference)
 end
 
 Handlers.add(
@@ -430,7 +430,7 @@ Handlers.add(
         -- print("Search-Prompt-Response")
         -- print("Msg: " .. Dump(msg.Tags) .. Dump(msg.Data))
         local isEvaluation = false
-        local evaluationReference = msg.Tags.Reference
+        local evaluationReference = msg.Tags["X-Reference"]
 
         local promptFromEmdedding = 'Null'
         if (msg.Data ~= nil and msg.Data ~= 'Null') then
@@ -454,7 +454,7 @@ Handlers.add(
                 Tags = {
                     Action = "Inference",
                     WorkerType = "Evaluate",
-                    Reference = evaluationReference,
+                    ["X-Reference"] = evaluationReference,
                 },
                 Data = json.encode(body),
             })
@@ -471,7 +471,7 @@ Handlers.add(
     { Action = "Inference-Response" },
     function(msg)
         local workType = msg.Tags.WorkerType or ""
-        local reference = msg.Tags.Reference or ""
+        local reference = msg.Tags["X-Reference"] or ""
         print("Inference-Response: " .. workType .. " " .. reference .. " " .. Dump(msg.Data))
 
         if workType == 'Evaluate' then

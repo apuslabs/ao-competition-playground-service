@@ -89,7 +89,7 @@ function DispatchWork(msg)
                 Target = work.client,
                 Action = "Inference-Response",
                 WorkerType = work.workerType,
-                Reference = work.userReference,
+                ["X-Reference"] = work.userReference,
                 Data = resData
             })
 
@@ -129,7 +129,7 @@ function DispatchWork(msg)
             ao.send({
                 Target = Herd[i],
                 Action = "Inference",
-                Reference = job.userReference,
+                ["X-Reference"] = job.userReference,
                 Data = job.prompt
             })
 
@@ -152,14 +152,14 @@ Handlers.add(
         assert(isAllowed(msg.From), "Inference not allowed: " .. msg.From)
         local msgType = msg.Tags["WorkerType"]
         assert(msgType and (msgType == "Evaluate" or msgType == "Chat"), "Type not allowed: " .. msgType)
-        assert(msg.Tags["Reference"], "Reference not provided.")
+        assert(msg.Tags["X-Reference"], "Reference not provided.")
         assert(msg.Data, "Prompt not provided.")
         table.insert(Queue, {
             timestamp = msg.Timestamp,
             client = msg.From,
             prompt = msg.Data,
             workerType = msg.Tags["WorkerType"],
-            userReference = msg.Tags["Reference"],
+            userReference = msg.Tags["X-Reference"],
         })
 
         print("[" ..
@@ -167,7 +167,7 @@ Handlers.add(
             tostring(msg.Timestamp) .. Colors.reset .. ":" .. Colors.blue .. "REQ" .. Colors.reset .. "]" ..
             " Type: " .. Colors.blue .. msg.Tags["WorkerType"] .. Colors.reset ..
             " | Client: " .. Colors.blue .. string.sub(msg.From, 1, 6) .. Colors.reset ..
-            " | Client ref: " .. Colors.blue .. msg.Tags["Reference"] .. Colors.reset ..
+            " | Client ref: " .. Colors.blue .. msg.Tags["X-Reference"] .. Colors.reset ..
             " | In queue: " .. Colors.red .. #Queue .. Colors.reset
         )
 
@@ -186,7 +186,7 @@ Handlers.add(
                 " Inference-Response not accept." ..
                 " Type: " .. Colors.green .. msg.Tags["WorkerType"] .. Colors.reset ..
                 " | Worker: " .. Colors.blue .. string.sub(msg.From, 1, 6) .. Colors.reset ..
-                " | Reference: " .. Colors.blue .. msg.Tags["Reference"] .. Colors.reset
+                " | Reference: " .. Colors.blue .. msg.Tags["X-Reference"] .. Colors.reset
             )
             return
         end
@@ -207,7 +207,7 @@ Handlers.add(
             Target = work.client,
             Action = "Inference-Response",
             WorkerType = work.workerType,
-            Reference = work.userReference,
+            ["X-Reference"] = work.userReference,
             Data = msg.Data
         })
 

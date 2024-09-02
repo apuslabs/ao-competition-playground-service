@@ -126,8 +126,8 @@ end)
 
 Handlers.add("Search-Prompt", { Action = "Search-Prompt" }, function(msg)
     local data = json.decode(msg.Data)
-    assert(msg.Tags.Reference and #msg.Tags.Reference ~= 0, "Missing reference in tags")
-    local PromptReference = msg.Tags.Reference
+    assert(msg.Tags["X-Reference"] and #msg.Tags["X-Reference"] ~= 0, "Missing reference in tags")
+    local PromptReference = msg.Tags["X-Reference"]
     assert(data.dataset_hash, "Missing dataset hash in data")
     assert(data.prompt, "Missing search prompt")
     local query = string.format(SQL.ADD_PROMPT, escape_string(tostring(PromptReference)), msg.From or "anonymous",
@@ -162,7 +162,7 @@ Handlers.add("Set-Retrieve-Result", { Action = "Set-Retrieve-Result" }, function
             Target = item.sender,
             Tags = {
                 Action = "Search-Prompt-Response",
-                Reference = item.reference
+                ["X-Reference"] = item.reference
             },
             Data = item.retrieve_result
         })
