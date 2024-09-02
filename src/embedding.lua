@@ -144,7 +144,7 @@ Handlers.add("GET-TORETRIEVE-PROMPT", { Action = "GET-TORETRIEVE-PROMPT" }, func
     Handlers.utils.reply(json.encode(prompts))(msg)
 end)
 
-Handlers.add("Set-Retrieve-Result",{ Action = "Set-Retrieve-Result" } , function(msg)
+Handlers.add("Set-Retrieve-Result", { Action = "Set-Retrieve-Result" }, function(msg)
     local data = json.decode(msg.Data)
     for _, item in ipairs(data) do
         -- assert(item.id, "Missing id in item")
@@ -152,7 +152,8 @@ Handlers.add("Set-Retrieve-Result",{ Action = "Set-Retrieve-Result" } , function
         assert(item.reference, "Missing reference in item")
         assert(item.retrieve_result, "Missing result in item")
         print("Set Retrieve Result for" .. item.sender .. "  " .. item.reference)
-        local query = string.format(SQL.SET_RETRIEVE_RESULT, escape_string(item.retrieve_result), item.reference, item.sender)
+        local query = string.format(SQL.SET_RETRIEVE_RESULT, escape_string(item.retrieve_result), item.reference,
+            item.sender)
         DB:exec(query)
         if (item.sender == "anonymous") then
             return

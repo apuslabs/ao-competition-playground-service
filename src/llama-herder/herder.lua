@@ -51,7 +51,9 @@ function countHerder()
             busyChat = busyChat + 1
         end
     end
-    return "Free evaluator: " .. freeEvaluator .. " | Busy evaluator: " .. busyEvaluator .. " | Free chat: " .. freeChat .. " | Busy chat: " .. busyChat
+    return "Free evaluator: " ..
+        freeEvaluator ..
+        " | Busy evaluator: " .. busyEvaluator .. " | Free chat: " .. freeChat .. " | Busy chat: " .. busyChat
 end
 
 function DispatchWork(msg)
@@ -79,9 +81,9 @@ function DispatchWork(msg)
                 table.insert(Herder[wType], worker)
             end
 
-            resData = tostring(0)    
+            resData = tostring(0)
             if wType == 'Chat' then
-                resData =""
+                resData = ""
             end
             ao.send({
                 Target = work.client,
@@ -90,7 +92,7 @@ function DispatchWork(msg)
                 Reference = work.userReference,
                 Data = resData
             })
-            
+
             Busy[worker] = nil
         end
     end

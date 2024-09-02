@@ -1,0 +1,4 @@
+{
+  "diagnostics.globals": ["Handlers", "Owner", "Send", "Dump", "ao"],
+  "diagnostics.disable": ["undefined-field"]
+}
