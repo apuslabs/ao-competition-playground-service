@@ -145,7 +145,7 @@ end
 
 Handlers.add(
     "Inference",
-    Handlers.utils.hasMatchingTag("Action", "Inference"),
+    { Action = "Inference" },
     function(msg)
         assert(isAllowed(msg.From), "Inference not allowed: " .. msg.From)
         local msgType = msg.Tags["WorkerType"]
@@ -175,7 +175,7 @@ Handlers.add(
 
 Handlers.add(
     "InferenceResponseHandler",
-    Handlers.utils.hasMatchingTag("Action", "Inference-Response"),
+    { Action = "Inference-Response" },
     function(msg)
         if not Busy[msg.From] then
             print("[" ..
@@ -218,7 +218,7 @@ Handlers.add(
 
 Handlers.add(
     "Worker-Init",
-    Handlers.utils.hasMatchingTag("Action", "Init-Response"),
+    { Action = "Init-Response" },
     function(msg)
         local workerType = msg.Tags["WorkerType"]
         assert(workerType, "WorkerType not provided.")
