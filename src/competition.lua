@@ -6,10 +6,8 @@ local sqlite3 = require("lsqlite3")
 DB = DB or nil
 CompetitonPools = CompetitonPools or {}
 TokenProcessId = "al1xXXnWnfJD8qyZJvttVGq60z1VPGn4M5y6uCcMBUM"
-EmbeddingProcessId = "4pX6ABsJAJR8RWq_6tpGWfX29rFgIblvTqh6mWNKrro"
-LLMProcessId = 'tgSFV4I0LvTmGw6RPjY4WZi1mDZ5r_2nt_7SDEjS9Hs'
-LLamaProcessId = "lzNUGNUZ0rczcr7zh65ZPXc1XQ-XURk4zpuQRa4vZXk"
-Phi3Template = [[<|system|>%s<|end|><|user|>%s<|end|><|assistant|>]]
+EmbeddingProcessId = "agVpRpcfcR_wygOjNxv-xlbdCgWoaY1-5nPYw6wtJgE"
+LLMProcessId = '972kot-Duchcz6lkGD9EFnm4O2-k_0xT_QjxxNRySPM'
 
 PRIZE_BALANCE = PRIZE_BALANCE or 0
 CompetitonPoolId = 1001
@@ -446,8 +444,6 @@ Handlers.add(
                 expected_response = row.correct_answer:gsub('\'s', ' is'),
                 context = promptFromEmdedding
             }
-            -- local allPrompt = string.format(Phi3Template, SasSystemPrompt, json.encode(body))
-            -- print(allPrompt)
 
             Send({
                 Target = LLMProcessId,

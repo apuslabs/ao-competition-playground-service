@@ -1,18 +1,6 @@
 Herder = Herder or {
-    Evaluate = {
-        "O4ftPNEwm6qGvS29bX9lgVsrvC4boW9FNfh8UcnTaFI",
-        "SY6oajcujiovk_MNRnqrbgPBSI1NgDTbw5ZU7ZGwiyM",
-        "bI49OxDTwF0wKATTrpMbPdT8Ol3HXVaGI5ZGw8kJVIA",
-        "JX8_SjAm2YrQedDc6zVBwXmV1676bza4u-NnebXMf4w",
-        "Za8eBnPuleGsp-Eg8yvdQHdqQNqiOzyLM27HfLuRpQY"
-    },
-    Chat = {
-        "WzZMtjWpxfkSz2xFHDDauZR2KXxVs6VgqSFqn2bjkX8",
-        "0G0YQ4PmJ-uEDj8Fl335yDwy8RsPcURHZg2UqDt348E",
-        "E2fy7iYlGc-JMjfiSIUaTx0OmYTWBhjcoXFLRuKlkKY",
-        "VtTkbsMIQBDbR-lEgrNuPxjqxcvY-FNoiNoGVPxjVHU",
-        "x4EYi_Me5rMobVtJxQNzmZMg-CiapxRCha1NrijfN88"
-    }
+    Evaluate = {},
+    Chat = {}
 }
 Busy = Busy or {}
 Queue = Queue or {}
@@ -263,7 +251,7 @@ function testEvaluateInference(times)
             Tags = {
                 Action = "Inference",
                 WorkerType = "Evaluate",
-                Reference = "test" .. tostring(i)
+                ["X-Reference"] = "test" .. tostring(i)
             },
             Data = testEvaluatePrompt,
         })

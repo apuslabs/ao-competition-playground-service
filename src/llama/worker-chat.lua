@@ -11,7 +11,7 @@ WorkerType = "Chat"
 
 ModelID = ModelID or "ISrbGzQot05rs_HKC08O_SmkipYQnqgB1yC3mjZZeEo"
 Llama = Llama or nil
-RouterID = RouterID or "tgSFV4I0LvTmGw6RPjY4WZi1mDZ5r_2nt_7SDEjS9Hs"
+RouterID = RouterID or "972kot-Duchcz6lkGD9EFnm4O2-k_0xT_QjxxNRySPM"
 
 InferenceAllowList = {
     [RouterID] = true,

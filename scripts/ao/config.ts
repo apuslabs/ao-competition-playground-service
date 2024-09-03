@@ -1,17 +1,8 @@
-export const SQLITE_MODULE = "u1Ju_X8jiuq4rX9Nh-ZGRQuYQZgV2MKLMT3CZsykk54"
-export const DEFAULT_SCHEDULER = "_GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA"
+export const SQLITE_MODULE = "u1Ju_X8jiuq4rX9Nh-ZGRQuYQZgV2MKLMT3CZsykk54";
+export const DEFAULT_SCHEDULER = "_GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA";
 
-export const Phi3Mini4kModelDataTx = "ISrbGzQot05rs_HKC08O_SmkipYQnqgB1yC3mjZZeEo"
+export const WrappedARProcess = "xU9zFkq3X2ZQ6olwNVvr1vUWIjc3kXTWr7xKQD6dh10";
+export const PoolProcess = "pNSXgR1gIp6zzoXZv4mfSLQfuWVzvPsLZHg8-oi_DZo";
 
-export const WrappedARProcess = "xU9zFkq3X2ZQ6olwNVvr1vUWIjc3kXTWr7xKQD6dh10"
-export const SiqaProcess = "XUw5NtwUzk7hf_dE4ifEFD2rHfXffMLb8s2QfnZEvg4"
-//export const PoolProcess = "DLJoP8Xtdat6SKz3kqYGZPaa7DJBG6etF1jRLQCwquo"
-export const PoolProcess = "pNSXgR1gIp6zzoXZv4mfSLQfuWVzvPsLZHg8-oi_DZo"
-//export const PoolProcess = "9OEKsZsPpFP3jwjTe8wMHmkXP8UjdfkOSLJ9RgxL0WM"
-
-export const ModelID = "ISrbGzQot05rs_HKC08O_SmkipYQnqgB1yC3mjZZeEo"
-// const RouterProcess = "glGRJ4CqL-mL29RN8udCTro2-7svs7hfqH9Vf4WXAn4"
-// const WorkerProcess = "Ourv4yTMcfTmyqy3KnilgmajzpZcGWBnRkm-BKe-Md8"
-
-export const EMBEDDING_PROCESS = "4pX6ABsJAJR8RWq_6tpGWfX29rFgIblvTqh6mWNKrro"
-export const EMBEDDING_SERVICE = "http://127.0.0.1:8082"
+export const EMBEDDING_PROCESS = "agVpRpcfcR_wygOjNxv-xlbdCgWoaY1-5nPYw6wtJgE";
+export const EMBEDDING_SERVICE = "http://127.0.0.1:8082";
