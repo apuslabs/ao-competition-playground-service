@@ -13,6 +13,14 @@ PRIZE_BALANCE = PRIZE_BALANCE or 0
 CompetitonPoolId = 1001
 
 Handlers.add(
+    "CronTick",
+    "Cron",
+    function()
+        print('tick')
+    end
+)
+
+Handlers.add(
     "Init",
     { Action = "Init" },
     function()
@@ -221,46 +229,6 @@ local SQL = {
 -- )
 
 Handlers.add(
-    "DEBUG-DB",
-    { Action = "DEBUG-DB" },
-    function(msg)
-        print("DEBUG-DB")
-
-        -- print("participants")
-        -- for row in DB:nrows("select count(*) as cnt from participants;") do
-        -- 	print("rows: " .. Dump(row))
-        -- end
-        -- for row in DB:nrows("select * from participants;") do
-        -- 	print(Dump(row))
-        -- end
-
-        -- print("datasets")
-        -- for row in DB:nrows("select count(*) as cnt from datasets;") do
-        -- 	print("rows: " .. Dump(row))
-        -- end
-        -- for row in DB:nrows("select * from datasets;") do
-        -- 	print(Dump(row))
-        -- end
-
-        --print("evaluations")
-        --for row in DB:nrows("select count(*) as cnt from evaluations;") do
-        --	print("rows: " .. Dump(row))
-        --end
-        --for row in DB:nrows("select * from evaluations;") do
-        --	print(Dump(row))
-        --end
-
-        -- print("chatGroundEvaluations")
-        -- for row in DB:nrows("select count(*) as cnt from chatGroundEvaluations;") do
-        -- 	print("rows: " .. Dump(row))
-        -- end
-        -- for row in DB:nrows("select * from chatGroundEvaluations;") do
-        -- 	print(Dump(row))
-        -- end
-    end
-)
-
-Handlers.add(
     "Get-Datasets",
     { Action = "Get-Datasets" },
     function(msg)
@@ -282,75 +250,6 @@ ChatQuestionReference = ChatQuestionReference or 0
 UserChatStatistics = UserChatStatistics or {}
 DatasetChatStatistics = DatasetChatStatistics or {}
 
-function UserChat(msg)
-    local from = msg.From
-    local timestamp = msg.Timestamp
-    if UserChatStatistics[from] == nil then
-        UserChatStatistics[from] = {}
-    end
-    if UserChatStatistics[from] then
-        table.insert(UserChatStatistics[from], timestamp)
-    end
-end
-
-function DatasetChat(hash, msg)
-    local timestamp = msg.Timestamp
-    if DatasetChatStatistics[hash] == nil then
-        DatasetChatStatistics[hash] = {}
-    end
-    if DatasetChatStatistics[hash] then
-        table.insert(DatasetChatStatistics[hash], timestamp)
-    end
-end
-
-Handlers.add(
-    "Chat-Statistics",
-    { Action = "Chat-Statistics" },
-    function(msg)
-        if (msg.From ~= ao.id and msg.From ~= Owner) then
-            assert(false, "Permission denied")
-            return
-        end
-        ao.send({
-            Target = msg.From,
-            Tags = {
-                { name = "Action", value = "Chat-Statistics-Response" },
-                { name = "status", value = "200" }
-            },
-            Data = json.encode({
-                UserChatStatistics = UserChatStatistics,
-                DatasetChatStatistics = DatasetChatStatistics
-            })
-        })
-    end
-)
-
-Handlers.add(
-    "Chat-Question",
-    { Action = "Chat-Question" },
-    function(msg)
-        local data = json.decode(msg.Data)
-        local hash = data.dataset_hash
-        local question = data.question
-        local token = tonumber(data.token)
-
-        ChatQuestionReference = ChatQuestionReference + 1
-        DB:exec(string.format(SQL.INSERT_CHAT_GROUND_EVALUATION, hash, FixTextBeforeSaveDB(question), token,
-            tostring(ChatQuestionReference)))
-        local inferReference = SendEmeddingRequest(hash, question)
-        DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_INFERENCE, inferReference, ChatQuestionReference))
-        ao.send({
-            Target = msg.From,
-            Tags = {
-                { name = "Action",      value = "Chat-Question-Response" },
-                { name = "X-Reference", value = tostring(ChatQuestionReference) },
-                { name = "status",      value = "200" }
-            }
-        })
-        UserChat(msg)
-        DatasetChat(hash, msg)
-    end
-)
 
 SearchPromptReference = SearchPromptReference or 0
 function SendEmeddingRequest(datasetHash, question)
@@ -397,51 +296,20 @@ Handlers.add(
 )
 
 Handlers.add(
-    "Get-Chat-Answer",
-    { Action = "Get-Chat-Answer" },
-    function(msg)
-        local clientReference = msg.Data
-        local statuCode, rsp
-        for row in DB:nrows(string.format(SQL.FIND_CHAT_GROUND_EVALUATION_BY_CLIENT_REFERENCE, clientReference)) do
-            if row.response == nil then
-                statuCode = 100
-                rsp = "PROCESSING"
-            else
-                statuCode = 200
-                rsp = row.response
-            end
-        end
-        ao.send({
-            Target = msg.From,
-            Tags = {
-                { name = "Action", value = "Get-Chat-Answer-Response" },
-                { name = "status", value = tostring(statuCode) } },
-            Data = rsp
-        })
-    end
-)
-
-Handlers.add(
     "Search-Prompt-Response",
     { Action = "Search-Prompt-Response" },
     function(msg)
-        -- print("Search-Prompt-Response")
-        -- print("Msg: " .. Dump(msg.Tags) .. Dump(msg.Data))
-        local isEvaluation = false
         local evaluationReference = msg.Tags["X-Reference"]
 
         local promptFromEmdedding = 'Null'
         if (msg.Data ~= nil and msg.Data ~= 'Null') then
             promptFromEmdedding = msg.Data
         end
-        -- print(type(promptFromEmdedding))
 
         for row in DB:nrows(string.format(SQL.GET_EVALUATION_BY_REFERENCE, evaluationReference)) do
-            -- print("Send evaluation request" .. evaluationReference)
-            isEvaluation = true
             local body = {
-                question = row.question:gsub('\'s', ' is'),
-                expected_response = row.correct_answer:gsub('\'s', ' is'),
+                question = row.question,
+                expected_response = row.correct_answer,
                 context = promptFromEmdedding
             }
 
@@ -455,52 +323,22 @@ Handlers.add(
                 Data = json.encode(body),
             })
         end
-
-        if isEvaluation == false then
-            SendUserChatGroundRequest(promptFromEmdedding, evaluationReference)
-        end
     end
 )
 
 Handlers.add(
     "Inference-Response",
-    { Action = "Inference-Response" },
+    { Action = "Inference-Response", WorkerType = "Evaluate" },
     function(msg)
         local workType = msg.Tags.WorkerType or ""
         local reference = msg.Tags["X-Reference"] or ""
         print("Inference-Response: " .. workType .. " " .. reference .. " " .. Dump(msg.Data))
 
-        if workType == 'Evaluate' then
-            local data = msg.Data or "-1"
-            local score = tonumber(data)
-            DB:exec(string.format(SQL.UPDATE_SCORE, score, FixTextBeforeSaveDB(reference)))
-        elseif workType == 'Chat' then
-            DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_ANSWER, FixTextBeforeSaveDB(msg.Data), reference))
-        end
+        local data = msg.Data or "-1"
+        local score = tonumber(data)
+        DB:exec(string.format(SQL.UPDATE_SCORE, score, FixTextBeforeSaveDB(reference)))
     end
 )
-
-function SendUserChatGroundRequest(prompt, evaluationReference)
-    -- print("SendUserChatGroundRequest(" .. evaluationReference .. ")")
-    -- DB:exec(string.format(SQL.UPDATE_CHAT_GROUND_EVALUATION_PROMPT, prompt))
-    for row in DB:nrows(string.format(SQL.FIND_CHAT_GROUND_EVALUATION_BY_INFER_REFERENCE, evaluationReference)) do
-        local body = {
-            question = row.question,
-            context = prompt
-        }
-
-        -- print("InferenceMessage(" .. evaluationReference .. "): " .. json.encode(body))
-        Send({
-            Target = LLMProcessId,
-            Tags = {
-                Action = "Inference",
-                WorkerType = "Chat",
-                Reference = evaluationReference,
-            },
-            Data = json.encode(body),
-        })
-    end
-end
 
 Handlers.add(
     "Balance-Response",

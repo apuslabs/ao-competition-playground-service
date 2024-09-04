@@ -35,7 +35,7 @@ local function DispatchWork()
                 log.warn("REMOVE", wType, string.sub(worker, 1, 6))
                 TimeoutHerder[wType][worker] = nil
             end
-            work.rawMsg.reply(wType == "Chat" and "" or "0")
+            work.rawMsg.reply({ Status = "408", Data = wType == "Chat" and "" or "0" })
             Busy[worker] = nil
         end
     end
@@ -105,7 +105,7 @@ local function InferenceHandler(msg)
         rawMsg = msg
     })
 
-    log.trace("REQ", msg.Tags["WorkerType"], string.sub(msg.From, 1, 6), #Queue)
+    log.info("REQ", msg.Tags["WorkerType"], string.sub(msg.From, 1, 6), #Queue)
 
     DispatchWork()
 end
