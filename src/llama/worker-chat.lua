@@ -1,4 +1,6 @@
 -- Module: XcWULRSWWv_bmaEyx4PEOFf4vgRSVCP9vM5AucRvI40
+local aos2 = require("utils.aos2polyfill")
+
 Colors = {
     red = "\27[31m",
     green = "\27[32m",
@@ -141,30 +143,8 @@ Handlers.add(
             " | Reference: " .. Colors.blue .. msg.Tags["Reference"] .. Colors.reset ..
             " | Answer: " .. Colors.blue .. answer .. Colors.reset)
 
-        Send({
-            Target = msg.From,
-            Tags = {
-                Action = "Inference-Response",
-                Reference = msg.Tags["Reference"],
-                WorkerType = WorkerType,
-            },
-            Data = answer,
-        })
+        aos2.replyMsg(msg, { Data = answer })
 
         Llama.loadState()
     end
 )
-
-local testPrompt =
-[[{"question":"What are the use cases for a decentralized podcasting app?","context":"Question: What is the UI preview for the upcoming social media platform? Answer: The UI preview shows a functional public prototype for a truly decentralized social media platform.\nQuestion: What is the importance of governance in cryptonetworks? Answer: Governance tokens represent the power to change the rules of the system, and their value increases as the cryptonetwork grows.\nQuestion: Why are content creation and distribution governed by anyone other than creators and end users? Answer: This is a core question driving many underlying issues in society, and the answer lies in the deficiency of the HTTP protocol.\n"}]]
-
-function testInference()
-    Send({
-        Target = ao.id,
-        Tags = {
-            Action = "Inference",
-            Reference = "test",
-        },
-        Data = testPrompt,
-    })
-end

@@ -1,4 +1,5 @@
 -- Module: XcWULRSWWv_bmaEyx4PEOFf4vgRSVCP9vM5AucRvI40
+local aos2 = require("utils.aos2polyfill")
 
 Colors = {
     red = "\27[31m",
@@ -154,30 +155,8 @@ Handlers.add(
             " | Reference: " .. Colors.blue .. msg.Tags["Reference"] .. Colors.reset ..
             " | Score: " .. Colors.blue .. score .. Colors.reset)
 
-        Send({
-            Target = msg.From,
-            Tags = {
-                Action = "Inference-Response",
-                Reference = msg.Tags["Reference"],
-                WorkerType = WorkerType,
-            },
-            Data = tostring(score),
-        })
+        aos2.replyMsg(msg, { Data = tostring(score) })
 
         Llama.loadState()
     end
 )
-
-local testPrompt =
-[[{"question":"It is 2021-07-10 01:09:09 now. What are the use cases for a decentralized podcasting app?","expected_response":"It is 2021-07-10 03:33:07 now. Announcement of the next permaweb incubator, Open Web Foundry v4, is coming very soon! Anyone up for building a permaweb podcasting app? There are major opportunities in this area.","context":"Question: What is the UI preview for the upcoming social media platform? Answer: The UI preview shows a functional public prototype for a truly decentralized social media platform.\nQuestion: What is the importance of governance in cryptonetworks? Answer: Governance tokens represent the power to change the rules of the system, and their value increases as the cryptonetwork grows.\nQuestion: Why are content creation and distribution governed by anyone other than creators and end users? Answer: This is a core question driving many underlying issues in society, and the answer lies in the deficiency of the HTTP protocol.\n"}]]
-
-function testInference()
-    Send({
-        Target = ao.id,
-        Tags = {
-            Action = "Inference",
-            Reference = "test",
-        },
-        Data = testPrompt,
-    })
-end

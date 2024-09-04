@@ -1,3 +1,7 @@
+local ao = require(".ao")
+local log = require("utils.log")
+local datetime = require('utils.datetime')
+
 Herder = Herder or {
     Evaluate = {},
     Chat = {}
@@ -9,85 +13,35 @@ TimeoutHerder = TimeoutHerder or {
     Chat = {}
 }
 
-Colors = {
-    red = "\27[31m",
-    green = "\27[32m",
-    blue = "\27[34m",
-    reset = "\27[0m",
-    gray = "\27[90m"
-}
-
 InferenceAllowList = {
-    ["xLlcWNqzvVJHOYpgFP9QV-FSF4mcmPtk8xjverzRK3U"] = true,
-    ["Zv4NMG3qYgCtLLd9UTp8c0lhUjAnok2bVJahSwe1CkM"] = true,
     ["pNSXgR1gIp6zzoXZv4mfSLQfuWVzvPsLZHg8-oi_DZo"] = true,
+    ["yq6x9mAh87H7-YcCOrYyR_wC1OLP3rsLzVNCc1SPTV8"] = true
 }
 
 local function isAllowed(client)
     return InferenceAllowList[client] == true or client == ao.id or client == Owner
 end
 
-function countHerder()
-    local freeEvaluator = #Herder["Evaluate"]
-    local freeChat = #Herder["Chat"]
-    local busyEvaluator = 0
-    local busyChat = 0
-    for _, work in pairs(Busy) do
-        if work.workerType == "Evaluate" then
-            busyEvaluator = busyEvaluator + 1
-        elseif work.workerType == "Chat" then
-            busyChat = busyChat + 1
-        end
-    end
-    return "Free evaluator: " ..
-        freeEvaluator ..
-        " | Busy evaluator: " .. busyEvaluator .. " | Free chat: " .. freeChat .. " | Busy chat: " .. busyChat
-end
-
-function DispatchWork(msg)
+local function DispatchWork()
     -- check Busy table for if worker is over 1 hour
     for worker, work in pairs(Busy) do
-        if (msg.Timestamp - work.timestamp) > 3600000 then
+        if (datetime.unix() - work.timestamp) > 3600000 then
             local wType = work.workerType
-            print("[" .. Colors.gray .. "TIMEOUT" .. Colors.reset .. " ]" ..
-                " Type: " .. Colors.green .. wType .. Colors.reset ..
-                " | Client: " .. Colors.blue .. string.sub(work.client, 1, 6) .. Colors.reset ..
-                " | Client ref: " .. Colors.blue .. string.sub(work.userReference, 1, 10) .. Colors.reset ..
-                " | Worker: " .. Colors.green .. string.sub(worker, 1, 6) .. Colors.reset
-            )
-            TimeoutHerder[wType][worker] = TimeoutHerder[wType][worker] or 0
-            if (TimeoutHerder[wType][worker] >= 3) then
-                -- if more then twice, print and don't add back to Herder
-                print("[" .. Colors.gray .. "REMOVING WORKER" .. Colors.reset .. " ]" ..
-                    " Type: " .. Colors.green .. wType .. Colors.reset ..
-                    " | Worker: " .. Colors.green .. string.sub(worker, 1, 6) .. Colors.reset
-                )
-                -- TimeoutHerder[wType][worker] = nil
-            else
-                -- if less then twice, record and add back to Herder
-                TimeoutHerder[wType][worker] = TimeoutHerder[wType][worker] + 1
+            if not TimeoutHerder[wType][worker] then
+                log.warn("TIMEOUT", wType, string.sub(worker, 1, 6))
+                TimeoutHerder[wType][worker] = true
                 table.insert(Herder[wType], worker)
+            else
+                log.warn("REMOVE", wType, string.sub(worker, 1, 6))
+                TimeoutHerder[wType][worker] = nil
             end
-
-            resData = tostring(0)
-            if wType == 'Chat' then
-                resData = ""
-            end
-            ao.send({
-                Target = work.client,
-                Action = "Inference-Response",
-                WorkerType = work.workerType,
-                ["X-Reference"] = work.userReference,
-                Data = resData
-            })
-
+            work.rawMsg.reply(wType == "Chat" and "" or "0")
             Busy[worker] = nil
         end
     end
 
-    -- check every Herd, if there is work, dispatch it
+    -- check every Herd, if there is work in queue, dispatch it
     for workerType, Herd in pairs(Herder) do
-        -- goto tag for next worker type
         for i in ipairs(Herd) do
             if #Queue == 0 then
                 return
@@ -102,30 +56,31 @@ function DispatchWork(msg)
                 end
             end
 
+            -- if not job for this worker type, continue to next worker type
             if not job then
                 goto next_worker_type
             end
 
-            print("[" .. Colors.gray .. "DISPATCHING WORK" .. Colors.reset .. " ]" ..
-                " Type: " .. Colors.blue .. workerType .. Colors.reset ..
-                " | Client: " .. Colors.blue .. string.sub(job.client, 1, 6) .. Colors.reset ..
-                " | Client ref: " .. Colors.blue .. string.sub(job.userReference, 1, 10) .. Colors.reset ..
-                " | Worker: " .. Colors.green .. string.sub(Herd[i], 1, 6) .. Colors.reset ..
-                " | In queue: " .. Colors.red .. #Queue .. Colors.reset
-            )
+            log.trace("DISPATCHING WORK", workerType, "Client:", string.sub(job.client, 1, 6), "Worker:",
+                string.sub(Herd[i], 1, 6), "Queue:", #Queue)
 
-            ao.send({
+            -- TODO: use forward in future
+            Send({
                 Target = Herd[i],
                 Action = "Inference",
-                ["X-Reference"] = job.userReference,
                 Data = job.prompt
-            })
+            }).onReply(function(replyMsg)
+                log.info("RES", workerType, string.sub(replyMsg.From, 1, 6), datetime.unix() - job.timestamp)
+                job.rawMsg.reply({ Data = replyMsg.Data })
+                Busy[replyMsg.From] = nil
+                table.insert(Herder[workerType], replyMsg.From)
+                DispatchWork()
+            end)
 
             Busy[Herd[i]] = {
-                timestamp = msg.Timestamp,
-                client = job.client,
-                userReference = job.userReference,
-                workerType = job.workerType
+                timestamp = datetime.unix(),
+                workerType = job.workerType,
+                rawMsg = job.rawMsg
             }
             table.remove(Herd, i)
         end
@@ -133,127 +88,35 @@ function DispatchWork(msg)
     end
 end
 
-Handlers.add(
-    "Inference",
-    Handlers.utils.hasMatchingTag("Action", "Inference"),
-    function(msg)
-        assert(isAllowed(msg.From), "Inference not allowed: " .. msg.From)
-        local msgType = msg.Tags["WorkerType"]
-        assert(msgType and (msgType == "Evaluate" or msgType == "Chat"), "Type not allowed: " .. msgType)
-        assert(msg.Tags["X-Reference"], "Reference not provided.")
-        assert(msg.Data, "Prompt not provided.")
-        table.insert(Queue, {
-            timestamp = msg.Timestamp,
-            client = msg.From,
-            prompt = msg.Data,
-            workerType = msg.Tags["WorkerType"],
-            userReference = msg.Tags["X-Reference"],
-        })
-
-        print("[" ..
-            Colors.gray ..
-            tostring(msg.Timestamp) .. Colors.reset .. ":" .. Colors.blue .. "REQ" .. Colors.reset .. "]" ..
-            " Type: " .. Colors.blue .. msg.Tags["WorkerType"] .. Colors.reset ..
-            " | Client: " .. Colors.blue .. string.sub(msg.From, 1, 6) .. Colors.reset ..
-            " | Client ref: " .. Colors.blue .. msg.Tags["X-Reference"] .. Colors.reset ..
-            " | In queue: " .. Colors.red .. #Queue .. Colors.reset
-        )
-
-        DispatchWork(msg)
-    end
-)
-
-Handlers.add(
-    "InferenceResponseHandler",
-    Handlers.utils.hasMatchingTag("Action", "Inference-Response"),
-    function(msg)
-        if not Busy[msg.From] then
-            print("[" ..
-                Colors.gray ..
-                tostring(msg.Timestamp) .. Colors.reset .. ":" .. Colors.red .. "ERR" .. Colors.reset .. "]" ..
-                " Inference-Response not accept." ..
-                " Type: " .. Colors.green .. msg.Tags["WorkerType"] .. Colors.reset ..
-                " | Worker: " .. Colors.blue .. string.sub(msg.From, 1, 6) .. Colors.reset ..
-                " | Reference: " .. Colors.blue .. msg.Tags["X-Reference"] .. Colors.reset
-            )
-            return
-        end
-
-        local work = Busy[msg.From]
-        print("[" ..
-            Colors.gray ..
-            tostring(msg.Timestamp) .. Colors.reset .. ":" .. Colors.green .. "RES" .. Colors.reset .. "]" ..
-            " Type: " .. Colors.green .. work.workerType .. Colors.reset ..
-            " | Client: " .. Colors.blue .. string.sub(work.client, 1, 6) .. Colors.reset ..
-            " | Client ref: " .. Colors.blue .. string.sub(work.userReference, 1, 10) .. Colors.reset ..
-            " | Worker: " .. Colors.green .. string.sub(msg.From, 1, 6) .. Colors.reset ..
-            " | Duration: " ..
-            Colors.red .. tostring((math.floor(msg.Timestamp - work.timestamp) / 1000)) .. Colors.reset .. "s"
-        )
-
-        ao.send({
-            Target = work.client,
-            Action = "Inference-Response",
-            WorkerType = work.workerType,
-            ["X-Reference"] = work.userReference,
-            Data = msg.Data
-        })
-
-        Busy[msg.From] = nil
-        table.insert(Herder[work.workerType], msg.From)
-
-        DispatchWork(msg)
-    end
-)
-
-Handlers.add(
-    "Worker-Init",
-    Handlers.utils.hasMatchingTag("Action", "Init-Response"),
-    function(msg)
-        local workerType = msg.Tags["WorkerType"]
-        assert(workerType, "WorkerType not provided.")
-        if not Herder[workerType] then
-            Herder[workerType] = {}
-        end
-        table.insert(Herder[workerType], msg.From)
-        print("[" .. Colors.gray .. tostring(msg.Timestamp) .. Colors.reset .. ":" ..
-            Colors.green .. "INIT" .. Colors.reset .. "]" ..
-            " Type: " .. Colors.green .. workerType .. Colors.reset ..
-            " | Worker: " .. Colors.blue .. string.sub(msg.From, 1, 6) .. Colors.reset
-        )
-    end
-)
-
-function testChatInference(times)
-    local testChatPrompt =
-    [[{"question":"What are the use cases for a decentralized podcasting app?","context":"Question: What is the UI preview for the upcoming social media platform? Answer: The UI preview shows a functional public prototype for a truly decentralized social media platform.\nQuestion: What is the importance of governance in cryptonetworks? Answer: Governance tokens represent the power to change the rules of the system, and their value increases as the cryptonetwork grows.\nQuestion: Why are content creation and distribution governed by anyone other than creators and end users? Answer: This is a core question driving many underlying issues in society, and the answer lies in the deficiency of the HTTP protocol.\n"}]]
-
-    for i = 1, times do
-        Send({
-            Target = ao.id,
-            Tags = {
-                Action = "Inference",
-                WorkerType = "Chat",
-                Reference = "test" .. tostring(i)
-            },
-            Data = testChatPrompt,
-        })
-    end
+local function checkWorkerType(workerType)
+    assert(workerType == "Evaluate" or workerType == "Chat", "WorkerType not allowed: " .. workerType)
 end
 
-function testEvaluateInference(times)
-    local testEvaluatePrompt =
-    [[{"question":"It is 2021-07-10 01:09:09 now. What are the use cases for a decentralized podcasting app?","expected_response":"It is 2021-07-10 03:33:07 now. Announcement of the next permaweb incubator, Open Web Foundry v4, is coming very soon! Anyone up for building a permaweb podcasting app? There are major opportunities in this area.","context":"Question: What is the UI preview for the upcoming social media platform? Answer: The UI preview shows a functional public prototype for a truly decentralized social media platform.\nQuestion: What is the importance of governance in cryptonetworks? Answer: Governance tokens represent the power to change the rules of the system, and their value increases as the cryptonetwork grows.\nQuestion: Why are content creation and distribution governed by anyone other than creators and end users? Answer: This is a core question driving many underlying issues in society, and the answer lies in the deficiency of the HTTP protocol.\n"}]]
+local function InferenceHandler(msg)
+    assert(isAllowed(msg.From), "Inference not allowed: " .. msg.From)
+    local msgType = msg.Tags["WorkerType"]
+    checkWorkerType(msgType)
+    assert(msg.Data, "Prompt not provided.")
+    table.insert(Queue, {
+        timestamp = datetime.unix(),
+        workerType = msg.Tags["WorkerType"],
+        client = msg.From,
+        prompt = msg.Data,
+        rawMsg = msg
+    })
 
-    for i = 1, times do
-        Send({
-            Target = ao.id,
-            Tags = {
-                Action = "Inference",
-                WorkerType = "Evaluate",
-                ["X-Reference"] = "test" .. tostring(i)
-            },
-            Data = testEvaluatePrompt,
-        })
-    end
+    log.trace("REQ", msg.Tags["WorkerType"], string.sub(msg.From, 1, 6), #Queue)
+
+    DispatchWork()
 end
+
+function WorkerInitResponse(msg)
+    local workerType = msg.Tags["WorkerType"]
+    checkWorkerType(workerType)
+    table.insert(Herder[workerType], msg.From)
+    log.info("INIT", workerType, string.sub(msg.From, 1, 6))
+end
+
+Handlers.add("Worker-Init", "Init-Response", WorkerInitResponse)
+
+Handlers.add("Inference", "Inference", InferenceHandler)
