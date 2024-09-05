@@ -1,34 +1,37 @@
 local json = require("json")
 local config = require("utils.config")
+local Helper = require("utils.helper")
 local LlamaClient = {
     ProcessID = config.Process.LlamaHerder,
+    ClinetID = ao.id,
 }
 
-LlamaClient.Evaluate = function(data, onReply)
-    assert(data.question, "question is required")
-    assert(data.expected_response, "expected_response is required")
-    assert(data.context, "context is required")
+LlamaClient.Reference = function()
+    return string.format("%-6s%s", LlamaClient.ClinetID, ao.reference)
+end
+
+LlamaClient.Evaluate = function(data, onReply, reference)
+    Helper.assert_non_empty(data.question, data.expected_response, data.context)
+    reference = reference or LlamaClient.Reference()
     Send({
         Target = LlamaClient.ProcessID,
-        Tags = {
-            Action = "Inference",
-            WorkerType = "Evaluate",
-        },
+        ["X-Reference"] = reference,
+        Action = "Inference",
+        WorkerType = "Evaluate",
         Data = json.encode(data),
     }).onReply(function(replyMsg)
         onReply(replyMsg.Data)
     end)
 end
 
-LlamaClient.Chat = function(data, onReply)
-    assert(data.question, "question is required")
-    assert(data.context, "context is required")
+LlamaClient.Chat = function(data, onReply, reference)
+    Helper.assert_non_empty(data.question, data.context)
+    reference = reference or LlamaClient.Reference()
     Send({
         Target = LlamaClient.ProcessID,
-        Tags = {
-            Action = "Inference",
-            WorkerType = "Chat",
-        },
+        ["X-Reference"] = reference,
+        Action = "Inference",
+        WorkerType = "Chat",
         Data = json.encode(data),
     }).onReply(function(replyMsg)
         onReply(replyMsg.Data)

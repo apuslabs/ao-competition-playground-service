@@ -102,16 +102,28 @@ DB.update = function(self, table, data, conditions)
     return self:exec(query)
 end
 
-DB.query = function(self, table, conditions)
+DB.query = function(self, table, conditions, options)
     assert(self.Client, "Database client is not initialized")
     local where = ""
     for k, v in pairs(conditions or {}) do
         if where ~= "" then
             where = where .. " AND "
         end
-        where = where .. string.format("%s = %s", k, prepare_arg(v))
+        if v == nil then
+            where = where .. string.format("%s IS NULL", k)
+        else
+            where = where .. string.format("%s = %s", k, prepare_arg(v))
+        end
     end
-    local query = string.format("SELECT * FROM %s WHERE %s", table, where == "" and "1" or where)
+    local query = string.format(
+        "SELECT %s FROM %s WHERE %s %s %s %s;",
+        options.fields or "*",
+        table,
+        where == "" and "1" or where,
+        options.order ~= nil and "ORDER BY " .. options.Order or "",
+        options.limit ~= nil and "LIMIT " .. options.Limit or "",
+        options.offset ~= nil and "OFFSET " .. options.Offset or ""
+    )
     return self:nrows(query)
 end
 

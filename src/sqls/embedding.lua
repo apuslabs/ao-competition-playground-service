@@ -4,14 +4,14 @@ local SQL = {}
 
 SQL.DATABASE = [[
     CREATE TABLE IF NOT EXISTS contents (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         dataset_hash TEXT NOT NULL,
         content TEXT NOT NULL,
         embeded INTEGER NOT NULL DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS prompts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         reference TEXT NOT NULL,
         dataset_hash TEXT NOT NULL,
         sender TEXT NOT NULL,

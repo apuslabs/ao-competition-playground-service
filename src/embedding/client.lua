@@ -1,44 +1,59 @@
 local config = require("utils.config")
-local Client = {
-    ProcessID = config.Process.Embedding
+local RAGClient = {
+    ProcessID = config.Process.Embedding,
+    ClinetID = ao.id,
 }
 local json = require("json")
 local Helper = require("utils.helper")
 local LlamaClient = require("llama.client")
 
-Client.Chat = function(dataset_hash, question, onReply)
-    Helper.assert_non_empty(dataset_hash, question)
+RAGClient.Reference = function()
+    return string.format("%-6s%s", RAGClient.ClinetID, ao.reference)
+end
+
+RAGClient.Chat = function(data, onReply, reference)
+    Helper.assert_non_empty(data.dataset_hash, data.question)
+    reference = reference or RAGClient.Reference()
     Send({
-        Target = Client.ProcessID,
+        Target = RAGClient.ProcessID,
         Action = "Search-Prompt",
+        ["X-Reference"] = reference or RAGClient.Reference(),
         Data = json.encode({
-            dataset_hash = dataset_hash,
-            prompt = question
+            dataset_hash = data.dataset_hash,
+            prompt = data.question
         })
     }).onReply(function(replyMsg)
         LlamaClient.Chat({
-            question = question,
+            question = data.question,
             context = replyMsg.Data
-        }, onReply)
+        }, function(resultMsg)
+            onReply(resultMsg.Data, reference)
+        end, reference)
     end)
+    return reference
 end
 
-Client.Evaluate = function(dataset_hash, question, expected_response, onReply)
-    Helper.assert_non_empty(dataset_hash, question, expected_response)
+RAGClient.Evaluate = function(data, onReply, reference)
+    Helper.assert_non_empty(data.dataset_hash, data.question, data.expected_response)
+    reference = reference or RAGClient.Reference()
     Send({
-        Target = Client.ProcessID,
+        Target = RAGClient.ProcessID,
         Action = "Search-Prompt",
+        ["X-Reference"] = reference,
         Data = json.encode({
-            dataset_hash = dataset_hash,
-            prompt = question
+            dataset_hash = data.dataset_hash,
+            prompt = data.question
         })
     }).onReply(function(replyMsg)
         LlamaClient.Evaluate({
-            question = question,
-            expected_response = expected_response,
+            question = data.question,
+            expected_response = data.expected_response,
             context = replyMsg.Data
-        }, onReply)
+        }, function(resultMsg)
+            onReply(resultMsg.Data, reference)
+        end, reference)
     end)
+    return reference
 end
 
-return Client
+return RAGClient

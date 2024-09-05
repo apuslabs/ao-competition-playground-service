@@ -1,24 +1,15 @@
 local sqlite3 = require("lsqlite3")
 local json = require("json")
-local SQL = require("sql")
+local SQL = require("sqls.embedding")
 local log = require("utils.log")
 local datetime = require("utils.datetime")
 local Helper = require("utils.helper")
+local Config = require("utils.config")
 
 DBClient = DBClient or sqlite3.open_memory()
 SQL.init(DBClient)
 
-local lastSubmissionTime = 0
-local function throttleCheck(msg)
-    local now = datetime.unix()
-    if (now - lastSubmissionTime) < 5 * 60 then
-        msg.reply({ Status = "429", Data = "Processing data. Try again in five minutes." })
-        log.warn(string.format("Req from %s blocked due to rate limit", msg.From))
-        return false
-    end
-    lastSubmissionTime = now
-    return true
-end
+local throttleCheck = Helper.throttleCheckWrapper(Config.Pool.JoinThrottle)
 
 function CreateDatasetHandler(msg)
     if not throttleCheck(msg) then
@@ -48,21 +39,7 @@ function SearchPromptHandler(msg)
     msg.reply({ Status = "200", Data = "Prompt added successfully" })
 end
 
-Handlers.add("Create-Dataset", { Action = "Create-Dataset" }, CreateDatasetHandler)
-
-Handlers.add("Get-Unembeded-Documents", { Action = "Get-Unembeded-Documents" }, function(msg)
-    msg.reply({ Status = "200", Data = json.encode(SQL.GetUnembededDocuments()) })
-end)
-
-Handlers.add("Embedding-Data", { Action = "Embedding-Data" }, EmbeddingDataHandler)
-
-Handlers.add("Search-Prompt", { Action = "Search-Prompt" }, SearchPromptHandler)
-
-Handlers.add("GET-TORETRIEVE-PROMPT", { Action = "GET-TORETRIEVE-PROMPT" }, function(msg)
-    msg.reply({ Status = "200", Data = json.encode(SQL.GetToRetrievePrompt()) })
-end)
-
-Handlers.add("Set-Retrieve-Result", { Action = "Set-Retrieve-Result" }, function(msg)
+function RecevicePromptResponseHandler(msg)
     local data = json.decode(msg.Data)
     for _, item in ipairs(data) do
         Helper.assert_non_empty(item.sender, item.reference, item.retrieve_result)
@@ -75,9 +52,25 @@ Handlers.add("Set-Retrieve-Result", { Action = "Set-Retrieve-Result" }, function
             Data = item.retrieve_result
         })
     end
+end
+
+Handlers.add("Create-Dataset", "Create-Dataset", CreateDatasetHandler)
+
+Handlers.add("Get-Unembeded-Documents", "Get-Unembeded-Documents", function(msg)
+    msg.reply({ Status = "200", Data = json.encode(SQL.GetUnembededDocuments()) })
 end)
 
-Handlers.add("GET-Retrieve-Result", { Action = "GET-Retrieve-Result" }, function(msg)
+Handlers.add("Embedding-Data", "Embedding-Data", EmbeddingDataHandler)
+
+Handlers.add("Search-Prompt", "Search-Prompt", SearchPromptHandler)
+
+Handlers.add("GET-TORETRIEVE-PROMPT", "GET-TORETRIEVE-PROMPT", function(msg)
+    msg.reply({ Status = "200", Data = json.encode(SQL.GetToRetrievePrompt()) })
+end)
+
+Handlers.add("Set-Retrieve-Result", "Set-Retrieve-Result", RecevicePromptResponseHandler)
+
+Handlers.add("GET-Retrieve-Result", "GET-Retrieve-Result", function(msg)
     Helper.assert_non_empty(msg.Reference, msg.Sender)
     msg.reply({ Status = "200", Data = SQL.GetRetrievePrompt(msg.Sender, msg.Reference) })
 end)

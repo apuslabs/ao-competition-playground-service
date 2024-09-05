@@ -1,533 +1,127 @@
 local json = require("json")
 local ao = require('.ao')
 local sqlite3 = require("lsqlite3")
---Llama = require("@sam/Llama-Herder")
+local SQL = require("sqls.pool")
+local log = require("utils.log")
+local Lodash = require("utils.lodash")
+local Config = require("utils.config")
+local Helper = require("utils.helper")
+local datetime = require("utils.datetime")
 
-DB = DB or nil
+DBClient = DBClient or sqlite3.open_memory()
+SQL.init(DBClient)
+
 CompetitonPools = CompetitonPools or {}
-TokenProcessId = "al1xXXnWnfJD8qyZJvttVGq60z1VPGn4M5y6uCcMBUM"
-EmbeddingProcessId = "agVpRpcfcR_wygOjNxv-xlbdCgWoaY1-5nPYw6wtJgE"
-LLMProcessId = '972kot-Duchcz6lkGD9EFnm4O2-k_0xT_QjxxNRySPM'
-
-PRIZE_BALANCE = PRIZE_BALANCE or 0
-CompetitonPoolId = 1001
-
-Handlers.add(
-    "CronTick",
-    "Cron",
-    function()
-        print('tick')
-    end
-)
-
-Handlers.add(
-    "Init",
-    { Action = "Init" },
-    function()
-        DB = sqlite3.open_memory()
-
-        DB:exec [[
-            CREATE TABLE IF NOT EXISTS participants (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				author TEXT NOT NULL,
-				upload_dataset_name TEXT NOT NULL,
-				upload_dataset_time INTEGER,
-				participant_dataset_hash TEXT,
-				rewarded_tokens INTEGER DEFAULT 0,
-				UNIQUE(participant_dataset_hash)
-			);
-
-
-            CREATE TABLE IF NOT EXISTS datasets (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				question TEXT,
-				expected_response TEXT
-            );
-
-            CREATE TABLE IF NOT EXISTS chatGroundEvaluations (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				dataset_hash TEXT,
-				token INTEGER,
-				question TEXT,
-				prompt TEXT,
-				response TEXT,
-				inference_start_time DATETIME,
-				inference_end_time DATETIME,
-				inference_reference TEXT,
-				client_reference TEXT
-            );
-            CREATE INDEX IF NOT EXISTS chatGroundEvaluations_reference ON chatGroundEvaluations (inference_reference);
-            CREATE INDEX IF NOT EXISTS chatGroundEvaluations_client_reference ON chatGroundEvaluations (client_reference);
-
-            CREATE TABLE IF NOT EXISTS evaluations (
-				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				author TEXT,
-				participant_id INTEGER NOT NULL,
-				participant_dataset_hash TEXT,
-				dataset_id INTEGER NOT NULL,
-				question TEXT NOT NULL,
-				correct_answer TEXT NOT NULL,
-				prediction TEXT,
-				prediction_sas_score INTEGER,
-				inference_start_time DATETIME,
-				inference_end_time DATETIME,
-				inference_reference TEXT,
-				FOREIGN KEY (participant_id) REFERENCES participants(id),
-				FOREIGN KEY (dataset_id) REFERENCES datasets(id)
-			);
-            CREATE INDEX IF NOT EXISTS evaluations_reference ON evaluations (inference_reference);
-        ]]
-
-        print("DB init")
-    end
-)
-
-local SQL = {
-    INSERT_DATASET = [[
-      	INSERT INTO datasets(question, expected_response) VALUES ('%s', '%s');
-    ]],
-    FIND_ALL_PARTICIPANTS = [[
-      	SELECT * FROM participants;
-    ]],
-    FIND_PARTICIPANT_BY_HASH = [[
-     	SELECT * FROM participants WHERE participant_dataset_hash = '%s';
-    ]],
-    INSERT_PARTICIPANTS = [[
-    	INSERT INTO participants (author, upload_dataset_name, participant_dataset_hash, upload_dataset_time) VALUES('%s', '%s', '%s', %d);
-    ]],
-    INSERT_EVALUATIONS = [[
-      	INSERT INTO evaluations (participant_id, author, participant_dataset_hash, dataset_id, question, correct_answer) VALUES('%d', '%s', '%s', '%d', '%s', '%s');
-    ]],
-    ADD_REWARDED_TOKENS = [[
-      	UPDATE participants SET rewarded_tokens = '%d' WHERE author = '%s' AND participant_dataset_hash = '%s';
-    ]],
-    FIND_ALL_DATASET = [[
-      	SELECT id, question, expected_response FROM datasets;
-    ]],
-    FIND_USER_REWARDED_TOKENS_BY_AUTHOR_HASH = [[
-      	SELECT rewarded_tokens as rewardedTokens from participants WHERE author = '%s' and participant_dataset_hash = '%s';
-    ]],
-    FIND_USER_REWARDED_TOKENS = [[
-      	SELECT rewarded_tokens as rewardedTokens from participants WHERE author = '%s';
-    ]],
-    GET_UNEVALUATED_EVALUATIONS = [[
-      	SELECT * FROM evaluations WHERE inference_start_time IS NULL LIMIT '%d';
-    ]],
-    START_EVALUATION = [[
-      	UPDATE evaluations SET inference_start_time = datetime('now', 'utc'), inference_reference = '%s' WHERE id = '%d';
-    ]],
-    END_EVALUATION = [[
-      	UPDATE evaluations SET inference_end_time = datetime('now', 'utc'), prediction = '%s' WHERE inference_reference = '%s';
-    ]],
-    GET_EVALUATION_BY_REFERENCE = [[
-      	SELECT * FROM evaluations WHERE inference_reference = '%s';
-    ]],
-    UPDATE_SCORE = [[
-      	UPDATE evaluations SET prediction_sas_score = '%d' WHERE inference_reference = '%s';
-    ]],
-    INSERT_CHAT_GROUND_EVALUATION = [[
-      	INSERT INTO chatGroundEvaluations(dataset_hash, question, token, client_reference) VALUES('%s', '%s', '%d', '%s');
-    ]],
-    FIND_CHAT_GROUND_EVALUATION_BY_CLIENT_REFERENCE = [[
-      	SELECT * FROM  chatGroundEvaluations WHERE client_reference = '%s';
-    ]],
-    FIND_CHAT_GROUND_EVALUATION_BY_INFER_REFERENCE = [[
-      	SELECT * FROM  chatGroundEvaluations WHERE inference_reference = '%s';
-    ]],
-    UPDATE_CHAT_GROUND_EVALUATION_INFERENCE = [[
-      	UPDATE chatGroundEvaluations SET inference_reference = '%s' WHERE client_reference = '%s'
-    ]],
-    UPDATE_CHAT_GROUND_EVALUATION_PROMPT = [[
-      	UPDATE chatGroundEvaluations SET prompt = '%s' WHERE inference_reference = '%s'
-    ]],
-    UPDATE_CHAT_GROUND_EVALUATION_ANSWER = [[
-      	UPDATE chatGroundEvaluations SET response = '%s' WHERE inference_reference = '%s'
-    ]],
-    TOTAL_PARTICIPANT_REWARDED_TOKENS = [[
-      SELECT
-		COUNT(*) AS total_participants,
-		SUM(rewarded_tokens) AS total_rewarded_tokens
-      FROM
-      	participants;
-	]],
-    TOTAL_PARTICIPANTS_RANK = [[
-        WITH RankedScores AS (
-            SELECT
-				p.author,
-				p.upload_dataset_name AS dataset_name,
-				p.upload_dataset_time AS upload_time,
-				p.participant_dataset_hash AS dataset_id,
-				p.rewarded_tokens AS granted_reward,
-				SUM(e.prediction_sas_score) AS total_score,
-                ROW_NUMBER() OVER (ORDER BY SUM(e.prediction_sas_score) DESC, p.upload_dataset_time) AS rank,
-				COUNT(e.id) AS total_evaluations,
-				SUM(CASE WHEN e.prediction_sas_score IS NOT NULL THEN 1 ELSE 0 END) AS completed_evaluations
-            FROM
-                participants p
-            JOIN
-                evaluations e ON e.participant_id = p.id
-            GROUP BY
-                p.id
-        )
-        SELECT
-            rank,
-            dataset_id,
-            dataset_name,
-			upload_time,
-            total_score AS score,
-            author,
-            granted_reward,
-			(CAST(completed_evaluations AS FLOAT) / total_evaluations) AS completion_progress
-        FROM
-            RankedScores
-        ORDER BY
-            rank;
-	]],
-    FIND_USER_RANK = [[
-		WITH RankedScores AS (
-            SELECT
-				p.author,
-                ROW_NUMBER() OVER (ORDER BY SUM(e.prediction_sas_score) DESC, p.upload_dataset_time) AS rank
-            FROM
-                participants p
-            JOIN
-                evaluations e ON e.participant_id = p.id
-            GROUP BY
-                p.id
-        )
-        SELECT
-            rank
-        FROM
-            RankedScores
-        WHERE
-            author = '%s'
-        ORDER BY
-            rank;
-	]]
-}
-
---Handlers.add(
---	"Fix-DB",
---	Handlers.utils.hasMatchingTag("Action", "Fix-DB"),
---	function(msg)
---		print("DB exex: " .. tostring(DB:exec(msg.Data)))
---	end
---)
-
--- Handlers.add(
--- 	"Read-DB",
--- 	Handlers.utils.hasMatchingTag("Action", "Read-DB"),
--- 	function(msg)
--- 		if msg.Data == '' then
--- 			msg.Data = [[ SELECT name FROM sqlite_master WHERE type='table' ]]
--- 		end
--- 		for item in DB:nrows(msg.Data) do
--- 			-- print(type(item))
--- 			print(item)
--- 		end
--- 	end
--- )
-
-Handlers.add(
-    "Get-Datasets",
-    { Action = "Get-Datasets" },
-    function(msg)
-        local rsp = {}
-        local cnt = 0
-        for row in DB:nrows(SQL.FIND_ALL_PARTICIPANTS) do
-            cnt = cnt + 1
-            rsp[cnt] = row
+local function getOngoingCompetitions()
+    local pools = {}
+    for _, pool in pairs(CompetitonPools) do
+        local metadata = json.decode(pool.metadata)
+        local startTime = metadata.competition_time["start"]
+        local endTime = metadata.competition_time["end"]
+        local now = datetime.unix()
+        if now >= startTime and now <= endTime then
+            table.insert(pools, pool)
         end
-        ao.send({
-            Target = msg.From,
-            Action = "Get-Datasets-Response",
-            Data = json.encode(rsp)
-        })
     end
-)
-
-ChatQuestionReference = ChatQuestionReference or 0
-UserChatStatistics = UserChatStatistics or {}
-DatasetChatStatistics = DatasetChatStatistics or {}
-
-
-SearchPromptReference = SearchPromptReference or 0
-function SendEmeddingRequest(datasetHash, question)
-    SearchPromptReference = SearchPromptReference + 1
-    -- local ragData = string.format('{"dataset_hash": "%s","prompt":"%s"}', datasetHash, question)
-    local ragData = json.encode({
-        dataset_hash = datasetHash,
-        prompt = question
-    })
-    print("SendEmeddingRequest: " .. "v2" .. tostring(SearchPromptReference))
-    ao.send({
-        Target = EmbeddingProcessId,
-        Data = ragData,
-        Tags = {
-            --https://github.com/apuslabs/ao-rag-embedding
-            { name = "Action",      value = "Search-Prompt" },
-            { name = "X-Reference", value = "v2" .. tostring(SearchPromptReference) }
-        }
-    })
-    return "v2" .. tostring(SearchPromptReference)
+    return pools
 end
 
-Handlers.add(
-    "Evaluate",
-    { Action = "Evaluate" },
-    function(msg)
-        -- print("Start Evaluate")
-        -- print("Msg: " .. Dump(msg.Tags) .. Dump(msg.Data))
-        local limit = tonumber(msg.Data) or 1
-        -- if limit > 2 then
-        -- 	limit = 2
-        -- end
-        for row in DB:nrows(string.format(SQL.GET_UNEVALUATED_EVALUATIONS, limit)) do
-            -- print("Row: " .. Dump(row))
-            local reference = SendEmeddingRequest(row.participant_dataset_hash, row.question)
-            -- print("Reference: " .. reference)
-            local result = DB:exec(string.format(
-                SQL.START_EVALUATION,
-                reference, row.id
-            ))
-            -- print("DB exec result: " .. result)
-        end
-    end
-)
+APUS_BALANCE = APUS_BALANCE or 0
 
-Handlers.add(
-    "Search-Prompt-Response",
-    { Action = "Search-Prompt-Response" },
-    function(msg)
-        local evaluationReference = msg.Tags["X-Reference"]
+Handlers.add("Get-Competitions", "Get-Competitions", function(msg)
+    msg.reply({ Status = "200", Data = json.encode(Lodash.keys(CompetitonPools)) })
+end)
 
-        local promptFromEmdedding = 'Null'
-        if (msg.Data ~= nil and msg.Data ~= 'Null') then
-            promptFromEmdedding = msg.Data
-        end
+Handlers.add("Get-Competition", "Get-Competition", function(msg)
+    local poolId = tonumber(msg.Data)
+    msg.reply({ Status = "200", Data = json.encode(CompetitonPools[poolId]) })
+end)
 
-        for row in DB:nrows(string.format(SQL.GET_EVALUATION_BY_REFERENCE, evaluationReference)) do
-            local body = {
-                question = row.question,
-                expected_response = row.correct_answer,
-                context = promptFromEmdedding
-            }
+Handlers.add("Get-Participants", "Get-Datasets", function(msg)
+    local poolId = tonumber(msg.Data)
+    msg.reply({ Status = "200", Data = json.encode(SQL.GetParticipants(poolId)) })
+end)
 
-            Send({
-                Target = LLMProcessId,
-                Tags = {
-                    Action = "Inference",
-                    WorkerType = "Evaluate",
-                    ["X-Reference"] = evaluationReference,
-                },
-                Data = json.encode(body),
-            })
-        end
-    end
-)
-
-Handlers.add(
-    "Inference-Response",
-    { Action = "Inference-Response", WorkerType = "Evaluate" },
-    function(msg)
-        local workType = msg.Tags.WorkerType or ""
-        local reference = msg.Tags["X-Reference"] or ""
-        print("Inference-Response: " .. workType .. " " .. reference .. " " .. Dump(msg.Data))
-
-        local data = msg.Data or "-1"
-        local score = tonumber(data)
-        DB:exec(string.format(SQL.UPDATE_SCORE, score, FixTextBeforeSaveDB(reference)))
-    end
-)
-
-Handlers.add(
-    "Balance-Response",
-    function(msg)
-        return msg.From == TokenProcessId and
-            msg.Tags.Account == ao.id and msg.Tags.Balance ~= nil
-    end,
-    function(msg)
-        PRIZE_BALANCE = tonumber(msg.Tags.Balance)
-        -- print("Balance-Response: " .. PRIZE_BALANCE)
-    end
-)
-
-function FixTextBeforeSaveDB(text)
-    return text:gsub("'", "''")
-end
-
-function FixTextBeforeReadDB(text)
-    return text:gsub("''", "'")
-end
-
-Handlers.add(
-    "Load-Dataset",
-    { Action = "Load-Dataset" },
-    function(msg)
-        -- print("Load-Dataset")
-        local data = msg.Data
-        assert(data ~= nil, "Data is nil")
-        local DataSets = json.decode(data)
-        -- print("DataSets: " .. Dump(DataSets))
-        for _, DataSetItem in ipairs(DataSets) do
-            -- print('DataSetItem: ' .. Dump(DataSetItem))
-            local context = FixTextBeforeSaveDB(DataSetItem.context)
-            local response = FixTextBeforeSaveDB(DataSetItem.response[1])
-            local query = string.format(SQL.INSERT_DATASET, context, response)
-            local result = DB:exec(query)
-            -- print(query .. 'result ' .. result)
-        end
-        -- print("Load-Dataset END")
-    end
-)
-
-
-Handlers.add(
-    "Create-Pool",
-    function(msg)
-        return msg.Tags.Action == "Credit-Notice" and
-            msg.From == TokenProcessId
-    end,
-    function(msg)
-        -- print("Create-Pool")
-        -- print("Msg: " .. Dump(msg.Tags) .. Dump(msg.Data))
-        local title = msg.Tags["X-Title"]
-        local description = msg.Tags["X-Description"]
-        local prizePool = msg.Tags["X-Prize-Pool"]
-        local metaData = msg.Tags["X-MetaData"]
-
-        CompetitonPools[CompetitonPoolId] = {
-            title = title,
-            description = description,
-            prizePool = prizePool,
-            metaData = metaData
-        }
-        -- print("CompetitonPools: " .. Dump(CompetitonPools))
-        ao.send({
-            Target = msg.From,
-            Tags = {
-                { name = "Action", value = "Create-Pool-Response" },
-                { name = "status", value = "200" }
-            }
-        })
-        -- print("Create-Pool END")
-    end
-)
-
-local function initBenchmarkRecords(author, participantDatasetHash)
-    local participantId
-    for row in DB:nrows(string.format(SQL.FIND_PARTICIPANT_BY_HASH, participantDatasetHash)) do
-        participantId = tonumber(row.id)
-    end
-    for row in DB:nrows(string.format(SQL.FIND_ALL_DATASET)) do
-        local sql = string.format(SQL.INSERT_EVALUATIONS, participantId, author,
-            participantDatasetHash, row.id,
-            FixTextBeforeSaveDB(row.question),
-            FixTextBeforeSaveDB(row.expected_response)
-        )
-        DB:exec(sql)
-        -- print('sql:' .. sql .. ' result:' .. DB:exec(sql))
-    end
-end
-
-local lastSubmissionTime = 0
-local oneMinutes = 1 * 60
-
-Handlers.add(
-    "Join-Pool",
-    { Action = "Join-Pool" },
-    function(msg)
-        local metaDataTable = json.decode(CompetitonPools[1001].metaData)
-        local endTime = tonumber(metaDataTable.competition_time["end"]) * 1000
-        if msg.Timestamp > endTime then
-            ao.send({
-                Target = msg.From,
-                Tags = {
-                    { name = "Action", value = "Join-Pool-Response" },
-                    { name = "status", value = "403" }
-                },
-                Data = "The event has ended, and joining is no longer allowed."
-            })
-            return
-        end
-
-        local currentTime = math.floor(msg.Timestamp / 1000)
-        if (currentTime - lastSubmissionTime) < oneMinutes then
-            ao.send({
-                Target = msg.From,
-                Tags = {
-                    { name = "Action", value = "Join-Pool-Response" },
-                    { name = "status", value = "429" }
-                },
-                Data = "Processing data. Try again in one minutes."
-            })
-            return
-        end
-
-        lastSubmissionTime = currentTime
-
-        local data = json.decode(msg.Data)
-        local author = msg.From
-        local datasetHash = FixTextBeforeSaveDB(data.dataset_hash)
-        local datasetName = FixTextBeforeSaveDB(data.dataset_name)
-
-        DB:exec(string.format(
-            SQL.INSERT_PARTICIPANTS,
-            author,
-            datasetName,
-            datasetHash,
-            msg.Timestamp
-        ))
-        initBenchmarkRecords(author, datasetHash)
-
-        ao.send({
-            Target = msg.From,
-            Tags = {
-                { name = "Action", value = "Join-Pool-Response" },
-                { name = "status", value = "200" }
-            }
-        })
-    end
-)
-
+Handlers.add("Get-Leaderboard", "Get-Leaderboard", function(msg)
+    local poolId = tonumber(msg.Data)
+    msg.reply({ Status = "200", Data = json.encode(SQL.GetLeaderboard(poolId)) })
+end)
 
 function UpdateBalance()
+    Send({ Target = Config.Process.Token, Action = "Balance" })
+end
+
+Handlers.add("Update-Balance", { From = Config.Process.Token, Account = ao.id }, function(msg)
+    APUS_BALANCE = tonumber(msg.Balance)
+end)
+function Transfer(receipent, quantity)
     ao.send({
-        Target = TokenProcessId,
+        Target = Config.Process.Token,
         Tags = {
-            { name = "Action", value = "Balance" }
+            { name = "Action",    value = "Transfer" },
+            { name = "Recipient", value = receipent },
+            { name = "Quantity",  value = tostring(quantity) }
         }
     })
 end
 
-Handlers.add(
-    "Get-Pool",
-    { Action = "Get-Pool" },
-    function(msg)
-        local pool = CompetitonPools[CompetitonPoolId]
-        local meta_data = pool['metaData']
+LatestPoolID = LatestPoolID or 1001
 
-        -- delete below line after testing
-        meta_data = string.gsub(meta_data, "1722554056", "1726096456")
+function CreatePoolHandler(msg)
+    -- TODO: semantic params
+    Helper.assert_non_empty(msg["X-Title"], msg["X-Description"], msg["X-Prize-Pool"], msg["X-Process-ID"],
+        msg["X-MetaData"])
 
-        ao.send({
-            Target = msg.From,
-            Tags = {
-                { name = "Action", value = "Get-Pool-Response" },
-                { name = "status", value = "200" }
-            },
-            Data = json.encode({
-                title = pool['title'],
-                prize_pool = pool['prizePool'],
-                meta_data = meta_data
-            })
-        })
-        print("Get-Pool END")
+    LatestPoolID = LatestPoolID + 1
+    CompetitonPools[LatestPoolID] = {
+        owner = msg.Sender,
+        title = msg["X-Title"],
+        description = msg["X-Description"],
+        reward_pool = ao.Quantity,
+        process_id = msg["X-Process-ID"],
+        metadata = msg["X-MetaData"]
+    }
+    Send({
+        Target = msg.Sender,
+        Action = "Create-Pool-Notice",
+        Status = 200,
+        Data = LatestPoolID
+    })
+end
+
+Handlers.add("Create-Pool", { Action = "Credit-Notice", From = Config.Process.Token }, CreatePoolHandler)
+
+local poolTimeCheck = function(poolID)
+    local metadata = json.decode(CompetitonPools[poolID].metadata)
+    local startTime = metadata.competition_time["start"]
+    local endTime = metadata.competition_time["end"]
+    local now = datetime.now()
+    return now >= startTime and now <= endTime
+end
+local throttleCheck = Helper.throttleCheckWrapper(Config.Pool.JoinThrottle)
+function JoinPoolHandler(msg)
+    local data = json.decode(msg.Data)
+    Helper.assert_non_empty(msg.PoolID, data.dataset_hash, data.dataset_name)
+    if not poolTimeCheck(msg.PoolID) then
+        msg.reply({ Status = 403, Data = "The event has ended, can't join in." })
     end
-)
+    if not throttleCheck(msg) then
+        return
+    end
+
+    SQL.CreateParticipant(msg.PoolID, msg.From, data.dataset_hash, data.dataset_name)
+    Send({
+        Target = CompetitonPools[msg.PoolID].process_id,
+        Action = "Join-Competition",
+        Data = data.dataset_hash
+    }).receive()
+    msg.reply({ Status = 200, Data = "Join success" })
+end
+
+Handlers.add("Join-Pool", "Join-Pool", JoinPoolHandler)
 
 Reward = { 35000, 20000, 10000, 5000, 5000, 5000, 5000, 5000, 5000, 5000 }
-local function computeReward(rank)
+local function allocateReward(rank)
     if rank <= 10 then
         return Reward[rank]
     elseif rank <= 200 then
@@ -536,118 +130,51 @@ local function computeReward(rank)
         return 0
     end
 end
+function GetRank(poolID)
+    local ranks = Send({
+        Target = CompetitonPools[poolID].process_id,
+        Action = "Get-Rank"
+    }).receive().Data
+    for i in ipairs(ranks) do
+        ranks[i].reward = allocateReward(i)
+    end
+    SQL.UpdateRank(poolID, ranks)
+end
 
--- local function computeNeedRewarded(amount, author, datasetHash)
---   for item in DB:nrows(string.format(SQL.FIND_USER_REWARDED_TOKENS_BY_AUTHOR_HASH, author, datasetHash)) do
---     return amount - tonumber(item.rewardedTokens)
---   end
---   return amount
--- end
+CircleTimes = CircleTimes or 0
+function AutoUpdateLeaderboard()
+    if CircleTimes >= Config.Pool.LeaderboardInterval then
+        local ongoingCompetitions = getOngoingCompetitions()
+
+        for _, pool in ipairs(ongoingCompetitions) do
+            log.trace("Auto Update Leaderboard ", pool.title)
+            GetRank(pool.id)
+        end
+        CircleTimes = 0
+    else
+        CircleTimes = CircleTimes + 1
+    end
+end
 
 Handlers.add(
-    "Allocate-Rewards",
-    { Action = "Allocate-Rewards" },
-    function(msg)
-        for item in DB:nrows(SQL.TOTAL_PARTICIPANTS_RANK) do
-            local amount = computeReward(item.rank)
-            -- if PRIZE_BALANCE < amount then
-            -- 	print("Balance is not enough, balance: " .. PRIZE_BALANCE .. " want: " .. amount)
-            -- elseif amount > 0 then
-            -- 	PRIZE_BALANCE = PRIZE_BALANCE - amount
-            DB:exec(string.format(SQL.ADD_REWARDED_TOKENS, amount, item.author, item.dataset_id))
-            -- TODO: transfer after competition ended
-            -- transfer(item.author, amount)
-            -- end
-        end
-
-        ao.send({
-            Target = msg.From,
-            Tags = {
-                { name = "Action", value = "Allocate-Rewards-Response" },
-                { name = "status", value = "200" }
-            }
-        })
+    "CronTick",
+    "Cron",
+    function()
+        log.trace("CronTick at " .. datetime.now())
+        AutoUpdateLeaderboard()
     end
 )
 
-function transfer(author, amount)
-    ao.send({
-        Target = TokenProcessId,
-        Tags = {
-            { name = "Action",    value = "Transfer" },
-            { name = "Recipient", value = author },
-            { name = "Quantity",  value = tostring(amount) }
-        }
+Handlers.add("Get-Dashboard", "Get-Dashboard", function(msg)
+    local From = msg.FromAddress or msg.From
+    local poolID = tonumber(msg.Data)
+    msg.reply({
+        Status = 200,
+        Data = json.encode({
+            participants = SQL.GetTotalParticipants(poolID),
+            granted_reward = SQL.GetTotalRewards(poolID),
+            rank = SQL.GetUserRank(poolID, From),
+            rewarded_tokens = SQL.GetUserReward(poolID, From)
+        })
     })
-end
-
-Handlers.add(
-    "Get-Dashboard",
-    { Action = "Get-Dashboard" },
-    function(msg)
-        local tempParticipants = 0
-        local tempRewardedTokens = 0
-        local tempRank = 0
-        local tempReward = 0
-
-        local from = ParseMsgFrom(msg)
-
-        for row in DB:nrows(SQL.TOTAL_PARTICIPANT_REWARDED_TOKENS) do
-            tempParticipants = row.total_participants
-            tempRewardedTokens = row.total_rewarded_tokens
-        end
-
-        for row in DB:nrows(string.format(SQL.FIND_USER_REWARDED_TOKENS, from)) do
-            tempReward = row.rewardedTokens
-        end
-
-        for row in DB:nrows(string.format(SQL.FIND_USER_RANK, from)) do
-            tempRank = row.rank
-        end
-
-        -- print("Get-Dashboard(" .. from .. "): " .. Dump(row))
-        ao.send({
-            Target = from,
-            Tags = {
-                { name = "Action", value = "Get-Dashboard-Response" },
-                { name = "status", value = "200" }
-            },
-            Data = json.encode({
-                participants = tempParticipants,
-                granted_reward = tempRewardedTokens,
-                my_rank = tempRank,
-                my_reward = tempReward
-            })
-        })
-    end
-)
-
-Handlers.add(
-    "Get-Leaderboard",
-    { Action = "Get-Leaderboard" },
-    function(msg)
-        local from = ParseMsgFrom(msg)
-
-        local data = {}
-        local query = SQL.TOTAL_PARTICIPANTS_RANK
-        for row in DB:nrows(query) do
-            table.insert(data, row)
-        end
-
-        ao.send({
-            Target = from,
-            Tags = {
-                { name = "Action", value = "Get-Leaderboard-Response" },
-                { name = "status", value = "200" }
-            },
-            Data = json.encode(data)
-        })
-    end
-)
-
-function ParseMsgFrom(msg)
-    if msg.Tags.FromAddress ~= nil then
-        return msg.Tags.FromAddress
-    end
-    return msg.From
-end
+end)
