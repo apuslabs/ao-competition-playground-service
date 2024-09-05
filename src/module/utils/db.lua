@@ -1,5 +1,5 @@
 local json = require("json")
-local log = require("log")
+local log = require("module.utils.log")
 local DB = { Client = nil }
 
 DB.init = function(self, client)
@@ -8,14 +8,14 @@ end
 
 DB.exec = function(self, sql)
     assert(self.Client, "Database client is not initialized")
-    log.trace("Executing query: %s", sql)
+    log.trace("Executing query: ", sql)
     return self.Client:exec(sql)
 end
 
 DB.nrows = function(self, sql)
     assert(self.Client, "Database client is not initialized")
     local result = {}
-    log.trace("Executing query: %s", sql)
+    log.trace("Executing query: ", sql)
     for row in self.Client:nrows(sql) do
         table.insert(result, row)
     end
@@ -25,7 +25,7 @@ end
 DB.nrow = function(self, sql)
     assert(self.Client, "Database client is not initialized")
     local result = {}
-    log.trace("Executing query: %s", sql)
+    log.trace("Executing query: ", sql)
     for row in self.Client:nrows(sql) do
         result = row
         break

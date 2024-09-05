@@ -1,6 +1,6 @@
-local DB = require("utils.db")
-local Helper = require("utils.helper")
-local datetime = require("utils.datetime")
+local DB = require("module.utils.db")
+local Helper = require("module.utils.helper")
+local datetime = require("module.utils.datetime")
 local SQL = {}
 
 SQL.DATABASE = [[

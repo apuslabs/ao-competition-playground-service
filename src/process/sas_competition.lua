@@ -1,8 +1,9 @@
 local json = require("json")
 local sqlite3 = require("lsqlite3")
-local SQL = require("sqls.sas_competition")
-local Config = require("utils.config")
-local RAGClient = require("embedding.client")
+local SQL = require("module.sqls.sas_competition")
+local Config = require("module.utils.config")
+local RAGClient = require("module.embedding.client")
+require("module.llama.client")
 
 DBClient = DBClient or sqlite3.open_memory()
 SQL.init(DBClient)

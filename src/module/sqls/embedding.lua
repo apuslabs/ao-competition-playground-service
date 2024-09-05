@@ -1,5 +1,5 @@
-local DB = require("utils.db")
-local Helper = require("utils.helper")
+local DB = require("module.utils.db")
+local Helper = require("module.utils.helper")
 local SQL = {}
 
 SQL.DATABASE = [[

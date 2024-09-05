@@ -1,11 +1,12 @@
-local config = require("utils.config")
+local config = require("module.utils.config")
+local json = require("json")
+local Helper = require("module.utils.helper")
+local LlamaClient = require("module.llama.client")
+
 local RAGClient = {
     ProcessID = config.Process.Embedding,
     ClinetID = ao.id,
 }
-local json = require("json")
-local Helper = require("utils.helper")
-local LlamaClient = require("llama.client")
 
 RAGClient.Reference = function()
     return string.format("%-6s%s", RAGClient.ClinetID, ao.reference)

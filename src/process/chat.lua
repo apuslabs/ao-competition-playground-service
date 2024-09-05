@@ -1,8 +1,8 @@
 local json = require("json")
 local sqlite3 = require("lsqlite3")
 local SQL = require("sqls.chat")
-local Helper = require("utils.helper")
-local RAGClient = require("embedding.client")
+local Helper = require("module.utils.helper")
+local RAGClient = require("module.embedding.client")
 
 DBClient = DBClient or sqlite3.open_memory()
 SQL.init(DBClient)

@@ -1,6 +1,6 @@
 local ao = require(".ao")
-local log = require("utils.log")
-local datetime = require('utils.datetime')
+local log = require("module.utils.log")
+local datetime = require('module.utils.datetime')
 
 Herder = Herder or {
     Evaluate = {},

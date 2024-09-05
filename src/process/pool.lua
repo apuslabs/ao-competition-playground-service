@@ -1,12 +1,12 @@
 local json = require("json")
 local ao = require('.ao')
 local sqlite3 = require("lsqlite3")
-local SQL = require("sqls.pool")
-local log = require("utils.log")
-local Lodash = require("utils.lodash")
-local Config = require("utils.config")
-local Helper = require("utils.helper")
-local datetime = require("utils.datetime")
+local SQL = require("module.sqls.pool")
+local log = require("module.utils.log")
+local Lodash = require("module.utils.lodash")
+local Config = require("module.utils.config")
+local Helper = require("module.utils.helper")
+local Datetime = require("module.utils.datetime")
 
 DBClient = DBClient or sqlite3.open_memory()
 SQL.init(DBClient)
@@ -18,7 +18,7 @@ local function getOngoingCompetitions()
         local metadata = json.decode(pool.metadata)
         local startTime = metadata.competition_time["start"]
         local endTime = metadata.competition_time["end"]
-        local now = datetime.unix()
+        local now = Datetime.unix()
         if now >= startTime and now <= endTime then
             table.insert(pools, pool)
         end
@@ -55,7 +55,7 @@ Handlers.add("Update-Balance", { From = Config.Process.Token, Account = ao.id },
     APUS_BALANCE = tonumber(msg.Balance)
 end)
 function Transfer(receipent, quantity)
-    ao.send({
+    Send({
         Target = Config.Process.Token,
         Tags = {
             { name = "Action",    value = "Transfer" },
@@ -72,15 +72,7 @@ function CreatePoolHandler(msg)
     Helper.assert_non_empty(msg["X-Title"], msg["X-Description"], msg["X-Prize-Pool"], msg["X-Process-ID"],
         msg["X-MetaData"])
 
-    LatestPoolID = LatestPoolID + 1
-    CompetitonPools[LatestPoolID] = {
-        owner = msg.Sender,
-        title = msg["X-Title"],
-        description = msg["X-Description"],
-        reward_pool = ao.Quantity,
-        process_id = msg["X-Process-ID"],
-        metadata = msg["X-MetaData"]
-    }
+    CreatePool(msg["X-Title"], msg["X-Description"], msg["X-Prize-Pool"], msg["X-Process-ID"], msg["X-MetaData"])
     Send({
         Target = msg.Sender,
         Action = "Create-Pool-Notice",
@@ -89,13 +81,26 @@ function CreatePoolHandler(msg)
     })
 end
 
+function CreatePool(title, description, reward_pool, process_id, metadata)
+    LatestPoolID = LatestPoolID + 1
+    CompetitonPools[LatestPoolID] = {
+        owner = ao.id,
+        title = title,
+        description = description,
+        reward_pool = reward_pool,
+        process_id = process_id,
+        metadata = metadata
+    }
+    return LatestPoolID
+end
+
 Handlers.add("Create-Pool", { Action = "Credit-Notice", From = Config.Process.Token }, CreatePoolHandler)
 
 local poolTimeCheck = function(poolID)
     local metadata = json.decode(CompetitonPools[poolID].metadata)
     local startTime = metadata.competition_time["start"]
     local endTime = metadata.competition_time["end"]
-    local now = datetime.now()
+    local now = Datetime.unix()
     return now >= startTime and now <= endTime
 end
 local throttleCheck = Helper.throttleCheckWrapper(Config.Pool.JoinThrottle)
@@ -156,14 +161,10 @@ function AutoUpdateLeaderboard()
     end
 end
 
-Handlers.add(
-    "CronTick",
-    "Cron",
-    function()
-        log.trace("CronTick at " .. datetime.now())
-        AutoUpdateLeaderboard()
-    end
-)
+Handlers.add("CronTick", "Cron", function()
+    log.trace("CronTick at " .. Datetime.unix())
+    AutoUpdateLeaderboard()
+end)
 
 Handlers.add("Get-Dashboard", "Get-Dashboard", function(msg)
     local From = msg.FromAddress or msg.From

@@ -1,6 +1,6 @@
 local Helper = {}
-local datetime = require("datetime")
-local log = require("log")
+local datetime = require("module.utils.datetime")
+local log = require("module.utils.log")
 
 Helper.assert_non_empty = function(...)
     for i = 1, select("#", ...) do
