@@ -1,8 +1,7 @@
 local sqlite3 = require("lsqlite3")
 local json = require("json")
-local SQL = require("sqls.embedding")
+local SQL = require("module.sqls.embedding")
 local log = require("module.utils.log")
-local datetime = require("module.utils.datetime")
 local Helper = require("module.utils.helper")
 local Config = require("module.utils.config")
 
