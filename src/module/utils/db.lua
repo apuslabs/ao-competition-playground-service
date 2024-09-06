@@ -8,14 +8,14 @@ end
 
 DB.exec = function(self, sql)
     assert(self.Client, "Database client is not initialized")
-    log.trace("Executing query: ", sql)
+    log.trace("Executing query\n", sql)
     return self.Client:exec(sql)
 end
 
 DB.nrows = function(self, sql)
     assert(self.Client, "Database client is not initialized")
     local result = {}
-    log.trace("Executing query: ", sql)
+    log.trace("Executing query\n", sql)
     for row in self.Client:nrows(sql) do
         table.insert(result, row)
     end
@@ -34,14 +34,14 @@ DB.nrow = function(self, sql)
 end
 
 local function escape_string(str)
-    return string.gsub(str, "'", "''")
+    return str:gsub("'", "''")
 end
 
 local function prepare_arg(arg)
     if type(arg) == "table" then
-        return "'" .. json.encode(arg) .. "'"
+        return string.format("'%s'", json.encode(arg))
     elseif type(arg) == "string" then
-        return "'" .. escape_string(arg) .. "'"
+        return string.format("'%s'", escape_string(arg))
     end
     return tostring(arg)
 end
@@ -56,14 +56,14 @@ local function prepare_columns_values_for_insert(data)
     return table.concat(columns, ","), table.concat(values, ",")
 end
 
-DB.insert = function(self, table, data)
+DB.insert = function(self, tableName, data)
     assert(self.Client, "Database client is not initialized")
     local columns, values = prepare_columns_values_for_insert(data)
-    local query = string.format("INSERT INTO %s (%s) VALUES (%s)", table, columns, values)
+    local query = string.format("INSERT INTO %s (%s) VALUES (%s);", tableName, columns, values)
     return self:exec(query)
 end
 
-DB.batchInsert = function(self, table, data)
+DB.batchInsert = function(self, tableName, data)
     assert(self.Client, "Database client is not initialized")
     assert(#data > 0, "Data should be a non-empty table")
     local columns = ""
@@ -77,12 +77,12 @@ DB.batchInsert = function(self, table, data)
         end
         table.insert(values, string.format("(%s)", values_string))
     end
-    local query = string.format("INSERT INTO %s (%s) VALUES %s", table, columns,
+    local query = string.format("INSERT INTO %s (%s) VALUES %s;", tableName, columns,
         table.concat(values, ","))
     return self:exec(query)
 end
 
-DB.update = function(self, table, data, conditions)
+DB.update = function(self, tableName, data, conditions)
     assert(self.Client, "Database client is not initialized")
     local set = ""
     for k, v in pairs(data) do
@@ -98,11 +98,12 @@ DB.update = function(self, table, data, conditions)
         end
         where = where .. string.format("%s = %s", k, prepare_arg(v))
     end
-    local query = string.format("UPDATE %s SET %s WHERE %s", table, set, where == "" and "1" or where)
+    local query = string.format("UPDATE %s SET %s WHERE %s;", tableName, set, where == "" and "1" or where)
     return self:exec(query)
 end
 
-DB.query = function(self, table, conditions, options)
+DB.query = function(self, tableName, conditions, options)
+    options = options or {}
     assert(self.Client, "Database client is not initialized")
     local where = ""
     for k, v in pairs(conditions or {}) do
@@ -118,17 +119,17 @@ DB.query = function(self, table, conditions, options)
     local query = string.format(
         "SELECT %s FROM %s WHERE %s %s %s %s;",
         options.fields or "*",
-        table,
+        tableName,
         where == "" and "1" or where,
-        options.order ~= nil and "ORDER BY " .. options.Order or "",
-        options.limit ~= nil and "LIMIT " .. options.Limit or "",
-        options.offset ~= nil and "OFFSET " .. options.Offset or ""
+        options.order ~= nil and string.format("ORDER BY %s", options.order) or "",
+        options.limit ~= nil and string.format("LIMIT %s", options.limit) or "",
+        options.offset ~= nil and string.format("OFFSET %s", options.offset) or ""
     )
     return self:nrows(query)
 end
 
-DB.queryOne = function(self, table, conditions)
-    local result = self:query(table, conditions)
+DB.queryOne = function(self, tableName, conditions, options)
+    local result = self:query(tableName, conditions, options)
     if #result > 0 then
         return result[1]
     end

@@ -24,7 +24,13 @@ for i, v in ipairs(modes) do
     levels[v.name] = i
 end
 
-local _tostring = tostring
+local _tostring = function(x)
+    if type(x) == "table" then
+        return Dump(x)
+    else
+        return tostring(x)
+    end
+end
 
 local tostring = function(...)
     local t = {}

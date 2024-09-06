@@ -7,7 +7,7 @@ SQL.DATABASE = [[
     CREATE TABLE IF NOT EXISTS questions (
     	id INTEGER PRIMARY KEY,
     	question TEXT,
-    	c TEXT
+    	expected_response TEXT
     );
     CREATE TABLE IF NOT EXISTS evaluations (
 		id INTEGER PRIMARY KEY,
@@ -104,16 +104,16 @@ SQL.SetEvaluationResponse = function(reference, sas_score)
 end
 
 SQL.GetRank = function()
-    return DB:nrows([[
+    return DB:nrows([=[
         WITH RankedScores AS (
             SELECT
-				participant_dataset_hash
+				participant_dataset_hash,
 				SUM(sas_score) AS total_score,
                 ROW_NUMBER() OVER (ORDER BY SUM(sas_score) DESC, MIN(created_at)) AS rank,
 				COUNT(id) AS total_evaluations,
 				SUM(CASE WHEN sas_score IS NULL THEN 0 ELSE 1 END) AS completed_evaluations
             FROM
-                evaluations e
+                evaluations
             GROUP BY
                 participant_dataset_hash
         )
@@ -121,12 +121,16 @@ SQL.GetRank = function()
             rank,
             participant_dataset_hash AS dataset_hash,
             total_score AS score,
-			(1.0 * completed_evaluations / total_evaluations) AS progress
+			1.0 * completed_evaluations / total_evaluations AS progress
         FROM
             RankedScores
         ORDER BY
             rank;
-    ]])
+    ]=])
+end
+
+SQL.GetVersion = function()
+    return DB:nrows("SELECT sqlite_version();")
 end
 
 return SQL

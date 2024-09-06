@@ -11,30 +11,33 @@ local Datetime = require("module.utils.datetime")
 DBClient = DBClient or sqlite3.open_memory()
 SQL.init(DBClient)
 
-CompetitonPools = CompetitonPools or {}
+CompetitionPools = CompetitionPools or {}
 local function getOngoingCompetitions()
     local pools = {}
-    for _, pool in pairs(CompetitonPools) do
+    for id, pool in pairs(CompetitionPools) do
         local metadata = json.decode(pool.metadata)
-        local startTime = metadata.competition_time["start"]
-        local endTime = metadata.competition_time["end"]
+        if not metadata.competition_time then
+            log.error("Competition time not found in metadata")
+            return {}
+        end
+        local startTime = tonumber(metadata.competition_time["start"])
+        local endTime = tonumber(metadata.competition_time["end"])
         local now = Datetime.unix()
         if now >= startTime and now <= endTime then
-            table.insert(pools, pool)
+            pools[id] = pool
         end
     end
     return pools
 end
 
-APUS_BALANCE = APUS_BALANCE or 0
 
 Handlers.add("Get-Competitions", "Get-Competitions", function(msg)
-    msg.reply({ Status = "200", Data = json.encode(Lodash.keys(CompetitonPools)) })
+    msg.reply({ Status = "200", Data = json.encode(Lodash.keys(CompetitionPools)) })
 end)
 
 Handlers.add("Get-Competition", "Get-Competition", function(msg)
     local poolId = tonumber(msg.Data)
-    msg.reply({ Status = "200", Data = json.encode(CompetitonPools[poolId]) })
+    msg.reply({ Status = "200", Data = json.encode(CompetitionPools[poolId]) })
 end)
 
 Handlers.add("Get-Participants", "Get-Datasets", function(msg)
@@ -42,11 +45,26 @@ Handlers.add("Get-Participants", "Get-Datasets", function(msg)
     msg.reply({ Status = "200", Data = json.encode(SQL.GetParticipants(poolId)) })
 end)
 
-Handlers.add("Get-Leaderboard", "Get-Leaderboard", function(msg)
+Handlers.add("Get-Leaderboard", { Action = "Get-Leaderboard" }, function(msg)
     local poolId = tonumber(msg.Data)
     msg.reply({ Status = "200", Data = json.encode(SQL.GetLeaderboard(poolId)) })
 end)
 
+Handlers.add("Get-Dashboard", "Get-Dashboard", function(msg)
+    local From = msg.FromAddress or msg.From
+    local poolID = tonumber(msg.Data)
+    msg.reply({
+        Status = 200,
+        Data = json.encode({
+            participants = SQL.GetTotalParticipants(poolID),
+            granted_reward = SQL.GetTotalRewards(poolID),
+            rank = SQL.GetUserRank(poolID, From),
+            rewarded_tokens = SQL.GetUserReward(poolID, From)
+        })
+    })
+end)
+
+APUS_BALANCE = APUS_BALANCE or 0
 function UpdateBalance()
     Send({ Target = Config.Process.Token, Action = "Balance" })
 end
@@ -65,14 +83,14 @@ function Transfer(receipent, quantity)
     })
 end
 
-LatestPoolID = LatestPoolID or 1001
+LatestPoolID = LatestPoolID or 1000
 
 function CreatePoolHandler(msg)
     -- TODO: semantic params
-    Helper.assert_non_empty(msg["X-Title"], msg["X-Description"], msg["X-Prize-Pool"], msg["X-Process-ID"],
+    Helper.assert_non_empty(msg["X-Title"], msg["X-Process-ID"],
         msg["X-MetaData"])
 
-    CreatePool(msg["X-Title"], msg["X-Description"], msg["X-Prize-Pool"], msg["X-Process-ID"], msg["X-MetaData"])
+    CreatePool(msg["X-Title"], msg.Quantity, msg["X-Process-ID"], msg["X-MetaData"])
     Send({
         Target = msg.Sender,
         Action = "Create-Pool-Notice",
@@ -81,12 +99,11 @@ function CreatePoolHandler(msg)
     })
 end
 
-function CreatePool(title, description, reward_pool, process_id, metadata)
+function CreatePool(title, reward_pool, process_id, metadata)
     LatestPoolID = LatestPoolID + 1
-    CompetitonPools[LatestPoolID] = {
+    CompetitionPools[LatestPoolID] = {
         owner = ao.id,
         title = title,
-        description = description,
         reward_pool = reward_pool,
         process_id = process_id,
         metadata = metadata
@@ -97,7 +114,7 @@ end
 Handlers.add("Create-Pool", { Action = "Credit-Notice", From = Config.Process.Token }, CreatePoolHandler)
 
 local poolTimeCheck = function(poolID)
-    local metadata = json.decode(CompetitonPools[poolID].metadata)
+    local metadata = json.decode(CompetitionPools[poolID].metadata)
     local startTime = metadata.competition_time["start"]
     local endTime = metadata.competition_time["end"]
     local now = Datetime.unix()
@@ -116,7 +133,7 @@ function JoinPoolHandler(msg)
 
     SQL.CreateParticipant(msg.PoolID, msg.From, data.dataset_hash, data.dataset_name)
     Send({
-        Target = CompetitonPools[msg.PoolID].process_id,
+        Target = CompetitionPools[msg.PoolID].process_id,
         Action = "Join-Competition",
         Data = data.dataset_hash
     }).receive()
@@ -136,14 +153,17 @@ local function allocateReward(rank)
     end
 end
 function GetRank(poolID)
-    local ranks = Send({
-        Target = CompetitonPools[poolID].process_id,
+    Send({
+        Target = CompetitionPools[poolID].process_id,
         Action = "Get-Rank"
-    }).receive().Data
-    for i in ipairs(ranks) do
-        ranks[i].reward = allocateReward(i)
-    end
-    SQL.UpdateRank(poolID, ranks)
+    }).onReply(function(msg)
+        local ranks = json.decode(msg.Data)
+        log.trace("Update Rank ", poolID, ranks)
+        for i in ipairs(ranks) do
+            ranks[i].reward = allocateReward(i)
+        end
+        SQL.UpdateRank(poolID, ranks)
+    end)
 end
 
 CircleTimes = CircleTimes or 0
@@ -151,9 +171,9 @@ function AutoUpdateLeaderboard()
     if CircleTimes >= Config.Pool.LeaderboardInterval then
         local ongoingCompetitions = getOngoingCompetitions()
 
-        for _, pool in ipairs(ongoingCompetitions) do
+        for id, pool in pairs(ongoingCompetitions) do
             log.trace("Auto Update Leaderboard ", pool.title)
-            GetRank(pool.id)
+            GetRank(id)
         end
         CircleTimes = 0
     else
@@ -162,20 +182,6 @@ function AutoUpdateLeaderboard()
 end
 
 Handlers.add("CronTick", "Cron", function()
-    log.trace("CronTick at " .. Datetime.unix())
+    log.trace("Cron Tick")
     AutoUpdateLeaderboard()
-end)
-
-Handlers.add("Get-Dashboard", "Get-Dashboard", function(msg)
-    local From = msg.FromAddress or msg.From
-    local poolID = tonumber(msg.Data)
-    msg.reply({
-        Status = 200,
-        Data = json.encode({
-            participants = SQL.GetTotalParticipants(poolID),
-            granted_reward = SQL.GetTotalRewards(poolID),
-            rank = SQL.GetUserRank(poolID, From),
-            rewarded_tokens = SQL.GetUserReward(poolID, From)
-        })
-    })
 end)

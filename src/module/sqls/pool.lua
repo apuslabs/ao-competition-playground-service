@@ -2,6 +2,7 @@ local DB = require("module.utils.db")
 local Helper = require("module.utils.helper")
 local datetime = require("module.utils.datetime")
 local SQL = {}
+local log = require("module.utils.log")
 
 SQL.DATABASE = [[
     CREATE TABLE IF NOT EXISTS participants (
@@ -35,8 +36,6 @@ SQL.CreateParticipant = function(pool_id, author, dataset_hash, dataset_name)
 end
 
 SQL.UpdateRank = function(pool_id, ranks)
-    Helper.assert_array(ranks)
-    local values = {}
     for _, rank in ipairs(ranks) do
         Helper.assert_non_empty(rank.dataset_hash, rank.rank, rank.score, rank.progress, rank.reward)
         DB:update("participants", {
@@ -49,6 +48,10 @@ SQL.UpdateRank = function(pool_id, ranks)
             pool_id = pool_id,
         })
     end
+end
+
+SQL.ImportParticipants = function(participants)
+    return DB:batchInsert("participants", participants)
 end
 
 SQL.GetParticipant = function(pool_id, dataset_hash)
@@ -75,13 +78,19 @@ SQL.GetTotalRewards = function(pool_id)
 end
 
 SQL.GetUserRank = function(pool_id, author)
-    local rankResult = DB:query("participants", { pool_id = pool_id, author = author }, { fields = "rank" })
-    return rankResult.rank
+    local rankResult = DB:queryOne("participants", { pool_id = pool_id, author = author }, { fields = "rank" })
+    if rankResult ~= nil then
+        return rankResult.rank
+    end
+    return -1
 end
 
 SQL.GetUserReward = function(pool_id, author)
-    local rewardResult = DB:query("participants", { pool_id = pool_id, author = author }, { fields = "reward" })
-    return rewardResult.reward
+    local rewardResult = DB:queryOne("participants", { pool_id = pool_id, author = author }, { fields = "reward" })
+    if rewardResult ~= nil then
+        return rewardResult.reward
+    end
+    return -1
 end
 
 return SQL

@@ -13,7 +13,7 @@ Helper.assert_type = function(value, expected_type)
     assert(type(value) == expected_type, "Expected " .. expected_type .. " but got " .. type(value))
 end
 
-Helper.assert_array = function(value)
+Helper.assert_non_empty_array = function(value)
     assert(value and type(value) == "table" and #value > 0, "Expected array but got " .. type(value))
 end
 
