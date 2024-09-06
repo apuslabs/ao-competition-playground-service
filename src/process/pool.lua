@@ -118,26 +118,27 @@ local poolTimeCheck = function(poolID)
     local startTime = metadata.competition_time["start"]
     local endTime = metadata.competition_time["end"]
     local now = Datetime.unix()
-    return now >= startTime and now <= endTime
+    return now >= tonumber(startTime) and now <= tonumber(endTime)
 end
 local throttleCheck = Helper.throttleCheckWrapper(Config.Pool.JoinThrottle)
 function JoinPoolHandler(msg)
     local data = json.decode(msg.Data)
     Helper.assert_non_empty(msg.PoolID, data.dataset_hash, data.dataset_name)
-    if not poolTimeCheck(msg.PoolID) then
+    local poolID = tonumber(msg.PoolID)
+    if not poolTimeCheck(poolID) then
         msg.reply({ Status = 403, Data = "The event has ended, can't join in." })
     end
     if not throttleCheck(msg) then
         return
     end
 
-    SQL.CreateParticipant(msg.PoolID, msg.From, data.dataset_hash, data.dataset_name)
+    SQL.CreateParticipant(poolID, msg.From, data.dataset_hash, data.dataset_name)
+    msg.reply({ Status = 200, Data = "Join Success" })
     Send({
-        Target = CompetitionPools[msg.PoolID].process_id,
+        Target = CompetitionPools[poolID].process_id,
         Action = "Join-Competition",
         Data = data.dataset_hash
-    }).receive()
-    msg.reply({ Status = 200, Data = "Join success" })
+    })
 end
 
 Handlers.add("Join-Pool", "Join-Pool", JoinPoolHandler)
