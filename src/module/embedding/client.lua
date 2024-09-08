@@ -10,16 +10,15 @@ local RAGClient = {
 }
 
 RAGClient.Reference = function()
-    return string.format("%s-%s", RAGClient.ClinetID:sub(1, 6), ao.reference)
+    return string.format("%s-%s", RAGClient.ClinetID:sub(1, 6), ao.reference + 1)
 end
 
-RAGClient.Chat = function(data, onReply, reference)
+RAGClient.Chat = function(data, onReply)
     Helper.assert_non_empty(data.dataset_hash, data.question)
-    reference = reference or RAGClient.Reference()
+    local reference = RAGClient.Reference()
     Send({
         Target = RAGClient.ProcessID,
         Action = "Search-Prompt",
-        ["X-Reference"] = reference or RAGClient.Reference(),
         Data = json.encode({
             dataset_hash = data.dataset_hash,
             prompt = data.question
@@ -30,7 +29,7 @@ RAGClient.Chat = function(data, onReply, reference)
             context = replyMsg.Data
         }, function(resultMsg)
             onReply(resultMsg.Data, reference)
-        end, reference)
+        end)
     end)
     return reference
 end

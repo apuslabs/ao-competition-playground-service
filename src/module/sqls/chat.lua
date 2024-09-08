@@ -10,7 +10,7 @@ SQL.DATABASE = [[
     	question TEXT NOT NULL,
     	response TEXT,
         created_at INTEGER,
-    	response_at DATETIME,
+    	response_at INTEGER
     );
 ]]
 
@@ -25,7 +25,7 @@ SQL.CreateChat = function(reference, dataset_hash, question)
         reference = reference,
         dataset_hash = dataset_hash,
         question = question,
-        inference_start_time = datetime.unix(),
+        created_at = datetime.unix(),
     })
 end
 
@@ -44,6 +44,14 @@ SQL.GetChat = function(reference)
     return DB:queryOne("chats", {
         reference = reference,
     })
+end
+
+SQL.GetAllChats = function()
+    return DB:query("chats")
+end
+
+SQL.QueryTables = function()
+    return DB:queryTables()
 end
 
 return SQL

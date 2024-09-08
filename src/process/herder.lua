@@ -19,6 +19,7 @@ InferenceAllowList = {
     ["yq6x9mAh87H7-YcCOrYyR_wC1OLP3rsLzVNCc1SPTV8"] = true
 }
 InferenceAllowList[Config.Process.Competition] = true
+InferenceAllowList[Config.Process.Chat] = true
 
 local function isAllowed(client)
     return InferenceAllowList[client] == true or client == ao.id or client == Owner

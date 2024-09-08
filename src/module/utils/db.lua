@@ -136,4 +136,19 @@ DB.queryOne = function(self, tableName, conditions, options)
     return nil
 end
 
+DB.queryTables = function(self)
+    local tables = self:nrows("SELECT name FROM sqlite_master WHERE type='table';")
+    local result = {}
+    for _, t in ipairs(tables) do
+        t = t.name
+        local columns = self:nrows(string.format("PRAGMA table_info(%s);", t))
+        local columns_result = {}
+        for _, column in ipairs(columns) do
+            table.insert(columns_result, column.name)
+        end
+        result[t] = columns_result
+    end
+    return result
+end
+
 return DB

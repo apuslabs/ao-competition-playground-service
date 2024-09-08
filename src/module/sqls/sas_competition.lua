@@ -96,7 +96,7 @@ end
 SQL.SetEvaluationResponse = function(reference, sas_score)
     Helper.assert_non_empty(reference, sas_score)
     return DB:update("evaluations", {
-        sas_score = sas_score,
+        sas_score = tonumber(sas_score),
         response_at = datetime.unix(),
     }, {
         reference = reference,

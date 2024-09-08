@@ -1,31 +1,49 @@
 local json = require("json")
 local sqlite3 = require("lsqlite3")
-local SQL = require("sqls.chat")
-local Helper = require("module.utils.helper")
+local SQL = require("module.sqls.chat")
 local RAGClient = require("module.embedding.client")
+local log = require("module.utils.log")
 
 DBClient = DBClient or sqlite3.open_memory()
 SQL.init(DBClient)
 
 Handlers.add("Chat-Question", { Action = "Chat-Question" }, function(msg)
     local data = json.decode(msg.Data)
-    Helper.assert_non_empty(data.dataset_hash, data.question)
-    local reference = RAGClient.Chat(data.dataset_hash, data.question, function(response, ref)
+    local reference = RAGClient.Chat(data, function(response, ref)
         SQL.SetResponse(ref, response)
     end)
     SQL.CreateChat(reference, data.dataset_hash, data.question)
+    msg.reply({ Status = 200, Data = reference })
 end)
+
+function GetChatAnswer(reference)
+    local chat = SQL.GetChat(reference)
+    log.debug("GetChatAnswer", reference, chat)
+    if not chat then
+        return nil
+    elseif not chat.response then
+        return "__NULL"
+    else
+        return chat.response
+    end
+end
 
 Handlers.add("Get-Chat-Answer", { Action = "Get-Chat-Answer" }, function(msg)
     local reference = msg.Data
-    local chat = SQL.GetChat(reference)
-    if not chat then
+    local response = GetChatAnswer(reference)
+    if not response then
         msg.reply({ Status = 404, Data = "Not Found" })
-        return
-    elseif not chat.response then
+    elseif response == "__NULL" then
         msg.reply({ Status = 102, Data = "Processing" })
-        return
     else
-        msg.reply({ Status = 200, Data = chat.response })
+        msg.reply({ Status = 200, Data = response })
     end
 end)
+
+function getTables()
+    return SQL.QueryTables()
+end
+
+function GetAllChats()
+    return SQL.GetAllChats()
+end

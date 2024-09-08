@@ -7,7 +7,7 @@ local LlamaClient = {
 }
 
 LlamaClient.Reference = function()
-    return string.format("%s-%s", LlamaClient.ClinetID:sub(1, 6), ao.reference)
+    return string.format("%s-%s", LlamaClient.ClinetID:sub(1, 6), ao.reference + 1)
 end
 
 LlamaClient.Evaluate = function(data, onReply)
@@ -30,7 +30,7 @@ LlamaClient.Chat = function(data, onReply)
         WorkerType = "Chat",
         Data = json.encode(data),
     }).onReply(function(replyMsg)
-        onReply(replyMsg.Data)
+        onReply(replyMsg)
     end)
 end
 

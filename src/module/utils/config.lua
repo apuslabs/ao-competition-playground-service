@@ -1,6 +1,7 @@
 local Config = {}
 
 Config.Process = {
+    Chat = "K0zJBT9HQ4KOGE6gCDYFa0tldMB0jdppOyCNH9loe38",
     LlamaHerder = "ZO9tosDW3L5HT8MU3Xa6bUUoSLpJGblNM4Ef936clCU",
     Embedding = "CZNh4g-sHxs0w6eM_xvONOFWK6fvWzQNd96fW5Mvlug",
     Token = "al1xXXnWnfJD8qyZJvttVGq60z1VPGn4M5y6uCcMBUM",

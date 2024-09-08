@@ -59,7 +59,7 @@ SQL.GetParticipant = function(pool_id, dataset_hash)
 end
 
 SQL.GetParticipants = function(pool_id)
-    return DB:query("participants", { pool_id = pool_id }, { fields = "dataset_hash" })
+    return DB:query("participants", { pool_id = pool_id }, { fields = "dataset_hash, dataset_name" })
 end
 
 SQL.GetLeaderboard = function(pool_id)
