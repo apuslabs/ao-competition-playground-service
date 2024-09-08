@@ -110,7 +110,7 @@ DB.query = function(self, tableName, conditions, options)
         if where ~= "" then
             where = where .. " AND "
         end
-        if v == nil then
+        if v == "__NULL" then
             where = where .. string.format("%s IS NULL", k)
         else
             where = where .. string.format("%s = %s", k, prepare_arg(v))

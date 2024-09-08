@@ -1,6 +1,7 @@
 local ao = require(".ao")
 local log = require("module.utils.log")
 local datetime = require('module.utils.datetime')
+local Config = require("module.utils.config")
 
 Herder = Herder or {
     Evaluate = {},
@@ -17,6 +18,7 @@ InferenceAllowList = {
     ["pNSXgR1gIp6zzoXZv4mfSLQfuWVzvPsLZHg8-oi_DZo"] = true,
     ["yq6x9mAh87H7-YcCOrYyR_wC1OLP3rsLzVNCc1SPTV8"] = true
 }
+InferenceAllowList[Config.Process.Competition] = true
 
 local function isAllowed(client)
     return InferenceAllowList[client] == true or client == ao.id or client == Owner

@@ -1,6 +1,6 @@
 -- SHOULD ONLY BE REQUIRED BY AOS 1
 
-local ao = require('.ao') or require('ao')
+local ao = require('ao')
 
 local aos2 = {}
 

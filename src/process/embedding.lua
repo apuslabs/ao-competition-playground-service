@@ -35,7 +35,6 @@ function SearchPromptHandler(msg)
     Helper.assert_non_empty(data.dataset_hash, data.prompt)
     SQL.AddPrompt(PromptReference, msg.From, data.dataset_hash, data.prompt)
     log.info(string.format("%s Prompt %s added successfully", msg.From, PromptReference))
-    msg.reply({ Status = "200", Data = "Prompt added successfully" })
 end
 
 function RecevicePromptResponseHandler(msg)
@@ -62,6 +61,10 @@ end)
 Handlers.add("Embedding-Data", "Embedding-Data", EmbeddingDataHandler)
 
 Handlers.add("Search-Prompt", "Search-Prompt", SearchPromptHandler)
+
+function GetToRetrievePrompt()
+    log.debug(SQL.GetToRetrievePrompt())
+end
 
 Handlers.add("GET-TORETRIEVE-PROMPT", "GET-TORETRIEVE-PROMPT", function(msg)
     msg.reply({ Status = "200", Data = json.encode(SQL.GetToRetrievePrompt()) })

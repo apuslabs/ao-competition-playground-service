@@ -6,6 +6,7 @@ local RAGClient = require("module.embedding.client")
 local log = require("module.utils.log")
 local Datetime = require("module.utils.datetime")
 require("module.llama.client")
+require("module.utils.helper")
 
 DBClient = DBClient or sqlite3.open_memory()
 SQL.init(DBClient)
@@ -36,10 +37,12 @@ function LoadQuestion(dataStr)
     SQL.BatchCreateQuestion(json.decode(dataStr))
 end
 
-Handlers.add("Join-Competition", "Join-Competition", function(msg)
+function JoinCompetitionHandler(msg)
     SQL.CreateEvaluationSet(msg.Data)
     msg.reply({ Status = "200" })
-end)
+end
+
+Handlers.add("Join-Competition", "Join-Competition", JoinCompetitionHandler)
 
 Handlers.add("Get-Rank", "Get-Rank", function(msg)
     local rank = SQL.GetRank()

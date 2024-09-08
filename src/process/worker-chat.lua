@@ -1,5 +1,6 @@
 -- Module: XcWULRSWWv_bmaEyx4PEOFf4vgRSVCP9vM5AucRvI40
 local aos2 = require("module.utils.aos2polyfill")
+local Config = require("module.utils.config")
 
 Colors = {
     red = "\27[31m",
@@ -11,9 +12,9 @@ Colors = {
 
 WorkerType = "Chat"
 
-ModelID = ModelID or "ISrbGzQot05rs_HKC08O_SmkipYQnqgB1yC3mjZZeEo"
+ModelID = ModelID or Config.Llama.DefaultModel
 Llama = Llama or nil
-RouterID = RouterID or "972kot-Duchcz6lkGD9EFnm4O2-k_0xT_QjxxNRySPM"
+RouterID = RouterID or Config.Process.LlamaHerder
 
 InferenceAllowList = {
     [RouterID] = true,

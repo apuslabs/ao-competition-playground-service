@@ -7,15 +7,13 @@ local LlamaClient = {
 }
 
 LlamaClient.Reference = function()
-    return string.format("%-6s%s", LlamaClient.ClinetID, ao.reference)
+    return string.format("%s-%s", LlamaClient.ClinetID:sub(1, 6), ao.reference)
 end
 
-LlamaClient.Evaluate = function(data, onReply, reference)
+LlamaClient.Evaluate = function(data, onReply)
     Helper.assert_non_empty(data.question, data.expected_response, data.context)
-    reference = reference or LlamaClient.Reference()
     Send({
         Target = LlamaClient.ProcessID,
-        ["X-Reference"] = reference,
         Action = "Inference",
         WorkerType = "Evaluate",
         Data = json.encode(data),
@@ -24,12 +22,10 @@ LlamaClient.Evaluate = function(data, onReply, reference)
     end)
 end
 
-LlamaClient.Chat = function(data, onReply, reference)
+LlamaClient.Chat = function(data, onReply)
     Helper.assert_non_empty(data.question, data.context)
-    reference = reference or LlamaClient.Reference()
     Send({
         Target = LlamaClient.ProcessID,
-        ["X-Reference"] = reference,
         Action = "Inference",
         WorkerType = "Chat",
         Data = json.encode(data),

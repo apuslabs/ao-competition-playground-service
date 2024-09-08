@@ -2,6 +2,7 @@ local config = require("module.utils.config")
 local json = require("json")
 local Helper = require("module.utils.helper")
 local LlamaClient = require("module.llama.client")
+local log = require("module.utils.log")
 
 local RAGClient = {
     ProcessID = config.Process.Embedding,
@@ -9,7 +10,7 @@ local RAGClient = {
 }
 
 RAGClient.Reference = function()
-    return string.format("%-6s%s", RAGClient.ClinetID, ao.reference)
+    return string.format("%s-%s", RAGClient.ClinetID:sub(1, 6), ao.reference)
 end
 
 RAGClient.Chat = function(data, onReply, reference)
@@ -40,7 +41,6 @@ RAGClient.Evaluate = function(data, onReply, reference)
     Send({
         Target = RAGClient.ProcessID,
         Action = "Search-Prompt",
-        ["X-Reference"] = reference,
         Data = json.encode({
             dataset_hash = data.dataset_hash,
             prompt = data.question
@@ -52,7 +52,7 @@ RAGClient.Evaluate = function(data, onReply, reference)
             context = replyMsg.Data
         }, function(resultMsg)
             onReply(resultMsg.Data, reference)
-        end, reference)
+        end)
     end)
     return reference
 end

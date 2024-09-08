@@ -1,6 +1,7 @@
 local DB = require("module.utils.db")
 local Helper = require("module.utils.helper")
 local datetime = require("module.utils.datetime")
+local log = require("module.utils.log")
 local SQL = {}
 
 SQL.DATABASE = [[
@@ -27,7 +28,7 @@ SQL.init = function(client)
 end
 
 SQL.BatchCreateQuestion = function(questions)
-    Helper.assert_array(questions)
+    Helper.assert_non_empty_array(questions)
     local values = {}
     for _, question in ipairs(questions) do
         Helper.assert_non_empty(question.question, question.expected_response)
@@ -45,7 +46,7 @@ end
 
 
 SQL.BatchCreateEvaluation = function(evaluations)
-    Helper.assert_array(evaluations)
+    Helper.assert_non_empty_array(evaluations)
     local values = {}
     for _, evaluation in ipairs(evaluations) do
         Helper.assert_non_empty(evaluation.participant_dataset_hash, evaluation.question_id)

@@ -60,7 +60,7 @@ end
 
 SQL.GetToRetrievePrompt = function()
     return DB:query("prompts", {
-        retrieve_result = nil
+        retrieve_result = "__NULL"
     })
 end
 
