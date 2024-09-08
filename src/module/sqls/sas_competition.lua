@@ -1,7 +1,6 @@
 local DB = require("module.utils.db")
 local Helper = require("module.utils.helper")
 local datetime = require("module.utils.datetime")
-local log = require("module.utils.log")
 local SQL = {}
 
 SQL.DATABASE = [[
@@ -81,7 +80,7 @@ SQL.GetUnEvaluated = function(limit)
             q.expected_response
         FROM evaluations e
         JOIN questions q ON e.question_id = q.id
-        WHERE e.sas_score IS NULL
+        WHERE e.reference IS NULL
         ORDER BY e.created_at
         LIMIT %d
     ]], limit))

@@ -37,7 +37,7 @@ end
 
 RAGClient.Evaluate = function(data, onReply, reference)
     Helper.assert_non_empty(data.dataset_hash, data.question, data.expected_response)
-    reference = reference or RAGClient.Reference()
+    local ref = reference or RAGClient.Reference()
     Send({
         Target = RAGClient.ProcessID,
         Action = "Search-Prompt",
@@ -51,10 +51,10 @@ RAGClient.Evaluate = function(data, onReply, reference)
             expected_response = data.expected_response,
             context = replyMsg.Data
         }, function(resultMsg)
-            onReply(resultMsg.Data, reference)
+            onReply(resultMsg.Data, ref)
         end)
     end)
-    return reference
+    return ref
 end
 
 return RAGClient

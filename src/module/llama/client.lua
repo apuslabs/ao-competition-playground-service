@@ -18,7 +18,7 @@ LlamaClient.Evaluate = function(data, onReply)
         WorkerType = "Evaluate",
         Data = json.encode(data),
     }).onReply(function(replyMsg)
-        onReply(replyMsg.Data)
+        onReply(replyMsg)
     end)
 end
 
