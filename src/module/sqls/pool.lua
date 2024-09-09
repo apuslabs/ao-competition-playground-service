@@ -37,12 +37,12 @@ end
 
 SQL.UpdateRank = function(pool_id, ranks)
     for _, rank in ipairs(ranks) do
-        Helper.assert_non_empty(rank.dataset_hash, rank.rank, rank.score, rank.progress, rank.reward)
+        Helper.assert_non_empty(rank.dataset_hash, rank.rank)
         DB:update("participants", {
             rank = rank.rank,
-            score = rank.score,
-            progress = rank.progress,
-            reward = rank.reward,
+            score = rank.score or 0,
+            progress = rank.progress or 0,
+            reward = rank.reward or 0,
         }, {
             dataset_hash = rank.dataset_hash,
             pool_id = pool_id,
@@ -91,6 +91,11 @@ SQL.GetUserReward = function(pool_id, author)
         return rewardResult.reward
     end
     return -1
+end
+
+SQL.DeleteParticipants = function(pool_id, dataset_hash)
+    return DB:exec(string.format("DELETE FROM participants WHERE pool_id = %d AND dataset_hash = '%s'", pool_id,
+        dataset_hash))
 end
 
 return SQL

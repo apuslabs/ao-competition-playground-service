@@ -1,8 +1,8 @@
 local json = require("json")
 local ao = require('.ao')
 local sqlite3 = require("lsqlite3")
-local SQL = require("module.sqls.pool")
-local log = require("module.utils.log")
+SQL = require("module.sqls.pool")
+Log = require("module.utils.log")
 local Lodash = require("module.utils.lodash")
 local Config = require("module.utils.config")
 local Helper = require("module.utils.helper")
@@ -17,7 +17,7 @@ local function getOngoingCompetitions()
     for id, pool in pairs(CompetitionPools) do
         local metadata = json.decode(pool.metadata)
         if not metadata.competition_time then
-            log.error("Competition time not found in metadata")
+            Log.error("Competition time not found in metadata")
             return {}
         end
         local startTime = tonumber(metadata.competition_time["start"])
@@ -165,7 +165,7 @@ function GetRank(poolID)
         Action = "Get-Rank"
     }).onReply(function(msg)
         local ranks = json.decode(msg.Data)
-        log.trace("Update Rank ", poolID, ranks)
+        Log.info("Update Rank ", poolID, ranks)
         for i in ipairs(ranks) do
             ranks[i].reward = allocateReward(i)
         end
@@ -179,7 +179,7 @@ function AutoUpdateLeaderboard()
         local ongoingCompetitions = getOngoingCompetitions()
 
         for id, pool in pairs(ongoingCompetitions) do
-            log.trace("Auto Update Leaderboard ", pool.title)
+            Log.trace("Auto Update Leaderboard ", pool.title)
             GetRank(id)
         end
         CircleTimes = 0
@@ -189,6 +189,6 @@ function AutoUpdateLeaderboard()
 end
 
 Handlers.add("CronTick", "Cron", function()
-    log.trace("Cron Tick")
+    Log.trace("Cron Tick")
     AutoUpdateLeaderboard()
 end)

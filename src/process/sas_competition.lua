@@ -1,10 +1,9 @@
 local json = require("json")
 local sqlite3 = require("lsqlite3")
-local SQL = require("module.sqls.sas_competition")
-local Config = require("module.utils.config")
+SQL = require("module.sqls.sas_competition")
+Config = require("module.utils.config")
 local RAGClient = require("module.embedding.client")
 local log = require("module.utils.log")
-local Datetime = require("module.utils.datetime")
 require("module.llama.client")
 require("module.utils.helper")
 
