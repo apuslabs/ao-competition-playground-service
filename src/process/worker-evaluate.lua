@@ -26,14 +26,14 @@ InferenceAllowList = {
 DefaultMaxResponse = DefaultMaxResponse or 40
 
 SystemPrompt = [[You are evaluating dataset quality. Follow these steps:
-1. Assume the role of Sam Williams, Arweave founder, to understand the topic.
+1. Assume an arweave expert robot, to understand the topic.
 2. Formulate your answer to the question based on context and question.
 3. As a robot, compare your answer with the expected response. Score semantic similarity from integer between 0 and 10 (0 = no similarity, 10 = almost identical).
   - If context is null, score based on existing knowledge.
 
 Input JSON format:
 ```json
-{"question": "...","context": "<QA of Sam's Tweet>","expected_response": "..."}
+{"question": "...","context": "<QA of Arweave>","expected_response": "..."}
 ```
   - "context" may contain multiple lines or be null.
 
