@@ -1,4 +1,5 @@
 local ao = require(".ao")
+local json = require("json")
 local log = require("module.utils.log")
 local datetime = require('module.utils.datetime')
 local Config = require("module.utils.config")
@@ -123,3 +124,25 @@ end
 Handlers.add("Worker-Init", "Init-Response", WorkerInitResponse)
 
 Handlers.add("Inference", "Inference", InferenceHandler)
+
+Handlers.add("Worker-Statistic", "Worker-Statistic", function(msg)
+    local queueLength = #Queue
+    local busyEvaluator = 0
+    local busyChat = 0
+    for _, work in pairs(Busy) do
+        if work.workerType == "Evaluate" then
+            busyEvaluator = busyEvaluator + 1
+        else
+            busyChat = busyChat + 1
+        end
+    end
+    msg.reply({
+        Data = json.encode({
+            QueueLength = queueLength,
+            BusyEvaluator = busyEvaluator,
+            BusyChat = busyChat,
+            FreeEvaluator = #Herder.Evaluate,
+            FreeChat = #Herder.Chat
+        })
+    })
+end)

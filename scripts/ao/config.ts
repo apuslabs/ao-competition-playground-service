@@ -1,2 +1,4 @@
 export const EMBEDDING_PROCESS = "CZNh4g-sHxs0w6eM_xvONOFWK6fvWzQNd96fW5Mvlug";
+export const HERDER_PROCESS = "ZO9tosDW3L5HT8MU3Xa6bUUoSLpJGblNM4Ef936clCU";
+export const POOL_PROCESS = "NcgWkb377fZRWQDT0t8Xnhb2JYDlJ1pOmXfYZZxb4LM";
 export const EMBEDDING_SERVICE = "http://127.0.0.1:8082";

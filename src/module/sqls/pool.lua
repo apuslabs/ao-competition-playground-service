@@ -63,6 +63,13 @@ SQL.GetParticipants = function(pool_id)
     return DB:query("participants", { pool_id = pool_id }, { fields = "dataset_hash, dataset_name" })
 end
 
+SQL.CountParticipantsByCreatedTime = function(pool_id, start_time, end_time)
+    local result = DB:nrow(string.format(
+        "SELECT COUNT(dataset_hash) AS count FROM participants WHERE pool_id = %s AND created_at >= %s AND created_at <= %s",
+        pool_id, start_time, end_time))
+    return result.count
+end
+
 SQL.GetLeaderboard = function(pool_id)
     return DB:query("participants", { pool_id = pool_id }, { order = "rank ASC" })
 end

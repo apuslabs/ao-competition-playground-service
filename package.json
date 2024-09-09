@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "@permaweb/aoconnect": "^0.0.56",
-    "axios": "^1.7.4"
+    "axios": "^1.7.7"
   },
   "name": "ao-aimodel-benchmark-process",
   "version": "1.0.0",

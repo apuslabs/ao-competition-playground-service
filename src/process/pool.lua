@@ -214,3 +214,22 @@ Handlers.add("Check-Permission", "Check-Permission", function(msg)
     local From = msg.FromAddress or msg.From
     msg.reply({ Status = 200, Data = Lodash.Contain(WhiteList, From) })
 end)
+
+Handlers.add("Participants-Statistic", "Participants-Statistic", function(msg)
+    local poolID = tonumber(msg.Data)
+    local now = Datetime.unix()
+    local lastHour = now - 3600
+    local lastDay = now - 86400
+    local lastHourParticipants = SQL.CountParticipantsByCreatedTime(poolID, lastHour, now)
+    local lastDayParticipants = SQL.CountParticipantsByCreatedTime(poolID, lastDay, now)
+    local totalParticipants = SQL.GetTotalParticipants(poolID)
+
+    msg.reply({
+        Status = 200,
+        Data = json.encode({
+            last_hour = lastHourParticipants,
+            last_day = lastDayParticipants,
+            total = totalParticipants
+        })
+    })
+end)
