@@ -1,8 +1,8 @@
 local json = require("json")
 local sqlite3 = require("lsqlite3")
-local SQL = require("module.sqls.chat")
+SQL = require("module.sqls.chat")
 local RAGClient = require("module.embedding.client")
-local log = require("module.utils.log")
+Log = require("module.utils.log")
 
 DBClient = DBClient or sqlite3.open_memory()
 SQL.init(DBClient)
@@ -18,7 +18,7 @@ end)
 
 function GetChatAnswer(reference)
     local chat = SQL.GetChat(reference)
-    log.debug("GetChatAnswer", reference, chat)
+    Log.debug("GetChatAnswer", reference, chat)
     if not chat then
         return nil
     elseif not chat.response then
@@ -40,10 +40,10 @@ Handlers.add("Get-Chat-Answer", { Action = "Get-Chat-Answer" }, function(msg)
     end
 end)
 
-function getTables()
-    return SQL.QueryTables()
-end
-
 function GetAllChats()
     return SQL.GetAllChats()
+end
+
+function DANGEROUS_CLEAR()
+    return SQL.ClearChats()
 end

@@ -3,7 +3,7 @@ local sqlite3 = require("lsqlite3")
 SQL = require("module.sqls.sas_competition")
 Config = require("module.utils.config")
 local RAGClient = require("module.embedding.client")
-local log = require("module.utils.log")
+Log = require("module.utils.log")
 require("module.llama.client")
 require("module.utils.helper")
 
@@ -12,9 +12,9 @@ SQL.init(DBClient)
 
 CircleTimes = CircleTimes or 0
 Handlers.add("CronTick", "Cron", function()
-    log.trace("Cron Tick")
+    Log.trace("Cron Tick")
     if (CircleTimes >= Config.Evaluate.Interval) then
-        log.trace("Auto Evaluate")
+        Log.trace("Auto Evaluate")
         Evaluate()
         CircleTimes = 0
     else
@@ -49,5 +49,9 @@ Handlers.add("Get-Rank", "Get-Rank", function(msg)
 end)
 
 function GetQuestions()
-    log.debug(SQL.GetQuestions())
+    Log.debug(SQL.GetQuestions())
+end
+
+function DANGEROUS_CLEAR()
+    SQL.ClearEvaluation()
 end

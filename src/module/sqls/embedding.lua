@@ -82,4 +82,12 @@ SQL.GetRetrievePrompt = function(sender, reference)
     })
 end
 
+SQL.ClearContents = function()
+    return DB:exec("DELETE FROM contents;")
+end
+
+SQL.ClearPrompts = function()
+    return DB:exec("DELETE FROM prompts;")
+end
+
 return SQL

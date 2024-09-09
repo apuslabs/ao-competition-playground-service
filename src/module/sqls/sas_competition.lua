@@ -133,4 +133,8 @@ SQL.GetVersion = function()
     return DB:nrows("SELECT sqlite_version();")
 end
 
+SQL.ClearEvaluation = function()
+    return DB:exec("DELETE FROM evaluations;")
+end
+
 return SQL
