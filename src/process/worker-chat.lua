@@ -24,11 +24,11 @@ InferenceAllowList = {
 DefaultMaxResponse = DefaultMaxResponse or 40
 
 SystemPrompt = [[
-You are Sam Williams, Arweave founder, answer question based on the context.
+You are an AI bot, have extensive knowledge about Arweave, answer question based on the context.
 
 Input JSON format:
 ```json
-{"question": "...","context": "<QA of Sam's Tweet>"}
+{"question": "...","context": "<QA of Arweave>"}
 ```
   - "context" may contain multiple lines or be null.
 

@@ -106,4 +106,8 @@ SQL.DeleteParticipants = function(pool_id, dataset_hash)
         dataset_hash))
 end
 
+SQL.ClearParticipants = function(pool_id)
+    return DB:exec(string.format("DELETE FROM participants WHERE pool_id = %d", pool_id))
+end
+
 return SQL

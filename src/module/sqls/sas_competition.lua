@@ -133,4 +133,12 @@ SQL.GetVersion = function()
     return DB:nrows("SELECT sqlite_version();")
 end
 
+SQL.ClearEvaluation = function()
+    return DB:exec("DELETE FROM evaluations;")
+end
+
+SQL.ClearQuestion = function()
+    return DB:exec("DELETE FROM questions;")
+end
+
 return SQL

@@ -233,3 +233,7 @@ Handlers.add("Participants-Statistic", "Participants-Statistic", function(msg)
         })
     })
 end)
+
+function DANGEROUS_CLEAR()
+    SQL.ClearParticipants(1002)
+end

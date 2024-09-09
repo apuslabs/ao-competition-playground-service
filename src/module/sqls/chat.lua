@@ -54,4 +54,8 @@ SQL.QueryTables = function()
     return DB:queryTables()
 end
 
+SQL.ClearChats = function()
+    return DB:exec("DELETE FROM chats;")
+end
+
 return SQL

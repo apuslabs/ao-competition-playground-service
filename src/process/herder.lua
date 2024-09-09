@@ -65,8 +65,7 @@ local function DispatchWork()
                 goto next_worker_type
             end
 
-            log.trace("DISPATCHING WORK", workerType, "Client:", string.sub(job.client, 1, 6), "Worker:",
-                string.sub(Herd[i], 1, 6), "Queue:", #Queue)
+            log.trace("DISPATCHING", workerType, "TO", string.sub(Herd[i], 1, 6), "REMAIN", #Queue)
 
             -- TODO: use forward in future
             Send({
@@ -74,7 +73,8 @@ local function DispatchWork()
                 Action = "Inference",
                 Data = job.prompt
             }).onReply(function(replyMsg)
-                log.info("RES", workerType, string.sub(replyMsg.From, 1, 6), datetime.unix() - job.timestamp)
+                log.info("RES", workerType, "FROM", string.sub(replyMsg.From, 1, 6), "COSTS",
+                    (datetime.unix() - job.timestamp) .. 's')
                 job.rawMsg.reply({ Data = replyMsg.Data })
                 Busy[replyMsg.From] = nil
                 table.insert(Herder[workerType], replyMsg.From)
@@ -109,7 +109,7 @@ local function InferenceHandler(msg)
         rawMsg = msg
     })
 
-    log.info("REQ", msg.Tags["WorkerType"], string.sub(msg.From, 1, 6), #Queue)
+    log.info("REQ", msg.Tags["WorkerType"], "FROM", string.sub(msg.From, 1, 6))
 
     DispatchWork()
 end
@@ -146,3 +146,7 @@ Handlers.add("Worker-Statistic", "Worker-Statistic", function(msg)
         })
     })
 end)
+
+function DANGEROUS_CLEAR()
+    Queue = {}
+end
