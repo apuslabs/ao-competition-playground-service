@@ -54,4 +54,5 @@ end
 
 function DANGEROUS_CLEAR()
     SQL.ClearEvaluation()
+    SQL.ClearQuestion()
 end

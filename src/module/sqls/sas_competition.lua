@@ -137,4 +137,8 @@ SQL.ClearEvaluation = function()
     return DB:exec("DELETE FROM evaluations;")
 end
 
+SQL.ClearQuestion = function()
+    return DB:exec("DELETE FROM questions;")
+end
+
 return SQL
