@@ -16,4 +16,22 @@ Lodash.keys = function(object)
     return result
 end
 
+Lodash.InsertUnique = function(t, value)
+    for _, v in ipairs(t) do
+        if v == value then
+            return
+        end
+    end
+    table.insert(t, value)
+end
+
+Lodash.Contain = function(t, value)
+    for _, v in ipairs(t) do
+        if v == value then
+            return true
+        end
+    end
+    return false
+end
+
 return Lodash

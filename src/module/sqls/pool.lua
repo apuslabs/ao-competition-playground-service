@@ -2,7 +2,7 @@ local DB = require("module.utils.db")
 local Helper = require("module.utils.helper")
 local datetime = require("module.utils.datetime")
 local SQL = {}
-local log = require("module.utils.log")
+local json = require("json")
 
 SQL.DATABASE = [[
     CREATE TABLE IF NOT EXISTS participants (
@@ -50,7 +50,8 @@ SQL.UpdateRank = function(pool_id, ranks)
     end
 end
 
-SQL.ImportParticipants = function(participants)
+SQL.ImportParticipants = function(data)
+    local participants = json.decode(data)
     return DB:batchInsert("participants", participants)
 end
 

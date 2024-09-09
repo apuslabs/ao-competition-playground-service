@@ -192,3 +192,25 @@ Handlers.add("CronTick", "Cron", function()
     Log.trace("Cron Tick")
     AutoUpdateLeaderboard()
 end)
+
+WhiteList = WhiteList or {}
+function BatchAddWhiteList(list)
+    for _, v in ipairs(list) do
+        Lodash.InsertUnique(WhiteList, v)
+    end
+end
+
+function BatchRemoveWhiteList(list)
+    for _, v in ipairs(list) do
+        Lodash.Remove(WhiteList, v)
+    end
+end
+
+Handlers.add("Count-WhiteList", "Count-WhiteList", function(msg)
+    msg.reply({ Status = 200, Data = #WhiteList })
+end)
+
+Handlers.add("Check-Permission", "Check-Permission", function(msg)
+    local From = msg.FromAddress or msg.From
+    msg.reply({ Status = 200, Data = Lodash.Contain(WhiteList, From) })
+end)
