@@ -53,13 +53,19 @@ end)
 Handlers.add("Get-Dashboard", "Get-Dashboard", function(msg)
     local From = msg.FromAddress or msg.From
     local poolID = tonumber(msg.Data)
+    local rank = 0
+    local rewarded_tokens = 0
+    if (From ~= "" and From ~= "1234") then
+        rank = SQL.GetUserRank(poolID, From)
+        rewarded_tokens = SQL.GetUserReward(poolID, From)
+    end
     msg.reply({
         Status = 200,
         Data = json.encode({
             participants = SQL.GetTotalParticipants(poolID),
             granted_reward = SQL.GetTotalRewards(poolID),
-            rank = SQL.GetUserRank(poolID, From),
-            rewarded_tokens = SQL.GetUserReward(poolID, From)
+            rank = rank,
+            rewarded_tokens = rewarded_tokens
         })
     })
 end)
