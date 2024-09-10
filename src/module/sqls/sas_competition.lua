@@ -1,3 +1,4 @@
+local json = require("json")
 local DB = require("module.utils.db")
 local Helper = require("module.utils.helper")
 local datetime = require("module.utils.datetime")
@@ -43,6 +44,12 @@ SQL.GetQuestions = function()
     return DB:query("questions")
 end
 
+SQL.GetEvaluations = function(limit, offset)
+    return json.encode(DB:query("evaluations", {}, {
+        limit = limit,
+        offset = offset,
+    }))
+end
 
 SQL.BatchCreateEvaluation = function(evaluations)
     Helper.assert_non_empty_array(evaluations)
@@ -84,6 +91,10 @@ SQL.GetUnEvaluated = function(limit)
         ORDER BY e.created_at
         LIMIT %d
     ]], limit))
+end
+
+SQL.ClearScore = function()
+    return DB:exec("UPDATE evaluations SET reference = NULL, sas_score = NULL, response_at = NULL;")
 end
 
 SQL.UpdateEvaluationReference = function(id, reference)
