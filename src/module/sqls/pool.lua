@@ -71,7 +71,7 @@ SQL.CountParticipantsByCreatedTime = function(pool_id, start_time, end_time)
 end
 
 SQL.GetLeaderboard = function(pool_id)
-    return DB:query("participants", { pool_id = pool_id }, { order = "rank ASC" })
+    return DB:query("participants", { pool_id = pool_id }, { order = "rank IS NULL,rank ASC" })
 end
 
 SQL.GetTotalParticipants = function(pool_id)

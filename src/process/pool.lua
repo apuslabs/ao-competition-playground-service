@@ -152,9 +152,9 @@ Handlers.add("Join-Pool", "Join-Pool", JoinPoolHandler)
 Reward = { 35000, 20000, 10000, 5000, 5000, 5000, 5000, 5000, 5000, 5000 }
 local function allocateReward(rank)
     if rank <= 10 then
-        return Reward[rank]
+        return Reward[rank] * 2
     elseif rank <= 200 then
-        return 300
+        return 300 * 2
     else
         return 0
     end

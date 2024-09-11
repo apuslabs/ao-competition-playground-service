@@ -7,7 +7,7 @@ local Colors = {
     reset = "\27[0m",
 }
 
-log.level = "trace"
+log.level = "info"
 
 local modes = {
     { name = "trace", color = "\27[34m", },
