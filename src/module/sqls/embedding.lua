@@ -18,6 +18,7 @@ SQL.DATABASE = [[
         prompt_text TEXT NOT NULL,
         retrieve_result TEXT
     );
+    CREATE INDEX IF NOT EXISTS idx_prompts_retrieve_result ON prompts(retrieve_result);
 ]]
 
 SQL.init = function(client)
@@ -40,6 +41,8 @@ end
 SQL.GetUnembededDocuments = function()
     return DB:query("contents", {
         embeded = 0
+    }, {
+        limit = 20
     })
 end
 
@@ -61,6 +64,8 @@ end
 SQL.GetToRetrievePrompt = function()
     return DB:query("prompts", {
         retrieve_result = "__NULL"
+    }, {
+        limit = 10
     })
 end
 
