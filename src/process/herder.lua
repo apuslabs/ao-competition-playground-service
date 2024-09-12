@@ -26,10 +26,10 @@ local function isAllowed(client)
     return InferenceAllowList[client] == true or client == ao.id or client == Owner
 end
 
-local function DispatchWork()
+function DispatchWork()
     -- check Busy table for if worker is over 1 hour
     for worker, work in pairs(Busy) do
-        if (datetime.unix() - work.timestamp) > 3600000 then
+        if (datetime.unix() - work.timestamp) > 1200000 then
             local wType = work.workerType
             if not TimeoutHerder[wType][worker] then
                 log.warn("TIMEOUT", wType, string.sub(worker, 1, 6))
