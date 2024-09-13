@@ -17,17 +17,18 @@ function CreateDatasetHandler(msg)
         return
     end
     if UploadedUserList[msg.From] then
+        Log.warn(string.format("%s has uploaded dataset before", msg.From))
         msg.reply({ Status = "403", Data = "You have uploaded dataset before." })
         return
     end
     local data = json.decode(msg.Data)
     assert(data and data.hash and data.list, "Invalid data")
     SQL.CreateDocuments(data.hash, data.list)
-    msg.reply({ Status = "200", Data = "Dataset created " .. #data.list .. " successfully" })
     Log.info(string.format("%s Create Dataset %s (%s)", msg.From, data.hash, #data.list))
     if not UploadedUserList[msg.From] then
         UploadedUserList[msg.From] = true
     end
+    msg.reply({ Status = "200", Data = "Dataset created " .. #data.list .. " successfully" })
 end
 
 function EmbeddingDataHandler(msg)
