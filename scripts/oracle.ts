@@ -34,9 +34,13 @@ async function embedDocuments(d: Dataset) {
   const list = [
     {
       dataset_id: d.dataset_hash,
-      documents: d.documents,
+      documents: d.documents.map((v) => ({ content: v })),
     },
   ];
+  if (!list.length) {
+    console.warn("No documents to embed", d.dataset_hash);
+    return 0;
+  }
   const res = await axios.post("/create-dataset", { list });
   return res.data?.count ?? 0;
 }
@@ -72,11 +76,14 @@ async function embeddingDocs() {
     try {
       const embeddingDocs = await embedDocuments(dataset);
       console.log(`Embedded ${embeddingDocs} documents`);
-    } catch (e) {
-      console.error("Failed to embed documents", e);
+      const replyMsg = await setDocumentsEmbedded(dataset);
+      console.log(replyMsg);
+    } catch (e: any) {
+      console.error(
+        "Failed to embed documents",
+        e?.response?.data ?? e?.message ?? e,
+      );
     }
-    // const replyMsg = await setDocumentsEmbedded(dataset);
-    // console.log(replyMsg);
   }
 }
 
