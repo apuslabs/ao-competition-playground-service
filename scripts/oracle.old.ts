@@ -1,24 +1,24 @@
-import { EMBEDDING_PROCESS, EMBEDDING_SERVICE } from "./ao/config";
-import { dryrun, dryrunDebug, msgResult } from "./ao/wallet";
+import { EMBEDDING_SERVICE } from "./ao/config";
+import { dryrun, msgResult } from "./ao/wallet";
 import axios from "axios";
 
 axios.defaults.baseURL = EMBEDDING_SERVICE;
 
+const EMBEDDING_PROCESS = "GbCrfjYRxhrVx-UNYPgCOB8-KW_j_6cKfhmKpSoUXFY";
+
 async function getUnembeddedDocuments() {
-  try {
-    const result = await dryrun(EMBEDDING_PROCESS, {
-      Action: "Get-Unembeded-Documents",
-    });
-    const data = result.Messages?.[0]?.Data ?? "[]";
-    return JSON.parse(data);
-  } catch (e) {
-    console.error("Failed to retrieve documents", e);
-  }
+  const result = await dryrun(EMBEDDING_PROCESS, {
+    Action: "Get-Unembeded-Documents",
+  });
+  const data = result.Messages?.[0]?.Data ?? "[]";
+  return JSON.parse(data);
 }
 
-interface Dataset {
+interface Docuemnt {
+  id: number;
+  content: string;
   dataset_hash: string;
-  documents: { content: string }[];
+  meta: string;
 }
 
 function decodeMeta(meta: string) {
@@ -30,23 +30,33 @@ function decodeMeta(meta: string) {
   }
 }
 
-async function embedDocuments(d: Dataset) {
-  const list = [
-    {
-      dataset_id: d.dataset_hash,
-      documents: d.documents,
+async function embedDocuments(docs: Docuemnt[]) {
+  // group by dataset_hash
+  const groupedDocs = docs.reduce(
+    (acc, doc) => {
+      (acc[doc.dataset_hash] = acc[doc.dataset_hash] || []).push({
+        content: doc.content,
+        meta: decodeMeta(doc.meta),
+      });
+      return acc;
     },
-  ];
+    {} as Record<string, any[]>,
+  );
+  // group to list
+  const list = Object.entries(groupedDocs).map(([dataset_hash, docs]) => ({
+    dataset_id: dataset_hash,
+    documents: docs,
+  }));
   const res = await axios.post("/create-dataset", { list });
   return res.data?.count ?? 0;
 }
 
-async function setDocumentsEmbedded(d: Dataset) {
+async function setDocumentsEmbedded(embeddingDocs: Docuemnt[]) {
   // exact ids from embeddingDocs
   const result = await msgResult(
     EMBEDDING_PROCESS,
     { Action: "Embedding-Data" },
-    d.dataset_hash,
+    embeddingDocs.map((doc) => doc.id),
   );
   const data = result.Messages?.[0]?.Data ?? 0;
   return data;
@@ -67,24 +77,24 @@ function executeWithRetry(asyncFunc: () => Promise<void>, intervalMs: number) {
 }
 
 async function embeddingDocs() {
-  const dataset: Dataset = await getUnembeddedDocuments();
-  if (dataset && dataset.dataset_hash && dataset.documents?.length) {
+  const toEmbeddedDocs = await getUnembeddedDocuments();
+  if (toEmbeddedDocs.length) {
     try {
-      const embeddingDocs = await embedDocuments(dataset);
-      console.log(`Embedded ${embeddingDocs} documents`);
+      const embeddingDocs = await embedDocuments(toEmbeddedDocs);
+      console.log(`Successfully embedded ${embeddingDocs} documents`);
     } catch (e) {
       console.error("Failed to embed documents", e);
     }
-    const replyMsg = await setDocumentsEmbedded(dataset);
-    console.log(replyMsg);
+    await setDocumentsEmbedded(toEmbeddedDocs);
   }
 }
 
 interface Prompt {
+  id: number;
   reference: string;
   sender: string;
   dataset_hash: string;
-  prompt: string;
+  prompt_text: string;
   retrieve_result?: string;
 }
 
@@ -92,29 +102,21 @@ const PromptPool: Record<string, Prompt> = {};
 const ErrorPool: Record<string, Prompt> = {};
 
 async function getToRetrievePrompt() {
-  try {
-    const result = await dryrun(EMBEDDING_PROCESS, {
-      Action: "GET-TORETRIEVE-PROMPT",
-    });
-    const data = result.Messages?.[0]?.Data ?? "[]";
-    const prompts = JSON.parse(data);
-    prompts.forEach((prompt: any) => {
-      if (!PromptPool[prompt.reference]) {
-        PromptPool[prompt.reference] = {
-          ...prompt,
-          ...PromptPool[prompt.reference],
-        };
-      }
-    });
-  } catch (e) {}
+  const result = await dryrun(EMBEDDING_PROCESS, {
+    Action: "GET-TORETRIEVE-PROMPT",
+  });
+  const data = result.Messages?.[0]?.Data ?? "[]";
+  const prompts = JSON.parse(data);
+  prompts.length && console.log(`Retrieved ${prompts.length} prompts`);
+  prompts.map((prompt: any) => {
+    PromptPool[prompt.reference] = { ...prompt };
+  });
 }
 
 async function retrievePrompt() {
   const toRetrievePrompts = Object.values(PromptPool).filter(
     (p) => !p.retrieve_result,
   );
-  toRetrievePrompts.length &&
-    console.log("toRetrievePrompts", JSON.stringify(toRetrievePrompts));
   if (!toRetrievePrompts.length) return;
   // only process 1 prompts at a time
   const toRetrievePrompts50 = toRetrievePrompts.slice(0, 1);
@@ -122,7 +124,7 @@ async function retrievePrompt() {
   const groupedPrompts = toRetrievePrompts50.reduce(
     (acc, doc) => {
       (acc[doc.dataset_hash] = acc[doc.dataset_hash] || []).push({
-        prompt: doc.prompt,
+        prompt: doc.prompt_text,
         reference: doc.reference,
       });
       return acc;
@@ -135,6 +137,7 @@ async function retrievePrompt() {
     prompts,
   }));
   const res = await axios.post("/retrieve-data", { list });
+  console.log(`Successfully retrieved ${res.data?.length ?? 0} prompts`);
   res.data.map(({ reference, result }: any) => {
     const prompt = PromptPool[reference];
     if (prompt) {
@@ -152,13 +155,10 @@ async function setPromptRetrieved() {
     await msgResult(
       EMBEDDING_PROCESS,
       { Action: "Set-Retrieve-Result" },
-      toSetPrompt.map((v) => ({
-        reference: v.reference,
-        retrieve_result: v.retrieve_result,
-      })),
+      toSetPrompt,
     );
     console.log(
-      `Set retrieve result for ${toSetPrompt.map((v) => v.reference).join(",")}`,
+      `Successfully set retrieve result for ${toSetPrompt.length} prompts`,
     );
     for (const prompt of toSetPrompt) {
       delete PromptPool[prompt.reference];
@@ -172,12 +172,12 @@ async function setPromptRetrieved() {
 }
 
 function autoRetrievePrompts() {
-  executeWithRetry(async () => {
-    await getToRetrievePrompt();
-    await setPromptRetrieved();
-  }, 1000);
+  setInterval(() => {
+    getToRetrievePrompt();
+  }, 2000);
   executeWithRetry(async () => {
     await retrievePrompt();
+    await setPromptRetrieved();
   }, 100);
 }
 
