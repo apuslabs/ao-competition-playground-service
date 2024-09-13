@@ -42,7 +42,7 @@ SQL.GetUnembededDocuments = function()
     return DB:query("contents", {
         embeded = 0
     }, {
-        limit = 20
+        limit = 500
     })
 end
 

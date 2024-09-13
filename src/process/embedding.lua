@@ -10,8 +10,14 @@ SQL.init(DBClient)
 
 local throttleCheck = Helper.throttleCheckWrapper(Config.Pool.JoinThrottle)
 
+local UploadedUserList = {}
+
 function CreateDatasetHandler(msg)
     if not throttleCheck(msg) then
+        return
+    end
+    if UploadedUserList[msg.From] then
+        msg.reply({ Status = "403", Data = "You have uploaded dataset before." })
         return
     end
     local data = json.decode(msg.Data)
@@ -19,6 +25,9 @@ function CreateDatasetHandler(msg)
     SQL.CreateDocuments(data.hash, data.list)
     msg.reply({ Status = "200", Data = "Dataset created " .. #data.list .. " successfully" })
     Log.info(string.format("%s Create Dataset %s (%s)", msg.From, data.hash, #data.list))
+    if not UploadedUserList[msg.From] then
+        UploadedUserList[msg.From] = true
+    end
 end
 
 function EmbeddingDataHandler(msg)

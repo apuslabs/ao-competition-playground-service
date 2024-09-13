@@ -51,6 +51,15 @@ SQL.GetEvaluations = function(limit, offset)
     }))
 end
 
+SQL.RecoverTimeoutEvaluations = function()
+    return DB:exec([=[
+        UPDATE evaluations
+        SET reference = NULL, sas_score = NULL, response_at = NULL
+        WHERE reference IS NOT NULL AND sas_score IS NULL AND created_at + 7200 < ]=] ..
+        datetime.unix() .. [=[;
+    ]=])
+end
+
 SQL.BatchCreateEvaluation = function(evaluations)
     Helper.assert_non_empty_array(evaluations)
     local values = {}
