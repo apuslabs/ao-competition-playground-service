@@ -75,8 +75,8 @@ async function embeddingDocs() {
     } catch (e) {
       console.error("Failed to embed documents", e);
     }
-    const replyMsg = await setDocumentsEmbedded(dataset);
-    console.log(replyMsg);
+    // const replyMsg = await setDocumentsEmbedded(dataset);
+    // console.log(replyMsg);
   }
 }
 
@@ -113,8 +113,6 @@ async function retrievePrompt() {
   const toRetrievePrompts = Object.values(PromptPool).filter(
     (p) => !p.retrieve_result,
   );
-  toRetrievePrompts.length &&
-    console.log("toRetrievePrompts", JSON.stringify(toRetrievePrompts));
   if (!toRetrievePrompts.length) return;
   // only process 1 prompts at a time
   const toRetrievePrompts50 = toRetrievePrompts.slice(0, 1);

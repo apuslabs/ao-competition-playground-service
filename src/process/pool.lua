@@ -127,6 +127,7 @@ local poolTimeCheck = function(poolID)
     return now >= tonumber(startTime) and now <= tonumber(endTime)
 end
 local throttleCheck = Helper.throttleCheckWrapper(Config.Pool.JoinThrottle)
+UploadedUserList = UploadedUserList or {}
 function JoinPoolHandler(msg)
     local data = json.decode(msg.Data)
     Helper.assert_non_empty(msg.PoolID, data.dataset_hash, data.dataset_name)
@@ -137,9 +138,14 @@ function JoinPoolHandler(msg)
     if not throttleCheck(msg) then
         return
     end
+    if UploadedUserList[msg.From] then
+        msg.reply({ Status = 403, Data = "You have already joined this competition." })
+        return
+    end
 
     SQL.CreateParticipant(poolID, msg.From, data.dataset_hash, data.dataset_name)
     msg.reply({ Status = 200, Data = "Join Success" })
+    UploadedUserList[msg.From] = true
     Send({
         Target = CompetitionPools[poolID].process_id,
         Action = "Join-Competition",
