@@ -26,10 +26,18 @@ local function isAllowed(client)
     return InferenceAllowList[client] == true or client == ao.id or client == Owner
 end
 
+function CheckBusyWorker()
+    local t = {}
+    for worker, work in pairs(Busy) do
+        t[worker] = datetime.unix() - work.timestamp
+    end
+    return t
+end
+
 function DispatchWork()
     -- check Busy table for if worker is over 1 hour
     for worker, work in pairs(Busy) do
-        if (datetime.unix() - work.timestamp) > 1200000 then
+        if (datetime.unix() - work.timestamp) > 1200 then
             local wType = work.workerType
             if not TimeoutHerder[wType][worker] then
                 log.warn("TIMEOUT", wType, string.sub(worker, 1, 6))
@@ -125,7 +133,7 @@ Handlers.add("Worker-Init", "Init-Response", WorkerInitResponse)
 
 Handlers.add("Inference", "Inference", InferenceHandler)
 
-Handlers.add("Worker-Statistic", "Worker-Statistic", function(msg)
+function StatisticWorker()
     local queueLength = #Queue
     local busyEvaluator = 0
     local busyChat = 0
@@ -136,15 +144,18 @@ Handlers.add("Worker-Statistic", "Worker-Statistic", function(msg)
             busyChat = busyChat + 1
         end
     end
-    msg.reply({
-        Data = json.encode({
-            QueueLength = queueLength,
-            BusyEvaluator = busyEvaluator,
-            BusyChat = busyChat,
-            FreeEvaluator = #Herder.Evaluate,
-            FreeChat = #Herder.Chat
-        })
-    })
+    return {
+        QueueLength = queueLength,
+        BusyEvaluator = busyEvaluator,
+        BusyChat = busyChat,
+        FreeEvaluator = #Herder.Evaluate,
+        FreeChat = #Herder.Chat
+    }
+end
+
+Handlers.add("Worker-Statistic", "Worker-Statistic", function(msg)
+    local statistic = StatisticWorker()
+    msg.reply({ Data = json.encode(statistic) })
 end)
 
 function DANGEROUS_CLEAR()
