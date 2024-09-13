@@ -15,7 +15,7 @@ Config.Evaluate = {
 }
 
 Config.Pool = {
-    JoinThrottle = 1 * 60,    -- 1 minute
+    JoinThrottle = 5 * 60,    -- 1 minute
     LeaderboardInterval = 12, -- 12 * 5 mins
 }
 

@@ -38,14 +38,14 @@ end
 
 function JoinCompetitionHandler(msg)
     SQL.CreateEvaluationSet(msg.Data)
-    msg.reply({ Status = "200" })
+    msg.reply({ Status = 200 })
 end
 
 Handlers.add("Join-Competition", "Join-Competition", JoinCompetitionHandler)
 
 Handlers.add("Get-Rank", "Get-Rank", function(msg)
     local rank = SQL.GetRank()
-    msg.reply({ Status = "200", Data = json.encode(rank) })
+    msg.reply({ Status = 200, Data = json.encode(rank) })
 end)
 
 function GetQuestions()

@@ -22,7 +22,7 @@ Helper.throttleCheckWrapper = function(throttle)
     return function(msg)
         local now = datetime.unix()
         if (now - lastTime) < throttle then
-            msg.reply({ Status = "429", Data = "Processing data. Try again in five minutes." })
+            msg.reply({ Status = 429, Data = "Processing data. Try again in five minutes." })
             log.warn(string.format("Req from %s blocked due to rate limit", msg.From))
             return false
         end

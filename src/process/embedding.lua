@@ -1,7 +1,7 @@
 local json = require("json")
 Log = require("module.utils.log")
 local Helper = require("module.utils.helper")
-local Config = require("module.utils.config")
+Config = require("module.utils.config")
 local Datetime = require("module.utils.datetime")
 
 local throttleCheck = Helper.throttleCheckWrapper(Config.Pool.JoinThrottle)
@@ -14,7 +14,7 @@ function CreateDatasetHandler(msg)
     end
     if UploadedUserList[msg.From] then
         Log.warn(string.format("%s has uploaded dataset before", msg.From))
-        msg.reply({ Status = "403", Data = "You have uploaded dataset before." })
+        msg.reply({ Status = 403, Data = "You have uploaded dataset before." })
         return
     end
     local data = json.decode(msg.Data)
@@ -28,13 +28,21 @@ function CreateDatasetHandler(msg)
     if not UploadedUserList[msg.From] then
         UploadedUserList[msg.From] = true
     end
-    msg.reply({ Status = "200", Data = "Dataset created " .. #data.list .. " successfully" })
+    msg.reply({ Status = 200, Data = "Dataset created " .. #data.list .. " successfully" })
+end
+
+function CountDatasetQueue()
+    local count = 0
+    for k, v in pairs(DatasetQueue) do
+        count = count + 1
+    end
+    return count
 end
 
 function GetUnembededDocumentsHandler(msg)
     for hash, data in pairs(DatasetQueue) do
         msg.reply({
-            Status = "200",
+            Status = 200,
             Data = json.encode({
                 dataset_hash = hash,
                 documents = data.list
@@ -42,7 +50,7 @@ function GetUnembededDocumentsHandler(msg)
         })
         return
     end
-    msg.reply({ Status = "200", Data = "{}" })
+    msg.reply({ Status = 200, Data = "{}" })
 end
 
 function EmbeddingDataHandler(msg)
@@ -50,13 +58,13 @@ function EmbeddingDataHandler(msg)
     local dataset = DatasetQueue[hash]
     if not dataset then
         Log.warn(string.format("Dataset %s not found", hash))
-        msg.reply({ Status = "404", Data = "Dataset not found" })
+        msg.reply({ Status = 404, Data = "Dataset not found" })
         return
     end
     local now = Datetime.unix()
     Log.info(string.format("Embeded %s documents COSTS %d", hash, now - dataset.created_at))
     DatasetQueue[hash] = nil
-    msg.reply({ Status = "200", Data = "Set  " .. hash .. " Embeded" })
+    msg.reply({ Status = 200, Data = "Set  " .. hash .. " Embeded" })
 end
 
 PromptQueue = PromptQueue or {}
@@ -82,7 +90,7 @@ function GetToRetrievePromptHandler(msg)
             break
         end
     end
-    msg.reply({ Status = "200", Data = json.encode(prompts) })
+    msg.reply({ Status = 200, Data = json.encode(prompts) })
 end
 
 function RecevicePromptResponseHandler(msg)
