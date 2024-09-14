@@ -3,8 +3,8 @@ local ao = require('.ao')
 local sqlite3 = require("lsqlite3")
 SQL = require("module.sqls.pool")
 Log = require("module.utils.log")
-local Lodash = require("module.utils.lodash")
-local Config = require("module.utils.config")
+Lodash = require("module.utils.lodash")
+Config = require("module.utils.config")
 local Helper = require("module.utils.helper")
 local Datetime = require("module.utils.datetime")
 
@@ -126,26 +126,41 @@ local poolTimeCheck = function(poolID)
     local now = Datetime.unix()
     return now >= tonumber(startTime) and now <= tonumber(endTime)
 end
-local throttleCheck = Helper.throttleCheckWrapper(Config.Pool.JoinThrottle)
+local throttleCheck = Helper.throttleCheckWrapper(Config.Pool.JoinThrottle - 10)
 UploadedUserList = UploadedUserList or {}
+function RemoveUserFromUploadedList(address)
+    if UploadedUserList[address] then
+        UploadedUserList[address] = nil
+        Log.warn(string.format("Removed %s from uploaded list", address))
+    end
+end
+
 function JoinPoolHandler(msg)
     local data = json.decode(msg.Data)
     Helper.assert_non_empty(msg.PoolID, data.dataset_hash, data.dataset_name)
     local poolID = tonumber(msg.PoolID)
     if not poolTimeCheck(poolID) then
         msg.reply({ Status = 403, Data = "The event has ended, can't join in." })
+        return
     end
-    if not throttleCheck(msg) then
+    if Lodash.Contain(WhiteList, msg.From) then -- WhiteList
+        Log.warn("User " .. msg.From .. " is not allowed to join the event.")
+        msg.reply({ Status = 403, Data = "You are not allowed to join this event." })
         return
     end
     if UploadedUserList[msg.From] then
-        msg.reply({ Status = 403, Data = "You have already joined this competition." })
+        Log.warn("User " .. msg.From .. " has already joined the event.")
+        msg.reply({ Status = 403, Data = "You have already joined this event." })
+        return
+    end
+    if not throttleCheck(msg) then
         return
     end
 
     SQL.CreateParticipant(poolID, msg.From, data.dataset_hash, data.dataset_name)
     msg.reply({ Status = 200, Data = "Join Success" })
     UploadedUserList[msg.From] = true
+    Log.info("Join Pool " .. msg.From .. " : ", data.dataset_hash)
     Send({
         Target = CompetitionPools[poolID].process_id,
         Action = "Join-Competition",
@@ -171,7 +186,7 @@ function GetRank(poolID)
         Action = "Get-Rank"
     }).onReply(function(msg)
         local ranks = json.decode(msg.Data)
-        Log.info("Update Rank ", poolID, ranks)
+        Log.trace("Update Rank ", poolID, ranks)
         for i in ipairs(ranks) do
             ranks[i].reward = allocateReward(i)
         end

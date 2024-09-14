@@ -7,14 +7,21 @@ local Datetime = require("module.utils.datetime")
 local throttleCheck = Helper.throttleCheckWrapper(Config.Pool.JoinThrottle)
 
 UploadedUserList = UploadedUserList or {}
+function RemoveUserFromUploadedList(address)
+    if UploadedUserList[address] then
+        UploadedUserList[address] = nil
+        Log.warn(string.format("Removed %s from uploaded list", address))
+    end
+end
+
 DatasetQueue = DatasetQueue or {}
 function CreateDatasetHandler(msg)
-    if not throttleCheck(msg) then
-        return
-    end
     if UploadedUserList[msg.From] then
         Log.warn(string.format("%s has uploaded dataset before", msg.From))
         msg.reply({ Status = 403, Data = "You have uploaded dataset before." })
+        return
+    end
+    if not throttleCheck(msg) then
         return
     end
     local data = json.decode(msg.Data)
