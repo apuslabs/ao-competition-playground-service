@@ -143,7 +143,7 @@ function JoinPoolHandler(msg)
         msg.reply({ Status = 403, Data = "The event has ended, can't join in." })
         return
     end
-    if Lodash.Contain(WhiteList, msg.From) then -- WhiteList
+    if not Lodash.Contain(WhiteList, msg.From) then -- WhiteList
         Log.warn("User " .. msg.From .. " is not allowed to join the event.")
         msg.reply({ Status = 403, Data = "You are not allowed to join this event." })
         return
@@ -255,6 +255,21 @@ Handlers.add("Participants-Statistic", "Participants-Statistic", function(msg)
     })
 end)
 
+-- ops
+
 function DANGEROUS_CLEAR()
     SQL.ClearParticipants(1002)
+end
+
+function CheckUserStatus(address)
+    if not Lodash.Contain(WhiteList, address) then -- WhiteList
+        return "User " .. address .. " is not allowed to join the event."
+    end
+    if SQL.GetUserRank(1002, address) ~= -1 then
+        return "User " .. address .. " has already joined the event."
+    end
+    if UploadedUserList[address] then
+        return "User " .. address .. " has already called join pool."
+    end
+    return "User is OK"
 end
