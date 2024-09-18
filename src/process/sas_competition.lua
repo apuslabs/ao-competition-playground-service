@@ -43,9 +43,13 @@ end
 
 Handlers.add("Join-Competition", "Join-Competition", JoinCompetitionHandler)
 
+function GetRank()
+    return json.encode(SQL.GetRank())
+end
+
 Handlers.add("Get-Rank", "Get-Rank", function(msg)
-    local rank = SQL.GetRank()
-    msg.reply({ Status = 200, Data = json.encode(rank) })
+    -- msg.reply({ Status = 200, Data = GetRank() })
+    Send({ Target = msg.From, Action = "Get-Rank-Response", Data = GetRank() })
 end)
 
 function GetQuestions()
