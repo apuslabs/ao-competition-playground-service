@@ -102,6 +102,21 @@ SQL.GetUnEvaluated = function(limit)
     ]], limit))
 end
 
+SQL.GetDatasetByStatus = function()
+    return DB:nrows(string.format([=[
+        SELECT
+            participant_dataset_hash,
+            COUNT(id) AS total_evaluations,
+            SUM(CASE WHEN reference IS NOT NULL AND response_at IS NOT NULL THEN 1 ELSE 0 END) AS finished_evaluations,
+            SUM(CASE WHEN reference IS NOT NULL AND response_at IS NULL THEN 1 ELSE 0 END) AS processing_evaluations,
+            SUM(CASE WHEN reference IS NULL THEN 1 ELSE 0 END) AS pending_evaluations
+        FROM
+            evaluations
+        GROUP BY
+            participant_dataset_hash
+    ]=]))
+end
+
 SQL.ClearScore = function()
     return DB:exec("UPDATE evaluations SET reference = NULL, sas_score = NULL, response_at = NULL;")
 end

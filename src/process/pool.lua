@@ -255,6 +255,41 @@ Handlers.add("Participants-Statistic", "Participants-Statistic", function(msg)
     })
 end)
 
+Handlers.add("Participants-All-Statistic", "Participants-All-Statistic", function(msg)
+    local now = Datetime.unix()
+    local lastHour = now - 3600
+    local lastDay = now - 86400
+
+    local lastHourParticipants = 0
+    local lastDayParticipants = 0
+    local totalParticipants = 0
+    for id, _ in pairs(getOngoingCompetitions()) do
+        lastHourParticipants = lastHourParticipants + SQL.CountParticipantsByCreatedTime(id, lastHour, now)
+        lastDayParticipants = lastHourParticipants + SQL.CountParticipantsByCreatedTime(id, lastDay, now)
+        totalParticipants = lastHourParticipants + SQL.GetTotalParticipants(id)
+    end
+    msg.reply({
+        Status = 200,
+        Data = json.encode({
+            last_hour = lastHourParticipants,
+            last_day = lastDayParticipants,
+            total = totalParticipants
+        })
+    })
+end)
+
+Handlers.add("Ongoing-Competitions", "Ongoing-Competitions", function(msg)
+    local res = {}
+    for id, pool in pairs(getOngoingCompetitions()) do
+        table.insert(res, {
+            Id = id,
+            Title = pool.title,
+            Process = pool.process_id,
+        })
+    end
+    msg.reply({ Status = 200, Data = res})
+end)
+
 -- ops
 
 function DANGEROUS_CLEAR()

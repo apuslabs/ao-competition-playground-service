@@ -48,6 +48,16 @@ Handlers.add("Get-Rank", "Get-Rank", function(msg)
     msg.reply({ Status = 200, Data = json.encode(rank) })
 end)
 
+Handlers.add("Dataset-Statistic", "Dataset-Statistic", function(msg)
+    Log.trace(SQL.GetDatasetByStatus())
+    msg.reply({
+        Status = 200,
+        Data = json.encode({
+            data = SQL.GetDatasetByStatus()
+        })
+    })
+end)
+
 function GetQuestions()
     Log.debug(SQL.GetQuestions())
 end
