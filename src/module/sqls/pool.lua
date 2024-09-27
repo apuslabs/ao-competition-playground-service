@@ -110,4 +110,16 @@ SQL.ClearParticipants = function(pool_id)
     return DB:exec(string.format("DELETE FROM participants WHERE pool_id = %d", pool_id))
 end
 
+SQL.CountEvaluatedDatasets = function(pool_id)
+    local result = DB:nrow(string.format(
+        "SELECT COUNT(dataset_hash) AS count FROM participants WHERE pool_id = %s AND progress >= 1", pool_id))
+    return result.count
+end
+
+SQL.CountUnEvaluatedDatasets = function(pool_id)
+    local result = DB:nrow(string.format(
+        "SELECT COUNT(dataset_hash) AS count FROM participants WHERE pool_id = %s AND (progress < 1 OR progress is NULL)", pool_id))
+    return result.count
+end
+
 return SQL

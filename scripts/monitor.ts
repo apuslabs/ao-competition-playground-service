@@ -18,35 +18,48 @@ QueueLength: \`${QueueLength}\``,
 }
 
 async function getPoolStatistic() {
-  const result = await dryrun(
-    POOL_PROCESS,
-    {
-      Action: "Participants-Statistic",
-    },
-    1002,
-  );
-  const { last_hour, last_day, total } = JSON.parse(
-    result?.Messages?.[0]?.Data ?? "{}",
-  );
-  console.log(result);
-  axios.post(webhookUrl, {
-    text: `*Pool Statistic*:\n
-Participants in last hour: \`${last_hour}\`\n
-Participants in last 24h: \`${last_day}\`\n
-Total participants: \`${total}\``,
+  const result = await dryrun(POOL_PROCESS, {
+    Action: 'Participants-Statistic',
   });
+  const { last_hour, last_day, total } = JSON.parse(
+    result?.Messages?.[0]?.Data ?? '{}'
+  );
+  const text = `*Pool Statistic*:\n
+  Participants in last hour: \`${last_hour}\`\n
+  Participants in last 24h: \`${last_day}\`\n
+  Total participants: \`${total}\``;
+
+  console.log(text);
+  // axios.post(webhookUrl, {
+  //   text,
+  // });
+}
+
+async function getDatasetStatistic() {
+  const result = await dryrun(POOL_PROCESS, { Action: 'Dataset-Statistic' });
+  const datasetInfos = JSON.parse(result?.Messages?.[0]?.Data ?? '[]');
+
+  const text = `*Dataset Statistics*:\n\n${datasetInfos
+    .map((di: any) => {
+      return `  Pool (${di.PoolId}): \n\n  Evaluated datasets count: ${di.evaluated} \n\n  UnEvaluated datasets count: ${di.unEvaluated}\n\n`;
+    })
+    .join('\n')}
+  `;
+
+  console.log(text);
+}
+
+async function runInterval() {
+  getHerderStatistic();
+  getPoolStatistic();
+  getDatasetStatistic();
 }
 
 async function main() {
-  getHerderStatistic();
-  getPoolStatistic();
-  setInterval(
-    () => {
-      getHerderStatistic();
-      getPoolStatistic();
-    },
-    1000 * 60 * 60 * 1,
-  );
+  runInterval();
+  setInterval(() => {
+    runInterval();
+  }, 1000 * 60 * 60 * 1);
 }
 
 main();
