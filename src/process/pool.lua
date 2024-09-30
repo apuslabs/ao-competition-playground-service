@@ -135,40 +135,40 @@ function RemoveUserFromUploadedList(address)
     end
 end
 
-function JoinPoolHandler(msg)
-    local data = json.decode(msg.Data)
-    Helper.assert_non_empty(msg.PoolID, data.dataset_hash, data.dataset_name)
-    local poolID = tonumber(msg.PoolID)
-    if not poolTimeCheck(poolID) then
-        msg.reply({ Status = 403, Data = "The event has ended, can't join in." })
-        return
-    end
-    if not Lodash.Contain(WhiteList, msg.From) then -- WhiteList
-        Log.warn("User " .. msg.From .. " is not allowed to join the event.")
-        msg.reply({ Status = 403, Data = "You are not allowed to join this event." })
-        return
-    end
-    if UploadedUserList[msg.From] then
-        Log.warn("User " .. msg.From .. " has already joined the event.")
-        msg.reply({ Status = 403, Data = "You have already joined this event." })
-        return
-    end
-    if not throttleCheck(msg) then
-        return
-    end
+-- function JoinPoolHandler(msg)
+--     local data = json.decode(msg.Data)
+--     Helper.assert_non_empty(msg.PoolID, data.dataset_hash, data.dataset_name)
+--     local poolID = tonumber(msg.PoolID)
+--     if not poolTimeCheck(poolID) then
+--         msg.reply({ Status = 403, Data = "The event has ended, can't join in." })
+--         return
+--     end
+--     if not Lodash.Contain(WhiteList, msg.From) then -- WhiteList
+--         Log.warn("User " .. msg.From .. " is not allowed to join the event.")
+--         msg.reply({ Status = 403, Data = "You are not allowed to join this event." })
+--         return
+--     end
+--     if UploadedUserList[msg.From] then
+--         Log.warn("User " .. msg.From .. " has already joined the event.")
+--         msg.reply({ Status = 403, Data = "You have already joined this event." })
+--         return
+--     end
+--     if not throttleCheck(msg) then
+--         return
+--     end
 
-    SQL.CreateParticipant(poolID, msg.From, data.dataset_hash, data.dataset_name)
-    msg.reply({ Status = 200, Data = "Join Success" })
-    UploadedUserList[msg.From] = true
-    Log.info("Join Pool " .. msg.From .. " : ", data.dataset_hash)
-    Send({
-        Target = CompetitionPools[poolID].process_id,
-        Action = "Join-Competition",
-        Data = data.dataset_hash
-    })
-end
+--     SQL.CreateParticipant(poolID, msg.From, data.dataset_hash, data.dataset_name)
+--     msg.reply({ Status = 200, Data = "Join Success" })
+--     UploadedUserList[msg.From] = true
+--     Log.info("Join Pool " .. msg.From .. " : ", data.dataset_hash)
+--     Send({
+--         Target = CompetitionPools[poolID].process_id,
+--         Action = "Join-Competition",
+--         Data = data.dataset_hash
+--     })
+-- end
 
-Handlers.add("Join-Pool", "Join-Pool", JoinPoolHandler)
+-- Handlers.add("Join-Pool", "Join-Pool", JoinPoolHandler)
 
 Reward = { 35000, 20000, 10000, 5000, 5000, 5000, 5000, 5000, 5000, 5000 }
 local function allocateReward(rank)
@@ -214,27 +214,27 @@ Handlers.add("CronTick", "Cron", function()
     AutoUpdateLeaderboard()
 end)
 
-WhiteList = WhiteList or {}
-function BatchAddWhiteList(list)
-    for _, v in ipairs(list) do
-        Lodash.InsertUnique(WhiteList, v)
-    end
-end
+-- WhiteList = WhiteList or {}
+-- function BatchAddWhiteList(list)
+--     for _, v in ipairs(list) do
+--         Lodash.InsertUnique(WhiteList, v)
+--     end
+-- end
 
-function BatchRemoveWhiteList(list)
-    for _, v in ipairs(list) do
-        Lodash.Remove(WhiteList, v)
-    end
-end
+-- function BatchRemoveWhiteList(list)
+--     for _, v in ipairs(list) do
+--         Lodash.Remove(WhiteList, v)
+--     end
+-- end
 
 Handlers.add("Count-WhiteList", "Count-WhiteList", function(msg)
     msg.reply({ Status = 200, Data = #WhiteList })
 end)
 
-Handlers.add("Check-Permission", "Check-Permission", function(msg)
-    local From = msg.FromAddress or msg.From
-    msg.reply({ Status = 200, Data = Lodash.Contain(WhiteList, From) })
-end)
+-- Handlers.add("Check-Permission", "Check-Permission", function(msg)
+--     local From = msg.FromAddress or msg.From
+--     msg.reply({ Status = 200, Data = Lodash.Contain(WhiteList, From) })
+-- end)
 
 Handlers.add("Participants-Statistic", "Participants-Statistic", function(msg)
     local now = Datetime.unix()
@@ -273,21 +273,52 @@ Handlers.add("Dataset-Statistic", "Dataset-Statistic", function(msg)
     msg.reply({Status="200", Data=json.encode(res)})
 end)
 
+Handlers.add("Embedding-Join-Pool", "Embedding-Join-Pool", function(msg)
+    Log.trace("Receive creation request from embedding process " .. msg.From)
+    if msg.From ~= Config.Process.Embedding then
+        msg.reply({Status = "403", Data = "From must be Embedding process."})
+    end
+    local data = json.decode(msg.Data)
+    Log.trace(data)
+    Log.trace(data.dataset_hash)
+    Log.trace(data.dataset_name)
+    if data.dataset_hash == nil or data.dataset_name == nil or msg.PoolID == nil or msg.User == nil then
+        msg.reply({ Status = "400", Data = "Parameter validation failed." })
+        return
+    end
+    -- Helper.assert_non_empty(msg.PoolID, data.dataset_hash, data.dataset_name)
+    local poolID = tonumber(msg.PoolID)
+    if not poolTimeCheck(poolID) then
+        msg.reply({ Status = "403", Data = "The event has ended, can't join in." })
+        return
+    end
+    -- if not Lodash.Contain(WhiteList, msg.User) then -- WhiteList
+    --     Log.warn("User " .. msg.User .. " is not allowed to join the event.")
+    --     msg.reply({ Status = "403", Data = "You are not allowed to join this event." })
+    --     return
+    -- end
+    if UploadedUserList[msg.User] then
+        Log.warn("User " .. msg.User .. " has already joined the event.")
+        msg.reply({ Status = "403", Data = "You have already joined this event." })
+        return
+    end
+    -- if not throttleCheck(msg) then
+    --     return
+    -- end
+
+    SQL.CreateParticipant(poolID, msg.User, data.dataset_hash, data.dataset_name)
+    msg.reply({ Status = "200", Data = "Join Success" })
+    UploadedUserList[msg.User] = true
+    Log.info("Join Pool " .. msg.From .. " : ", data.dataset_hash)
+    Send({
+        Target = CompetitionPools[poolID].process_id,
+        Action = "Join-Competition",
+        Data = data.dataset_hash
+    })
+end)
+
 -- ops
 
 function DANGEROUS_CLEAR()
     SQL.ClearParticipants(1002)
-end
-
-function CheckUserStatus(address)
-    if not Lodash.Contain(WhiteList, address) then -- WhiteList
-        return "User " .. address .. " is not allowed to join the event."
-    end
-    if SQL.GetUserRank(1002, address) ~= -1 then
-        return "User " .. address .. " has already joined the event."
-    end
-    if UploadedUserList[address] then
-        return "User " .. address .. " has already called join pool."
-    end
-    return "User is OK"
 end
