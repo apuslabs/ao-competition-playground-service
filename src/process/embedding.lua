@@ -15,6 +15,7 @@ function RemoveUserFromUploadedList(address)
     end
 end
 
+WhiteList = WhiteList or {}
 function CheckUserStatus(address)
     if not Lodash.Contain(WhiteList, address) then -- WhiteList
         return "User " .. address .. " is not allowed to join the event."
@@ -260,10 +261,6 @@ Handlers.add("Set-Retrieve-Result", "Set-Retrieve-Result", RecevicePromptRespons
 
 Handlers.add("Get-Creation-Status", "Get-Creation-Status", GetCreationStatus)
 
-Handlers.add("Check-Permission", "Check-Permission", function(msg)
-    local From = msg.FromAddress or msg.From
-    msg.reply({ Status = 200, Data = Lodash.Contain(WhiteList, From) })
-end)
 
 function DANGEROUS_CLEAR()
     SQL.ClearPrompts()
