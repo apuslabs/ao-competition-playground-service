@@ -123,7 +123,7 @@ async function createDatasetJoinPool() {
     const fetchCreationRes = await msgResult(
       EMBEDDING_PROCESS,
       {
-        Action: 'Fetch-Creation-Status',
+        Action: 'Get-Creation-Status',
       },
       'hgTuOFm4YpILHI3XScCuRuaKGJCdeF5FuFyyigNt-Gk'
     );

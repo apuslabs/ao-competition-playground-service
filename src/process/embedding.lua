@@ -8,7 +8,6 @@ local Lodash = require("module.utils.lodash")
 local throttleCheck = Helper.throttleCheckWrapper(Config.Pool.JoinThrottle)
 
 UploadedUserList = UploadedUserList or {}
-WhiteList = WhiteList or {}
 function RemoveUserFromUploadedList(address)
     if UploadedUserList[address] then
         UploadedUserList[address] = nil
@@ -40,9 +39,18 @@ function BatchRemoveWhiteList(list)
         Lodash.Remove(WhiteList, v)
     end
 end
-DatasetQueue = DatasetQueue or {}
-CreatePending = CreatePending or {}
-LastCreation = LastCreation or {}
+
+Handlers.add("Check-Permission", "Check-Permission", function(msg)
+    local From = msg.FromAddress or msg.From
+    msg.reply({ Status = 200, Data = Lodash.Contain(WhiteList, From) })
+end)
+
+Handlers.add("Count-WhiteList", "Count-WhiteList", function(msg)
+    msg.reply({ Status = 200, Data = #WhiteList })
+end)
+
+UploadDatasetQueue = UploadDatasetQueue or {}
+DatasetStatus = DatasetStatus or {}
 function CreateDatasetHandler(msg)
     if UploadedUserList[msg.From] then
         Log.warn(string.format("%s has uploaded dataset before", msg.From))
@@ -56,29 +64,29 @@ function CreateDatasetHandler(msg)
         return
     end
 
-    if not throttleCheck(msg) then
-        return
-    end
-
-    if CreatePending[msg.From] then
+    if DatasetStatus[msg.From] ~= nil and DatasetStatus[msg.From].create_pending then
         Log.warn(string.format("%s has pending creation", msg.From))
         msg.reply({ Status = 403, Data = "You have pending creation, please wait for it." })
         return
     end
+
+    if not throttleCheck(msg) then
+        return
+    end
     local data = json.decode(msg.Data)
     assert(data and data.hash and data.list and data.name and msg.PoolID, "Invalid data")
-    
-    CreatePending[msg.From] = true
-
 
     Log.info(string.format("%s Creation pending, waiting for syncronizations in Pool", msg.From))
     msg.reply({ Status = 200, Data = "Creation pending, waiting for syncronizations in Pool" })
 
-    LastCreation[msg.From] = {created_at=Datetime.unix(), updated_at = Datetime.unix(), status="WAIT_FOR_SYNC"}
+    DatasetStatus[msg.From] = {
+        create_pending = true,
+        last_creation = { created_at = Datetime.unix(), updated_at = Datetime.unix(), status = "WAIT_FOR_SYNC" },
+    }
 
     Send({
         Target = Config.Process.Pool,
-        Action = "Embedding-Join-Pool",
+        Action = "Join-Pool",
         User = msg.From,
         PoolID = msg.PoolID,
         Data = json.encode({ dataset_hash=data.hash, dataset_name=data.name})
@@ -87,59 +95,81 @@ function CreateDatasetHandler(msg)
 
         -- because once the data created, the timer will automaticly process the data, so
         -- it is hard to revert, we just ensure it will definately succeed.
-        if not CreatePending[msg.From] then
+        if not DatasetStatus[msg.From].create_pending then
             -- cancel by user.
             Log.trace("Reply message dropped because user canceld the uploading")
 
-            LastCreation[msg.From] = { created_at = LastCreation[msg.From].created_at, updated_at = Datetime.unix(), status = "CANCELED" }
+            DatasetStatus[msg.From].last_creation.updated_at = Datetime.unix()
+            DatasetStatus[msg.From].last_creation.status = "CANCELED"
             return
         end
 
-        if replyMsg.Status == "403" then
-            Log.warn(string.format("%s Join pool failed: %s", msg.From, replyMsg.Data))
-            LastCreation[msg.From] = { created_at = LastCreation[msg.From].created_at, updated_at = Datetime.unix(), status = "JOIN_POOL_FAILED", message = replyMsg
-            .Data }
-            return
-        end
-        
-        if replyMsg.Status ~= "200" then
-            Log.warn(string.format("%s Join pool failed due to unknown error", msg.From))
-            LastCreation[msg.From] = { created_at = LastCreation[msg.From].created_at, updated_at = Datetime.unix(), status = "JOIN_POOL_FAILED", message = "Unknown error."}
-            return
-        end
+        local replyStatusMatch = {
+            ["403"] = function() 
+                Log.warn(string.format("%s Join pool failed: %s", msg.From, replyMsg.Data))
+                DatasetStatus[msg.From].last_creation.updated_at = Datetime.unix()
+                DatasetStatus[msg.From].last_creation.status = "JOIN_POOL_FAILED"
+                DatasetStatus[msg.From].last_creation.message = replyMsg
+             end,
+            ["200"] = function()  
+                UploadDatasetQueue[data.hash] = {
+                    created_at = Datetime.unix(),
+                    list = data.list,
+                    embedding = false,
+                }
+                Log.info(string.format("%s Create Dataset %s (%s)", msg.From, data.hash, #data.list))
+                
+                DatasetStatus[msg.From].last_creation.updated_at = Datetime.unix()
+                DatasetStatus[msg.From].last_creation.status = "JOIN_SUCCEED"
+                DatasetStatus[msg.From].last_creation.message = "Successfully join the pool."
 
-        if replyMsg.Status == "200" then
-            DatasetQueue[data.hash] = {
-                created_at = Datetime.unix(),
-                list = data.list,
-                embedding = false,
-            }
-            Log.info(string.format("%s Create Dataset %s (%s)", msg.From, data.hash, #data.list))
-            LastCreation[msg.From] = { created_at = LastCreation[msg.From].created_at, updated_at = Datetime.unix(), status = "JOIN_SUCCEED", message = "Successfully join the pool."}
+                if not UploadedUserList[msg.From] then
+                    UploadedUserList[msg.From] = true
+                end
+            end,
+            ["default"] = function()
+                Log.warn(string.format("%s Join pool failed due to unknown error", msg.From))
+                
+                DatasetStatus[msg.From].last_creation.updated_at = Datetime.unix()
+                DatasetStatus[msg.From].last_creation.status = "JOIN_POOL_FAILED"
+                DatasetStatus[msg.From].last_creation.message = "unknown error"
+             end
+        }
 
-            if not UploadedUserList[msg.From] then
-                UploadedUserList[msg.From] = true
-            end
+        if replyStatusMatch[replyMsg.Status] then       
+            replyStatusMatch[replyMsg.Status]()
+        else
+            replyStatusMatch["defaul"]()
         end
-        CreatePending[msg.From] = false
+        DatasetStatus[msg.From].create_pending = false
     end)
 end
 
-function FetchCreationStatus(msg)
-    local user = msg.Data
-    msg.reply({Status="200", Data=json.encode(LastCreation[user])})
+function CancelCreatingDatasetHandler(msg)
+    local user = msg.From
+    if DatasetStatus[user] then
+        DatasetStatus[user].create_pending = false
+    else
+        DatasetStatus[user] = { create_pending = false }
+    end
+    msg.replay({Status="200"})
 end
 
-function CountDatasetQueue()
+function GetCreationStatus(msg)
+    local user = msg.Data
+    msg.reply({Status="200", Data=json.encode(DatasetStatus[user])})
+end
+
+function CountUploadDatasetQueue()
     local count = 0
-    for k, v in pairs(DatasetQueue) do
+    for k, v in pairs(UploadDatasetQueue) do
         count = count + 1
     end
     return count
 end
 
 function GetUnembededDocumentsHandler(msg)
-    for hash, data in pairs(DatasetQueue) do
+    for hash, data in pairs(UploadDatasetQueue) do
         msg.reply({
             Status = 200,
             Data = json.encode({
@@ -154,7 +184,7 @@ end
 
 function EmbeddingDataHandler(msg)
     local hash = msg.Data
-    local dataset = DatasetQueue[hash]
+    local dataset = UploadDatasetQueue[hash]
     if not dataset then
         Log.warn(string.format("Dataset %s not found", hash))
         msg.reply({ Status = 404, Data = "Dataset not found" })
@@ -162,7 +192,7 @@ function EmbeddingDataHandler(msg)
     end
     local now = Datetime.unix()
     Log.info(string.format("Embeded %s documents COSTS %d", hash, now - dataset.created_at))
-    DatasetQueue[hash] = nil
+    UploadDatasetQueue[hash] = nil
     msg.reply({ Status = 200, Data = "Set  " .. hash .. " Embeded" })
 end
 
@@ -216,6 +246,8 @@ end
 
 Handlers.add("Create-Dataset", "Create-Dataset", CreateDatasetHandler)
 
+Handlers.add("Cancel-Creating-Dataset", "Cancel-Creating-Dataset", CancelCreatingDatasetHandler)
+
 Handlers.add("Get-Unembeded-Documents", "Get-Unembeded-Documents", GetUnembededDocumentsHandler)
 
 Handlers.add("Embedding-Data", "Embedding-Data", EmbeddingDataHandler)
@@ -226,7 +258,7 @@ Handlers.add("GET-TORETRIEVE-PROMPT", "GET-TORETRIEVE-PROMPT", GetToRetrieveProm
 
 Handlers.add("Set-Retrieve-Result", "Set-Retrieve-Result", RecevicePromptResponseHandler)
 
-Handlers.add("Fetch-Creation-Status", "Fetch-Creation-Status", FetchCreationStatus)
+Handlers.add("Get-Creation-Status", "Get-Creation-Status", GetCreationStatus)
 
 Handlers.add("Check-Permission", "Check-Permission", function(msg)
     local From = msg.FromAddress or msg.From
