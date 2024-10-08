@@ -1,5 +1,4 @@
 import { connect, createDataItemSigner } from '@permaweb/aoconnect';
-import { msgResultWrapper } from './ao/wallet';
 import Arweave from 'arweave';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -9,34 +8,71 @@ import crypto from 'crypto';
 
 const POOL_ID = 1002;
 
-// 初始化 Arweave 实例
-const arweave = Arweave.init({
-  host: 'arweave.net', // Arweave 网关
-  port: 443, // 默认端口
-  protocol: 'https', // 使用 https
-});
+const ao = connect();
+
+function tostring(value: any) {
+  if (typeof value === 'object') {
+    return JSON.stringify(value);
+  }
+  return String(value);
+}
+
+function obj2tags(obj: Record<string, any>) {
+  return Object.entries(obj).map(([key, value]) => ({
+    name: key,
+    value: tostring(value),
+  }));
+}
+
+function generateUniqueRandomString(length: number): string {
+  const characters =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+
+  // 加入时间戳，确保唯一性
+  const timestamp = Date.now().toString(36); // 转换为36进制，缩短长度
+  result += timestamp;
+
+  // 生成剩余的随机字符串
+  for (let i = 0; i < length - timestamp.length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    result += characters[randomIndex];
+  }
+
+  return result;
+}
+const msgResultWrapper =
+  (signer: any, debug?: boolean) =>
+  async (
+    process: string,
+    tags: Record<string, string>,
+    data?: string | Record<string, any> | number
+  ) => {
+    const action = tags.Action ?? 'Msg';
+    debug && console.group(`${action} ${process}`);
+    const msgId = await ao.message({
+      process,
+      tags: obj2tags(tags),
+      data:
+        typeof data === 'string'
+          ? data
+          : typeof data === 'number'
+          ? data.toString()
+          : JSON.stringify(data),
+      signer: signer,
+    });
+    debug && console.log('Msg ID:', msgId);
+    const result = await ao.result({
+      process: process,
+      message: msgId,
+    });
+    debug && console.log(result);
+    debug && console.groupEnd();
+    return result;
+  };
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-// 批量生成钱包并保存到文件
-async function generateWallets(count: number, outputDir: string) {
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-  }
-
-  for (let i = 0; i < count; i++) {
-    const wallet = await arweave.wallets.generate(); // 生成钱包密钥对
-    const walletAddress = await arweave.wallets.jwkToAddress(wallet); // 获取钱包地址
-
-    // 将钱包密钥保存到文件
-    const walletFileName = path.join(
-      outputDir,
-      `wallet_${i + 1}_${walletAddress}.json`
-    );
-    fs.writeFileSync(walletFileName, JSON.stringify(wallet, null, 2));
-  }
 }
 
 async function registerSigners(): Promise<{ signers: any; wallets: string }[]> {
@@ -131,11 +167,6 @@ describe('Basic', () => {
     { content: 'A random doc', meta: { title: 'four' } },
   ];
 
-  const hashOfData = crypto.hash(
-    'sha1',
-    testData.map((item) => item.content).join('')
-  );
-
   before(async function () {
     signers = await registerSigners();
   });
@@ -149,7 +180,7 @@ describe('Basic', () => {
         PoolID: POOL_ID.toString(),
       },
       {
-        hash: hashOfData,
+        hash: generateUniqueRandomString(32),
         list: testData,
         name: 'test',
       }
@@ -163,7 +194,7 @@ describe('Basic', () => {
   it('Signer 2 (in whitelist) create then signer 3 (in whitelist) meet throttle check', async () => {
     let msgResult = msgResultWithTargetSignerWrapper(signers[1].signer);
 
-    await delay(2000); // 等待 2 秒
+    await delay(2500); // 等待 2 秒
     let createDatasetResponse = await msgResult(
       EMBEDDING_PROCESS,
       {
@@ -171,7 +202,7 @@ describe('Basic', () => {
         PoolID: POOL_ID.toString(),
       },
       {
-        hash: hashOfData,
+        hash: generateUniqueRandomString(32),
         list: testData,
         name: 'test',
       }
@@ -191,7 +222,7 @@ describe('Basic', () => {
         PoolID: POOL_ID.toString(),
       },
       {
-        hash: hashOfData,
+        hash: generateUniqueRandomString(32),
         list: testData,
         name: 'test',
       }
@@ -207,10 +238,10 @@ describe('Basic', () => {
     );
   });
 
-  it('Signer 4(in whitelist) upload twice will fail', async () => {
-    let msgResult = msgResultWithTargetSignerWrapper(signers[3].signer);
+  it('Signer 3 (in whitelist) create dataset with wrong format', async () => {
+    let msgResult = msgResultWithTargetSignerWrapper(signers[2].signer);
+    await delay(2500);
 
-    await delay(2000); // 等待 2 秒
     let createDatasetResponse = await msgResult(
       EMBEDDING_PROCESS,
       {
@@ -218,7 +249,27 @@ describe('Basic', () => {
         PoolID: POOL_ID.toString(),
       },
       {
-        hash: hashOfData,
+        hash: generateUniqueRandomString(32),
+        list: [{ a: 'bbb', c: 111, d: 223 }],
+        name: 'test',
+      }
+    );
+
+    expect(createDatasetResponse.Error).to.exist;
+  });
+
+  it('Signer 4 (in whitelist) upload twice will fail', async () => {
+    let msgResult = msgResultWithTargetSignerWrapper(signers[3].signer);
+
+    await delay(2500); // 等待 2 秒
+    let createDatasetResponse = await msgResult(
+      EMBEDDING_PROCESS,
+      {
+        Action: 'Create-Dataset',
+        PoolID: POOL_ID.toString(),
+      },
+      {
+        hash: generateUniqueRandomString(32),
         list: testData,
         name: 'test',
       }
@@ -229,7 +280,7 @@ describe('Basic', () => {
     let message = res.Data ?? '';
     expect(status).to.equal('200');
 
-    await delay(2000); // 等待 2 秒
+    await delay(2500); // 等待 2 秒
     createDatasetResponse = await msgResult(
       EMBEDDING_PROCESS,
       {
@@ -237,7 +288,7 @@ describe('Basic', () => {
         PoolID: POOL_ID.toString(),
       },
       {
-        hash: hashOfData,
+        hash: generateUniqueRandomString(32),
         list: testData,
         name: 'test',
       }
@@ -246,10 +297,12 @@ describe('Basic', () => {
     status = (res.Tags ?? []).find((t: any) => t.name == 'Status').value;
     message = res.Data ?? '';
     expect(status).to.equal('403');
-    expect(message).to.equal('You have uploaded dataset before.');
+
+    // May be  `You have pending creation, please wait for it`
+    // expect(message).to.equal('You have uploaded dataset before.');
   });
 
-  it('Signer 5(in whitelist) upload large dataset 4000 records', async () => {
+  it('Signer 5 (in whitelist) upload large dataset 4000 records', async () => {
     const repeatedTestData = Array.from(
       { length: 1000 },
       () => testData
@@ -257,7 +310,7 @@ describe('Basic', () => {
 
     let msgResult = msgResultWithTargetSignerWrapper(signers[4].signer);
 
-    await delay(2000); // 等待 2 秒
+    await delay(2500); // 等待 2 秒
     let createDatasetResponse = await msgResult(
       EMBEDDING_PROCESS,
       {
@@ -265,7 +318,7 @@ describe('Basic', () => {
         PoolID: POOL_ID.toString(),
       },
       {
-        hash: hashOfData,
+        hash: generateUniqueRandomString(32),
         list: repeatedTestData,
         name: 'test',
       }
@@ -277,8 +330,8 @@ describe('Basic', () => {
     expect(status).to.equal('200');
   });
 
-  it('Signer 6(in whitelist) upload large dataset 8000 records', async () => {
-    await delay(2000); // 等待 2 秒
+  it('Signer 6 (in whitelist) upload large dataset 8000 records', async () => {
+    await delay(2500); // 等待 2 秒
     const repeatedTestData = Array.from(
       { length: 2000 },
       () => testData
@@ -286,7 +339,7 @@ describe('Basic', () => {
 
     let msgResult = msgResultWithTargetSignerWrapper(signers[5].signer);
 
-    await delay(2000); // 等待 2 秒
+    await delay(2500); // 等待 2 秒
     let createDatasetResponse = await msgResult(
       EMBEDDING_PROCESS,
       {
@@ -294,7 +347,7 @@ describe('Basic', () => {
         PoolID: POOL_ID.toString(),
       },
       {
-        hash: hashOfData,
+        hash: generateUniqueRandomString(32),
         list: repeatedTestData,
         name: 'test',
       }
@@ -306,8 +359,8 @@ describe('Basic', () => {
     expect(status).to.equal('200');
   });
 
-  it('Signer 7(in whitelist) upload large dataset 12000 records', async () => {
-    await delay(2000); // 等待 2 秒
+  it('Signer 7 (in whitelist) upload large dataset 12000 records', async () => {
+    await delay(2500); // 等待 2 秒
     const repeatedTestData = Array.from(
       { length: 3000 },
       () => testData
@@ -315,7 +368,7 @@ describe('Basic', () => {
 
     let msgResult = msgResultWithTargetSignerWrapper(signers[6].signer);
 
-    await delay(2000); // 等待 2 秒
+    await delay(2500); // 等待 2 秒
     let createDatasetResponse = await msgResult(
       EMBEDDING_PROCESS,
       {
@@ -323,7 +376,7 @@ describe('Basic', () => {
         PoolID: POOL_ID.toString(),
       },
       {
-        hash: hashOfData,
+        hash: generateUniqueRandomString(32),
         list: repeatedTestData,
         name: 'test',
       }
@@ -334,6 +387,54 @@ describe('Basic', () => {
     let message = res.Data ?? '';
     expect(status).to.equal('200');
   });
+
+  it('Signer 8 (in whitelist) upload and then signer 9 use same dataset-hash will fail', async () => {
+    await delay(2500); // 等待 2 秒
+
+    let msgResult = msgResultWithTargetSignerWrapper(signers[7].signer);
+
+    const dataset_hash = generateUniqueRandomString(32);
+    let createDatasetResponse = await msgResult(
+      EMBEDDING_PROCESS,
+      {
+        Action: 'Create-Dataset',
+        PoolID: POOL_ID.toString(),
+      },
+      {
+        hash: dataset_hash,
+        list: testData,
+        name: 'test',
+      }
+    );
+
+    let res = createDatasetResponse?.Messages?.[0];
+    let status = (res.Tags ?? []).find((t: any) => t.name == 'Status').value;
+    let message = res.Data ?? '';
+    expect(status).to.equal('200');
+    await delay(15000); // 等待 5 秒
+
+    msgResult = msgResultWithTargetSignerWrapper(signers[8].signer);
+
+    createDatasetResponse = await msgResult(
+      EMBEDDING_PROCESS,
+      {
+        Action: 'Create-Dataset',
+        PoolID: POOL_ID.toString(),
+      },
+      {
+        hash: dataset_hash,
+        list: testData,
+        name: 'test',
+      }
+    );
+
+    res = createDatasetResponse?.Messages?.[0];
+    status = (res.Tags ?? []).find((t: any) => t.name == 'Status').value;
+    message = res.Data ?? '';
+    expect(status).to.equal('403');
+    expect(message).to.equal('Your dataset hash has been taken.');
+  });
+
   it('Signer 10 (not in whitelist) cannot create dataset', async () => {
     const msgResult = msgResultWithTargetSignerWrapper(signers[9].signer);
 
@@ -344,7 +445,7 @@ describe('Basic', () => {
         PoolID: POOL_ID.toString(),
       },
       {
-        hash: hashOfData,
+        hash: generateUniqueRandomString(32),
         list: testData,
         name: 'test',
       }

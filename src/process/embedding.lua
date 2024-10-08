@@ -8,6 +8,7 @@ local Lodash = require("module.utils.lodash")
 local throttleCheck = Helper.throttleCheckWrapper(Config.Pool.JoinThrottle)
 
 UploadedUserList = UploadedUserList or {}
+UploadedDatasetList = UploadedDatasetList or {}
 function RemoveUserFromUploadedList(address)
     if UploadedUserList[address] then
         UploadedUserList[address] = nil
@@ -69,15 +70,26 @@ function CreateDatasetHandler(msg)
 
     if DatasetStatus[msg.From] ~= nil and DatasetStatus[msg.From].create_pending then
         Log.warn(string.format("%s has pending creation", msg.From))
-        msg.reply({ Status = 403, Data = "You have pending creation, please wait for it." })
-        return
-    end
-
-    if not throttleCheck(msg) then
+        msg.reply({ Status = "403", Data = "You have pending creation, please wait for it." })
         return
     end
     local data = json.decode(msg.Data)
-    assert(data and data.hash and data.list and data.name and msg.PoolID, "Invalid data")
+        
+    if UploadedDatasetList[data.hash] then
+        Log.warn(string.format("%s has been taken, uploaded by %s", data.hash, msg.From))
+        msg.reply({ Status = "403", Data = "Your dataset hash has been taken." })
+        return
+    end
+
+    Helper.assert_non_empty(data, data.hash, data.list, data.name, msg.PoolID)
+    Helper.assert_non_empty_array(data.list)
+
+    for _, obj in ipairs(data.list) do
+        Helper.assert_non_empty(obj.content)
+    end
+    if not throttleCheck(msg) then
+        return
+    end
 
     Log.info(string.format("%s Creation pending, waiting for syncronizations in Pool", msg.From))
     msg.reply({ Status = "200", Data = "Creation pending, waiting for syncronizations in Pool" })
@@ -128,6 +140,10 @@ function CreateDatasetHandler(msg)
 
                 if not UploadedUserList[msg.From] then
                     UploadedUserList[msg.From] = true
+                end
+
+                if not UploadedDatasetList[data.hash] then
+                    UploadedDatasetList[data.hash] = true
                 end
             end,
             ["default"] = function()
