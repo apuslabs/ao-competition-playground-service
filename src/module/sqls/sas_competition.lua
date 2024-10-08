@@ -51,6 +51,12 @@ SQL.GetEvaluations = function(limit, offset)
     }))
 end
 
+SQL.GetEvaluationsByDataset = function(dataset_hash)
+    return DB:query("evaluations", {
+        participant_dataset_hash = dataset_hash,
+    })
+end
+
 SQL.RecoverTimeoutEvaluations = function()
     return DB:exec([=[
         UPDATE evaluations
@@ -58,6 +64,15 @@ SQL.RecoverTimeoutEvaluations = function()
         WHERE reference IS NOT NULL AND sas_score IS NULL AND created_at + 7200 < ]=] ..
         datetime.unix() .. [=[;
     ]=])
+end
+
+SQL.GetUnfinishedEvaluations = function()
+    local ids = DB:nrows("SELECT id from evaluations WHERE sas_score IS NULL;")
+    local idarr = {}
+    for _, id in ipairs(ids) do
+        table.insert(idarr, id.id)
+    end
+    return json.encode(idarr)
 end
 
 SQL.BatchCreateEvaluation = function(evaluations)
@@ -100,6 +115,10 @@ SQL.GetUnEvaluated = function(limit)
         ORDER BY e.created_at
         LIMIT %d
     ]], limit))
+end
+
+SQL.CountNoScore = function()
+    return DB:nrows("SELECT COUNT(id) AS count FROM evaluations WHERE sas_score IS NULL;")
 end
 
 SQL.ClearScore = function()
@@ -147,6 +166,39 @@ SQL.GetRank = function()
         ORDER BY
             rank;
     ]=])
+end
+
+SQL.SetUnEvaluatedDatasetFinished = function(dataset_hash)
+    return DB:update("evaluations", { sas_score = 0 }, {
+        participant_dataset_hash = dataset_hash,
+        sas_score = "__NULL",
+    })
+end
+
+SQL.CleanDatasetReference = function(dataset_hash)
+    return DB:exec(
+        "UPDATE evaluations SET reference = NULL, sas_score = NULL, response_at = NULL WHERE participant_dataset_hash = '" ..
+        dataset_hash .. "';")
+end
+
+SQL.FindDulplicateDataset = function()
+    -- find dataset which count id is > 20
+    return DB:nrows([=[
+        SELECT
+            participant_dataset_hash,
+            COUNT(id) AS count
+        FROM
+            evaluations
+        GROUP BY
+            participant_dataset_hash
+        HAVING
+            COUNT(id) > 20;
+    ]=])
+end
+
+SQL.BatchDeleteEvaluation = function(ids)
+    Helper.assert_non_empty_array(ids)
+    return DB:exec("DELETE FROM evaluations WHERE id IN (" .. table.concat(ids, ",") .. ");")
 end
 
 SQL.GetVersion = function()

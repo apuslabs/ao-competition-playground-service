@@ -96,7 +96,11 @@ DB.update = function(self, tableName, data, conditions)
         if where ~= "" then
             where = where .. " AND "
         end
-        where = where .. string.format("%s = %s", k, prepare_arg(v))
+        if v == "__NULL" then
+            where = where .. string.format("%s IS NULL", k)
+        else
+            where = where .. string.format("%s = %s", k, prepare_arg(v))
+        end
     end
     local query = string.format("UPDATE %s SET %s WHERE %s;", tableName, set, where == "" and "1" or where)
     return self:exec(query)

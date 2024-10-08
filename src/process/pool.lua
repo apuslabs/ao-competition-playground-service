@@ -23,7 +23,7 @@ local function getOngoingCompetitions()
         local startTime = tonumber(metadata.competition_time["start"])
         local endTime = tonumber(metadata.competition_time["end"])
         local now = Datetime.unix()
-        if now >= startTime and now <= endTime then
+        if now >= startTime and now <= endTime + 3600 * 48 then
             pools[id] = pool
         end
     end
@@ -170,19 +170,29 @@ local function allocateReward(rank)
         return 0
     end
 end
+function OnGetRank(poolID, ranks)
+    Log.info("Update Rank ", poolID, ranks)
+    for i in ipairs(ranks) do
+        ranks[i].reward = allocateReward(i)
+    end
+    SQL.UpdateRank(poolID, ranks)
+end
+
 function GetRank(poolID)
     Send({
         Target = CompetitionPools[poolID].process_id,
         Action = "Get-Rank"
-    }).onReply(function (msg)
-        local ranks = json.decode(msg.Data)
-        Log.trace("Update Rank ", poolID, ranks)
-        for i in ipairs(ranks) do
-            ranks[i].reward = allocateReward(i)
-        end
-        SQL.UpdateRank(poolID, ranks)
+    }).onReply(function(msg)
+        OnGetRank(poolID, json.decode(msg.Data))
     end)
 end
+
+Handlers.add("Update-Rank", "Get-Rank-Response", function(msg)
+    if not msg.From == Config.Process.Competition then
+        return
+    end
+    OnGetRank(1002, json.decode(msg.Data))
+end)
 
 CircleTimes = CircleTimes or 0
 function AutoUpdateLeaderboard()

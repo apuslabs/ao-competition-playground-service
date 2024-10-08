@@ -43,9 +43,13 @@ end
 
 Handlers.add("Join-Competition", "Join-Competition", JoinCompetitionHandler)
 
-Handlers.add("Get-Rank", "Get-Rank", function (msg)
-    local rank = SQL.GetRank()
-    msg.reply({ Status = 200, Data = json.encode(rank) })
+function GetRank()
+    return json.encode(SQL.GetRank())
+end
+
+Handlers.add("Get-Rank", "Get-Rank", function(msg)
+    -- msg.reply({ Status = 200, Data = GetRank() })
+    Send({ Target = msg.From, Action = "Get-Rank-Response", Data = GetRank() })
 end)
 
 function GetQuestions()
@@ -55,4 +59,23 @@ end
 function DANGEROUS_CLEAR()
     SQL.ClearEvaluation()
     SQL.ClearQuestion()
+end
+
+function SetUnEvaluatedDatasetFinished()
+    local rank = SQL.GetRank()
+    for _, row in ipairs(rank) do
+        if row.progress > 0 and row.progress < 1 then
+            SQL.SetUnEvaluatedDatasetFinished(row.dataset_hash)
+        end
+    end
+end
+
+function SetUnstartedDatasetReferenceNull()
+    local rank = SQL.GetRank()
+    for _, row in ipairs(rank) do
+        if row.progress == 0 then
+            Log.trace("SetUnstartedDatasetReferenceNull", row.dataset_hash)
+            SQL.CleanDatasetReference(row.dataset_hash)
+        end
+    end
 end
