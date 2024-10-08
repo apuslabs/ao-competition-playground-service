@@ -25,8 +25,7 @@ function obj2tags(obj: Record<string, any>) {
 }
 
 function generateUniqueRandomString(length: number): string {
-  const characters =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
 
   // 加入时间戳，确保唯一性
@@ -43,22 +42,13 @@ function generateUniqueRandomString(length: number): string {
 }
 const msgResultWrapper =
   (signer: any, debug?: boolean) =>
-  async (
-    process: string,
-    tags: Record<string, string>,
-    data?: string | Record<string, any> | number
-  ) => {
+  async (process: string, tags: Record<string, string>, data?: string | Record<string, any> | number) => {
     const action = tags.Action ?? 'Msg';
     debug && console.group(`${action} ${process}`);
     const msgId = await ao.message({
       process,
       tags: obj2tags(tags),
-      data:
-        typeof data === 'string'
-          ? data
-          : typeof data === 'number'
-          ? data.toString()
-          : JSON.stringify(data),
+      data: typeof data === 'string' ? data : typeof data === 'number' ? data.toString() : JSON.stringify(data),
       signer: signer,
     });
     debug && console.log('Msg ID:', msgId);
@@ -91,9 +81,7 @@ async function registerSigners(): Promise<{ signers: any; wallets: string }[]> {
       } else {
         const walletJson = JSON.parse(fs.readFileSync(fullPath).toString());
         const signer = createDataItemSigner(walletJson);
-        const cleanedFileName = file
-          .replace(/^wallet_\d+_/, '')
-          .replace(/\.json$/, '');
+        const cleanedFileName = file.replace(/^wallet_\d+_/, '').replace(/\.json$/, '');
 
         res.push({
           wallet: cleanedFileName,
@@ -233,9 +221,7 @@ describe('Basic', () => {
     status = (res.Tags ?? []).find((t: any) => t.name == 'Status').value;
     message = res.Data ?? '';
     expect(status).to.equal(429);
-    expect(message).to.equal(
-      'The system is experiencing high traffic. Try again in five minutes.'
-    );
+    expect(message).to.equal('The system is experiencing high traffic. Try again in five minutes.');
   });
 
   it('Signer 3 (in whitelist) create dataset with wrong format', async () => {
@@ -303,10 +289,7 @@ describe('Basic', () => {
   });
 
   it('Signer 5 (in whitelist) upload large dataset 4000 records', async () => {
-    const repeatedTestData = Array.from(
-      { length: 1000 },
-      () => testData
-    ).flat();
+    const repeatedTestData = Array.from({ length: 1000 }, () => testData).flat();
 
     let msgResult = msgResultWithTargetSignerWrapper(signers[4].signer);
 
@@ -332,10 +315,7 @@ describe('Basic', () => {
 
   it('Signer 6 (in whitelist) upload large dataset 8000 records', async () => {
     await delay(2500); // 等待 2 秒
-    const repeatedTestData = Array.from(
-      { length: 2000 },
-      () => testData
-    ).flat();
+    const repeatedTestData = Array.from({ length: 2000 }, () => testData).flat();
 
     let msgResult = msgResultWithTargetSignerWrapper(signers[5].signer);
 
@@ -361,10 +341,7 @@ describe('Basic', () => {
 
   it('Signer 7 (in whitelist) upload large dataset 12000 records', async () => {
     await delay(2500); // 等待 2 秒
-    const repeatedTestData = Array.from(
-      { length: 3000 },
-      () => testData
-    ).flat();
+    const repeatedTestData = Array.from({ length: 3000 }, () => testData).flat();
 
     let msgResult = msgResultWithTargetSignerWrapper(signers[6].signer);
 

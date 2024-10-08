@@ -17,7 +17,7 @@ function RemoveUserFromUploadedList(address)
 end
 
 WhiteList = WhiteList or {}
-Handlers.add("Check-Permission", "Check-Permission", function(msg)
+Handlers.add("Check-Permission", "Check-Permission", function (msg)
     local From = msg.FromAddress or msg.From
     msg.reply({ Status = 200, Data = Lodash.Contain(WhiteList, From) })
 end)
@@ -44,12 +44,12 @@ function BatchRemoveWhiteList(list)
     end
 end
 
-Handlers.add("Check-Permission", "Check-Permission", function(msg)
+Handlers.add("Check-Permission", "Check-Permission", function (msg)
     local From = msg.FromAddress or msg.From
     msg.reply({ Status = 200, Data = Lodash.Contain(WhiteList, From) })
 end)
 
-Handlers.add("Count-WhiteList", "Count-WhiteList", function(msg)
+Handlers.add("Count-WhiteList", "Count-WhiteList", function (msg)
     msg.reply({ Status = 200, Data = #WhiteList })
 end)
 
@@ -74,7 +74,7 @@ function CreateDatasetHandler(msg)
         return
     end
     local data = json.decode(msg.Data)
-        
+
     if UploadedDatasetList[data.hash] then
         Log.warn(string.format("%s has been taken, uploaded by %s", data.hash, msg.From))
         msg.reply({ Status = "403", Data = "Your dataset hash has been taken." })
@@ -104,8 +104,8 @@ function CreateDatasetHandler(msg)
         Action = "Join-Pool",
         User = msg.From,
         PoolID = msg.PoolID,
-        Data = json.encode({ dataset_hash=data.hash, dataset_name=data.name})
-    }).onReply(function(replyMsg)
+        Data = json.encode({ dataset_hash = data.hash, dataset_name = data.name })
+    }).onReply(function (replyMsg)
         Log.trace("Receive reply from the pool " .. replyMsg.From)
 
         -- because once the data created, the timer will automaticly process the data, so
@@ -120,20 +120,20 @@ function CreateDatasetHandler(msg)
         end
 
         local replyStatusMatch = {
-            ["403"] = function() 
+            ["403"] = function ()
                 Log.warn(string.format("%s Join pool failed: %s", msg.From, replyMsg.Data))
                 DatasetStatus[msg.From].last_creation.updated_at = Datetime.unix()
                 DatasetStatus[msg.From].last_creation.status = "JOIN_POOL_FAILED"
                 DatasetStatus[msg.From].last_creation.message = replyMsg
-             end,
-            ["200"] = function()  
+            end,
+            ["200"] = function ()
                 UploadDatasetQueue[data.hash] = {
                     created_at = Datetime.unix(),
                     list = data.list,
                     embedding = false,
                 }
                 Log.info(string.format("%s Create Dataset %s (%s)", msg.From, data.hash, #data.list))
-                
+
                 DatasetStatus[msg.From].last_creation.updated_at = Datetime.unix()
                 DatasetStatus[msg.From].last_creation.status = "JOIN_SUCCEED"
                 DatasetStatus[msg.From].last_creation.message = "Successfully join the pool."
@@ -146,16 +146,16 @@ function CreateDatasetHandler(msg)
                     UploadedDatasetList[data.hash] = true
                 end
             end,
-            ["default"] = function()
+            ["default"] = function ()
                 Log.warn(string.format("%s Join pool failed due to unknown error", msg.From))
-                
+
                 DatasetStatus[msg.From].last_creation.updated_at = Datetime.unix()
                 DatasetStatus[msg.From].last_creation.status = "JOIN_POOL_FAILED"
                 DatasetStatus[msg.From].last_creation.message = "unknown error"
-             end
+            end
         }
 
-        if replyStatusMatch[replyMsg.Status] then       
+        if replyStatusMatch[replyMsg.Status] then
             replyStatusMatch[replyMsg.Status]()
         else
             replyStatusMatch["defaul"]()
@@ -171,12 +171,12 @@ function CancelCreatingDatasetHandler(msg)
     else
         DatasetStatus[user] = { create_pending = false }
     end
-    msg.replay({Status="200"})
+    msg.replay({ Status = "200" })
 end
 
 function GetCreationStatus(msg)
     local user = msg.Data
-    msg.reply({Status="200", Data=json.encode(DatasetStatus[user])})
+    msg.reply({ Status = "200", Data = json.encode(DatasetStatus[user]) })
 end
 
 function CountUploadDatasetQueue()

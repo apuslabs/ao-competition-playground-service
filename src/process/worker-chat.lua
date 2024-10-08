@@ -93,7 +93,7 @@ end
 Handlers.add(
     "Init",
     Handlers.utils.hasMatchingTag("Action", "Init"),
-    function(msg)
+    function (msg)
         if msg.From ~= ao.id then
             return print("Init not allowed: " .. msg.From)
         end
@@ -114,7 +114,7 @@ Handlers.add(
 Handlers.add(
     "UpdateSystemPrompt",
     Handlers.utils.hasMatchingTag("Action", "Update-System-Prompt"),
-    function(msg)
+    function (msg)
         if msg.From ~= ao.id then
             return print("UpdateSystemPrompt not allowed: " .. msg.From)
         end
@@ -129,7 +129,7 @@ Handlers.add(
 Handlers.add(
     "Inference",
     Handlers.utils.hasMatchingTag("Action", "Inference"),
-    function(msg)
+    function (msg)
         if not InferenceAllowList[msg.From] then
             print("Inference not allowed: " .. msg.From)
             return

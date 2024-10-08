@@ -2,10 +2,7 @@ import { EMBEDDING_PROCESS } from './ao/config';
 import { msgResult } from './ao/wallet';
 import crypto from 'crypto';
 
-function executeWithRetryUntilSucceed(
-  asyncFunc: () => Promise<void>,
-  intervalMs: number
-) {
+function executeWithRetryUntilSucceed(asyncFunc: () => Promise<void>, intervalMs: number) {
   async function wrapper() {
     try {
       await asyncFunc();
@@ -20,33 +17,17 @@ function executeWithRetryUntilSucceed(
 function createDataset() {
   const testData = [
     { content: 'This contains variable declarations', meta: { title: 'one' } },
-    {
-      content: 'This contains another sort of variable declarations',
-      meta: { title: 'two' },
-    },
-    {
-      content: 'This has nothing to do with variable declarations',
-      meta: { title: 'three' },
-    },
+    { content: 'This contains another sort of variable declarations', meta: { title: 'two' } },
+    { content: 'This has nothing to do with variable declarations', meta: { title: 'three' } },
     { content: 'A random doc', meta: { title: 'four' } },
   ];
 
-  const hashOfData = crypto.hash(
-    'sha1',
-    testData.map((item) => item.content).join('')
-  );
+  const hashOfData = crypto.hash('sha1', testData.map((item) => item.content).join(''));
 
   const result = msgResult(
     EMBEDDING_PROCESS,
-    {
-      Action: 'Create-Dataset',
-      PoolID: '1002',
-    },
-    {
-      hash: hashOfData,
-      list: testData,
-      name: 'test',
-    }
+    { Action: 'Create-Dataset', PoolID: '1002' },
+    { hash: hashOfData, list: testData, name: 'test' }
   );
   result
     .then((response) => {
@@ -85,10 +66,7 @@ async function createDatasetJoinPool() {
     { content: 'A random doc', meta: { title: 'four' } },
   ];
 
-  const hashOfData = crypto.hash(
-    'sha1',
-    testData.map((item) => item.content).join('')
-  );
+  const hashOfData = crypto.hash('sha1', testData.map((item) => item.content).join(''));
 
   const result = await msgResult(
     EMBEDDING_PROCESS,
@@ -109,9 +87,7 @@ async function createDatasetJoinPool() {
     return;
   } else {
     // console.log(result?.Messages?.[0].Tags);
-    const statusCode = result?.Messages?.[0].Tags.find(
-      (t: any) => t.name == 'Status'
-    ).value;
+    const statusCode = result?.Messages?.[0].Tags.find((t: any) => t.name == 'Status').value;
 
     if (statusCode != '200' && statusCode != 200) {
       console.log(result?.Messages?.[0].Data);

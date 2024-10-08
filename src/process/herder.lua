@@ -1,7 +1,7 @@
 local ao = require(".ao")
 local json = require("json")
 local log = require("module.utils.log")
-local datetime = require('module.utils.datetime')
+local datetime = require("module.utils.datetime")
 local Config = require("module.utils.config")
 
 Herder = Herder or {
@@ -80,9 +80,9 @@ function DispatchWork()
                 Target = Herd[i],
                 Action = "Inference",
                 Data = job.prompt
-            }).onReply(function(replyMsg)
+            }).onReply(function (replyMsg)
                 log.info("RES", workerType, "FROM", string.sub(replyMsg.From, 1, 6), "COSTS",
-                    (datetime.unix() - job.timestamp) .. 's')
+                    (datetime.unix() - job.timestamp) .. "s")
                 job.rawMsg.reply({ Data = replyMsg.Data })
                 Busy[replyMsg.From] = nil
                 table.insert(Herder[workerType], replyMsg.From)
@@ -153,7 +153,7 @@ function StatisticWorker()
     }
 end
 
-Handlers.add("Worker-Statistic", "Worker-Statistic", function(msg)
+Handlers.add("Worker-Statistic", "Worker-Statistic", function (msg)
     local statistic = StatisticWorker()
     msg.reply({ Data = json.encode(statistic) })
 end)

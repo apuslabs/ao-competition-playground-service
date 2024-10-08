@@ -25,10 +25,7 @@ async function generateWallets(count: number, outputDir: string) {
     const walletAddress = await arweave.wallets.jwkToAddress(wallet); // 获取钱包地址
 
     // 将钱包密钥保存到文件
-    const walletFileName = path.join(
-      outputDir,
-      `wallet_${i + 1}_${walletAddress}.json`
-    );
+    const walletFileName = path.join(outputDir, `wallet_${i + 1}_${walletAddress}.json`);
     fs.writeFileSync(walletFileName, JSON.stringify(wallet, null, 2));
   }
 }

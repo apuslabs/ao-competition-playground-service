@@ -1,16 +1,16 @@
-import { EMBEDDING_SERVICE } from "./ao/config";
-import { dryrun, msgResult } from "./ao/wallet";
-import axios from "axios";
+import { EMBEDDING_SERVICE } from './ao/config';
+import { dryrun, msgResult } from './ao/wallet';
+import axios from 'axios';
 
 axios.defaults.baseURL = EMBEDDING_SERVICE;
 
-const EMBEDDING_PROCESS = "GbCrfjYRxhrVx-UNYPgCOB8-KW_j_6cKfhmKpSoUXFY";
+const EMBEDDING_PROCESS = 'GbCrfjYRxhrVx-UNYPgCOB8-KW_j_6cKfhmKpSoUXFY';
 
 async function getUnembeddedDocuments() {
   const result = await dryrun(EMBEDDING_PROCESS, {
-    Action: "Get-Unembeded-Documents",
+    Action: 'Get-Unembeded-Documents',
   });
-  const data = result.Messages?.[0]?.Data ?? "[]";
+  const data = result.Messages?.[0]?.Data ?? '[]';
   return JSON.parse(data);
 }
 
@@ -40,14 +40,14 @@ async function embedDocuments(docs: Docuemnt[]) {
       });
       return acc;
     },
-    {} as Record<string, any[]>,
+    {} as Record<string, any[]>
   );
   // group to list
   const list = Object.entries(groupedDocs).map(([dataset_hash, docs]) => ({
     dataset_id: dataset_hash,
     documents: docs,
   }));
-  const res = await axios.post("/create-dataset", { list });
+  const res = await axios.post('/create-dataset', { list });
   return res.data?.count ?? 0;
 }
 
@@ -55,8 +55,8 @@ async function setDocumentsEmbedded(embeddingDocs: Docuemnt[]) {
   // exact ids from embeddingDocs
   const result = await msgResult(
     EMBEDDING_PROCESS,
-    { Action: "Embedding-Data" },
-    embeddingDocs.map((doc) => doc.id),
+    { Action: 'Embedding-Data' },
+    embeddingDocs.map((doc) => doc.id)
   );
   const data = result.Messages?.[0]?.Data ?? 0;
   return data;
@@ -67,7 +67,7 @@ function executeWithRetry(asyncFunc: () => Promise<void>, intervalMs: number) {
     try {
       await asyncFunc();
     } catch (e) {
-      console.error("An error occurred during execution", e);
+      console.error('An error occurred during execution', e);
     } finally {
       setTimeout(wrapper, intervalMs);
     }
@@ -83,7 +83,7 @@ async function embeddingDocs() {
       const embeddingDocs = await embedDocuments(toEmbeddedDocs);
       console.log(`Successfully embedded ${embeddingDocs} documents`);
     } catch (e) {
-      console.error("Failed to embed documents", e);
+      console.error('Failed to embed documents', e);
     }
     await setDocumentsEmbedded(toEmbeddedDocs);
   }
@@ -103,9 +103,9 @@ const ErrorPool: Record<string, Prompt> = {};
 
 async function getToRetrievePrompt() {
   const result = await dryrun(EMBEDDING_PROCESS, {
-    Action: "GET-TORETRIEVE-PROMPT",
+    Action: 'GET-TORETRIEVE-PROMPT',
   });
-  const data = result.Messages?.[0]?.Data ?? "[]";
+  const data = result.Messages?.[0]?.Data ?? '[]';
   const prompts = JSON.parse(data);
   prompts.length && console.log(`Retrieved ${prompts.length} prompts`);
   prompts.map((prompt: any) => {
@@ -114,9 +114,7 @@ async function getToRetrievePrompt() {
 }
 
 async function retrievePrompt() {
-  const toRetrievePrompts = Object.values(PromptPool).filter(
-    (p) => !p.retrieve_result,
-  );
+  const toRetrievePrompts = Object.values(PromptPool).filter((p) => !p.retrieve_result);
   if (!toRetrievePrompts.length) return;
   // only process 1 prompts at a time
   const toRetrievePrompts50 = toRetrievePrompts.slice(0, 1);
@@ -129,37 +127,29 @@ async function retrievePrompt() {
       });
       return acc;
     },
-    {} as Record<string, any[]>,
+    {} as Record<string, any[]>
   );
   // group to list
   const list = Object.entries(groupedPrompts).map(([dataset_id, prompts]) => ({
     dataset_id,
     prompts,
   }));
-  const res = await axios.post("/retrieve-data", { list });
+  const res = await axios.post('/retrieve-data', { list });
   console.log(`Successfully retrieved ${res.data?.length ?? 0} prompts`);
   res.data.map(({ reference, result }: any) => {
     const prompt = PromptPool[reference];
     if (prompt) {
-      prompt.retrieve_result = result || "Null";
+      prompt.retrieve_result = result || 'Null';
     }
   });
 }
 
 async function setPromptRetrieved() {
-  const toSetPrompt = Object.values(PromptPool).filter(
-    (p) => !!p.retrieve_result,
-  );
+  const toSetPrompt = Object.values(PromptPool).filter((p) => !!p.retrieve_result);
   if (!toSetPrompt.length) return;
   try {
-    await msgResult(
-      EMBEDDING_PROCESS,
-      { Action: "Set-Retrieve-Result" },
-      toSetPrompt,
-    );
-    console.log(
-      `Successfully set retrieve result for ${toSetPrompt.length} prompts`,
-    );
+    await msgResult(EMBEDDING_PROCESS, { Action: 'Set-Retrieve-Result' }, toSetPrompt);
+    console.log(`Successfully set retrieve result for ${toSetPrompt.length} prompts`);
     for (const prompt of toSetPrompt) {
       delete PromptPool[prompt.reference];
     }

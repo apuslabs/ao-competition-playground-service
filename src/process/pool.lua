@@ -1,5 +1,5 @@
 local json = require("json")
-local ao = require('.ao')
+local ao = require(".ao")
 local sqlite3 = require("lsqlite3")
 SQL = require("module.sqls.pool")
 Log = require("module.utils.log")
@@ -31,26 +31,26 @@ local function getOngoingCompetitions()
 end
 
 
-Handlers.add("Get-Competitions", "Get-Competitions", function(msg)
+Handlers.add("Get-Competitions", "Get-Competitions", function (msg)
     msg.reply({ Status = 200, Data = json.encode(Lodash.keys(CompetitionPools)) })
 end)
 
-Handlers.add("Get-Competition", "Get-Competition", function(msg)
+Handlers.add("Get-Competition", "Get-Competition", function (msg)
     local poolId = tonumber(msg.Data)
     msg.reply({ Status = 200, Data = json.encode(CompetitionPools[poolId]) })
 end)
 
-Handlers.add("Get-Participants", "Get-Datasets", function(msg)
+Handlers.add("Get-Participants", "Get-Datasets", function (msg)
     local poolId = tonumber(msg.Data)
     msg.reply({ Status = 200, Data = json.encode(SQL.GetParticipants(poolId)) })
 end)
 
-Handlers.add("Get-Leaderboard", { Action = "Get-Leaderboard" }, function(msg)
+Handlers.add("Get-Leaderboard", { Action = "Get-Leaderboard" }, function (msg)
     local poolId = tonumber(msg.Data)
     msg.reply({ Status = 200, Data = json.encode(SQL.GetLeaderboard(poolId)) })
 end)
 
-Handlers.add("Get-Dashboard", "Get-Dashboard", function(msg)
+Handlers.add("Get-Dashboard", "Get-Dashboard", function (msg)
     local From = msg.FromAddress or msg.From
     local poolID = tonumber(msg.Data)
     local rank = 0
@@ -75,7 +75,7 @@ function UpdateBalance()
     Send({ Target = Config.Process.Token, Action = "Balance" })
 end
 
-Handlers.add("Update-Balance", { From = Config.Process.Token, Account = ao.id }, function(msg)
+Handlers.add("Update-Balance", { From = Config.Process.Token, Account = ao.id }, function (msg)
     APUS_BALANCE = tonumber(msg.Balance)
 end)
 function Transfer(receipent, quantity)
@@ -119,7 +119,7 @@ end
 
 Handlers.add("Create-Pool", { Action = "Credit-Notice", From = Config.Process.Token }, CreatePoolHandler)
 
-local poolTimeCheck = function(poolID)
+local poolTimeCheck = function (poolID)
     local metadata = json.decode(CompetitionPools[poolID].metadata)
     local startTime = metadata.competition_time["start"]
     local endTime = metadata.competition_time["end"]
@@ -140,7 +140,7 @@ function JoinPoolHandler(msg)
 
     -- Only embedding process can call this function
     if msg.From ~= Config.Process.Embedding then
-        msg.reply({Status = "403", Data = "From must be Embedding process."})
+        msg.reply({ Status = "403", Data = "From must be Embedding process." })
     end
     local poolID = tonumber(msg.PoolID)
     if not poolTimeCheck(poolID) then
@@ -174,7 +174,7 @@ function GetRank(poolID)
     Send({
         Target = CompetitionPools[poolID].process_id,
         Action = "Get-Rank"
-    }).onReply(function(msg)
+    }).onReply(function (msg)
         local ranks = json.decode(msg.Data)
         Log.trace("Update Rank ", poolID, ranks)
         for i in ipairs(ranks) do
@@ -199,12 +199,12 @@ function AutoUpdateLeaderboard()
     end
 end
 
-Handlers.add("CronTick", "Cron", function()
+Handlers.add("CronTick", "Cron", function ()
     Log.trace("Cron Tick")
     AutoUpdateLeaderboard()
 end)
 
-Handlers.add("Participants-Statistic", "Participants-Statistic", function(msg)
+Handlers.add("Participants-Statistic", "Participants-Statistic", function (msg)
     local now = Datetime.unix()
     local lastHour = now - 3600
     local lastDay = now - 86400
@@ -227,7 +227,7 @@ Handlers.add("Participants-Statistic", "Participants-Statistic", function(msg)
     })
 end)
 
-Handlers.add("Dataset-Statistic", "Dataset-Statistic", function(msg)
+Handlers.add("Dataset-Statistic", "Dataset-Statistic", function (msg)
     local res = {}
     for id, pool in pairs(getOngoingCompetitions()) do
         table.insert(res, {
@@ -238,7 +238,7 @@ Handlers.add("Dataset-Statistic", "Dataset-Statistic", function(msg)
         })
     end
 
-    msg.reply({Status="200", Data=json.encode(res)})
+    msg.reply({ Status = "200", Data = json.encode(res) })
 end)
 
 Handlers.add("Join-Pool", "Join-Pool", JoinPoolHandler)

@@ -6,7 +6,7 @@ export function obj2tags(obj: Record<string, any>) {
 }
 
 function tostring(value: any) {
-  if (typeof value === "object") {
+  if (typeof value === 'object') {
     return JSON.stringify(value);
   }
   return String(value);
