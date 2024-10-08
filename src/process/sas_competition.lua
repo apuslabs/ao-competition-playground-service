@@ -60,3 +60,22 @@ function DANGEROUS_CLEAR()
     SQL.ClearEvaluation()
     SQL.ClearQuestion()
 end
+
+function SetUnEvaluatedDatasetFinished()
+    local rank = SQL.GetRank()
+    for _, row in ipairs(rank) do
+        if row.progress > 0 and row.progress < 1 then
+            SQL.SetUnEvaluatedDatasetFinished(row.dataset_hash)
+        end
+    end
+end
+
+function SetUnstartedDatasetReferenceNull()
+    local rank = SQL.GetRank()
+    for _, row in ipairs(rank) do
+        if row.progress == 0 then
+            Log.trace("SetUnstartedDatasetReferenceNull", row.dataset_hash)
+            SQL.CleanDatasetReference(row.dataset_hash)
+        end
+    end
+end
