@@ -10,13 +10,20 @@
     "test": "tests"
   },
   "devDependencies": {
+    "@types/chai": "^5.0.0",
+    "@types/mocha": "^10.0.9",
     "@types/node": "^22.1.0",
+    "chai": "^4.5.0",
     "csv-parse": "^5.5.6",
+    "esm": "^3.2.25",
+    "mocha": "^10.7.3",
+    "ts-mocha": "^10.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.4"
+    "typescript": "^5.6.2"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test_prepare": "mocha --require ts-node/register --timeout 20000 tests/**/*.test.ts --grep 'Preparations' ",
+    "test": "mocha --require ts-node/register --timeout 40000 tests/**/*.test.ts --grep 'Preparations' --invert",
     "build": "tsc"
   },
   "keywords": [],

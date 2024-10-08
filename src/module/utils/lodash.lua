@@ -25,6 +25,14 @@ Lodash.InsertUnique = function(t, value)
     table.insert(t, value)
 end
 
+Lodash.Remove = function(t, value)
+    for i,  v in ipairs(t) do
+        if v == value then
+            table.remove(t, i)
+        end
+    end
+end
+
 Lodash.Contain = function(t, value)
     for _, v in ipairs(t) do
         if v == value then

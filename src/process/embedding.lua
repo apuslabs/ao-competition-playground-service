@@ -16,12 +16,14 @@ function RemoveUserFromUploadedList(address)
 end
 
 WhiteList = WhiteList or {}
+Handlers.add("Check-Permission", "Check-Permission", function(msg)
+    local From = msg.FromAddress or msg.From
+    msg.reply({ Status = 200, Data = Lodash.Contain(WhiteList, From) })
+end)
+
 function CheckUserStatus(address)
     if not Lodash.Contain(WhiteList, address) then -- WhiteList
         return "User " .. address .. " is not allowed to join the event."
-    end
-    if SQL.GetUserRank(1002, address) ~= -1 then
-        return "User " .. address .. " has already joined the event."
     end
     if UploadedUserList[address] then
         return "User " .. address .. " has already called join pool."
@@ -78,7 +80,7 @@ function CreateDatasetHandler(msg)
     assert(data and data.hash and data.list and data.name and msg.PoolID, "Invalid data")
 
     Log.info(string.format("%s Creation pending, waiting for syncronizations in Pool", msg.From))
-    msg.reply({ Status = 200, Data = "Creation pending, waiting for syncronizations in Pool" })
+    msg.reply({ Status = "200", Data = "Creation pending, waiting for syncronizations in Pool" })
 
     DatasetStatus[msg.From] = {
         create_pending = true,
@@ -263,6 +265,9 @@ Handlers.add("Get-Creation-Status", "Get-Creation-Status", GetCreationStatus)
 
 
 function DANGEROUS_CLEAR()
-    SQL.ClearPrompts()
-    SQL.ClearContents()
+    UploadedUserList = {}
+    WhiteList = {}
+    UploadDatasetQueue = {}
+    DatasetStatus = {}
+    PromptQueue = {}
 end
