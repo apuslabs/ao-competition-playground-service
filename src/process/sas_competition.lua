@@ -11,7 +11,7 @@ DBClient = DBClient or sqlite3.open_memory()
 SQL.init(DBClient)
 
 CircleTimes = CircleTimes or 0
-Handlers.add("CronTick", "Cron", function()
+Handlers.add("CronTick", "Cron", function ()
     Log.trace("Cron Tick")
     if (CircleTimes >= Config.Evaluate.Interval) then
         Log.trace("Auto Evaluate")
@@ -25,7 +25,7 @@ end)
 function Evaluate()
     local unevaluated = SQL.GetUnEvaluated(Config.Evaluate.BatchSize)
     for _, row in ipairs(unevaluated) do
-        local reference = RAGClient.Evaluate(row, function(response, ref)
+        local reference = RAGClient.Evaluate(row, function (response, ref)
             SQL.SetEvaluationResponse(ref, response)
         end)
         SQL.UpdateEvaluationReference(row.id, reference)

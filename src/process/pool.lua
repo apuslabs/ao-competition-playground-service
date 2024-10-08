@@ -1,5 +1,5 @@
 local json = require("json")
-local ao = require('.ao')
+local ao = require(".ao")
 local sqlite3 = require("lsqlite3")
 SQL = require("module.sqls.pool")
 Log = require("module.utils.log")
@@ -31,26 +31,26 @@ local function getOngoingCompetitions()
 end
 
 
-Handlers.add("Get-Competitions", "Get-Competitions", function(msg)
+Handlers.add("Get-Competitions", "Get-Competitions", function (msg)
     msg.reply({ Status = 200, Data = json.encode(Lodash.keys(CompetitionPools)) })
 end)
 
-Handlers.add("Get-Competition", "Get-Competition", function(msg)
+Handlers.add("Get-Competition", "Get-Competition", function (msg)
     local poolId = tonumber(msg.Data)
     msg.reply({ Status = 200, Data = json.encode(CompetitionPools[poolId]) })
 end)
 
-Handlers.add("Get-Participants", "Get-Datasets", function(msg)
+Handlers.add("Get-Participants", "Get-Datasets", function (msg)
     local poolId = tonumber(msg.Data)
     msg.reply({ Status = 200, Data = json.encode(SQL.GetParticipants(poolId)) })
 end)
 
-Handlers.add("Get-Leaderboard", { Action = "Get-Leaderboard" }, function(msg)
+Handlers.add("Get-Leaderboard", { Action = "Get-Leaderboard" }, function (msg)
     local poolId = tonumber(msg.Data)
     msg.reply({ Status = 200, Data = json.encode(SQL.GetLeaderboard(poolId)) })
 end)
 
-Handlers.add("Get-Dashboard", "Get-Dashboard", function(msg)
+Handlers.add("Get-Dashboard", "Get-Dashboard", function (msg)
     local From = msg.FromAddress or msg.From
     local poolID = tonumber(msg.Data)
     local rank = 0
@@ -75,7 +75,7 @@ function UpdateBalance()
     Send({ Target = Config.Process.Token, Action = "Balance" })
 end
 
-Handlers.add("Update-Balance", { From = Config.Process.Token, Account = ao.id }, function(msg)
+Handlers.add("Update-Balance", { From = Config.Process.Token, Account = ao.id }, function (msg)
     APUS_BALANCE = tonumber(msg.Balance)
 end)
 function Transfer(receipent, quantity)
@@ -119,7 +119,7 @@ end
 
 Handlers.add("Create-Pool", { Action = "Credit-Notice", From = Config.Process.Token }, CreatePoolHandler)
 
-local poolTimeCheck = function(poolID)
+local poolTimeCheck = function (poolID)
     local metadata = json.decode(CompetitionPools[poolID].metadata)
     local startTime = metadata.competition_time["start"]
     local endTime = metadata.competition_time["end"]
@@ -136,30 +136,22 @@ function RemoveUserFromUploadedList(address)
 end
 
 function JoinPoolHandler(msg)
-    local data = json.decode(msg.Data)
-    Helper.assert_non_empty(msg.PoolID, data.dataset_hash, data.dataset_name)
+    Log.trace("Receive creation request from embedding process " .. msg.From)
+
+    -- Only embedding process can call this function
+    if msg.From ~= Config.Process.Embedding then
+        msg.reply({ Status = "403", Data = "From must be Embedding process." })
+    end
     local poolID = tonumber(msg.PoolID)
     if not poolTimeCheck(poolID) then
-        msg.reply({ Status = 403, Data = "The event has ended, can't join in." })
-        return
-    end
-    if not Lodash.Contain(WhiteList, msg.From) then -- WhiteList
-        Log.warn("User " .. msg.From .. " is not allowed to join the event.")
-        msg.reply({ Status = 403, Data = "You are not allowed to join this event." })
-        return
-    end
-    if UploadedUserList[msg.From] then
-        Log.warn("User " .. msg.From .. " has already joined the event.")
-        msg.reply({ Status = 403, Data = "You have already joined this event." })
-        return
-    end
-    if not throttleCheck(msg) then
+        msg.reply({ Status = "403", Data = "The event has ended, can't join in." })
         return
     end
 
-    SQL.CreateParticipant(poolID, msg.From, data.dataset_hash, data.dataset_name)
-    msg.reply({ Status = 200, Data = "Join Success" })
-    UploadedUserList[msg.From] = true
+    local data = json.decode(msg.Data)
+    SQL.CreateParticipant(poolID, msg.User, data.dataset_hash, data.dataset_name)
+    msg.reply({ Status = "200", Data = "Join Success" })
+    UploadedUserList[msg.User] = true
     Log.info("Join Pool " .. msg.From .. " : ", data.dataset_hash)
     Send({
         Target = CompetitionPools[poolID].process_id,
@@ -167,8 +159,6 @@ function JoinPoolHandler(msg)
         Data = data.dataset_hash
     })
 end
-
-Handlers.add("Join-Pool", "Join-Pool", JoinPoolHandler)
 
 Reward = { 35000, 20000, 10000, 5000, 5000, 5000, 5000, 5000, 5000, 5000 }
 local function allocateReward(rank)
@@ -219,34 +209,12 @@ function AutoUpdateLeaderboard()
     end
 end
 
-Handlers.add("CronTick", "Cron", function()
+Handlers.add("CronTick", "Cron", function ()
     Log.trace("Cron Tick")
     AutoUpdateLeaderboard()
 end)
 
-WhiteList = WhiteList or {}
-function BatchAddWhiteList(list)
-    for _, v in ipairs(list) do
-        Lodash.InsertUnique(WhiteList, v)
-    end
-end
-
-function BatchRemoveWhiteList(list)
-    for _, v in ipairs(list) do
-        Lodash.Remove(WhiteList, v)
-    end
-end
-
-Handlers.add("Count-WhiteList", "Count-WhiteList", function(msg)
-    msg.reply({ Status = 200, Data = #WhiteList })
-end)
-
-Handlers.add("Check-Permission", "Check-Permission", function(msg)
-    local From = msg.FromAddress or msg.From
-    msg.reply({ Status = 200, Data = Lodash.Contain(WhiteList, From) })
-end)
-
-Handlers.add("Participants-Statistic", "Participants-Statistic", function(msg)
+Handlers.add("Participants-Statistic", "Participants-Statistic", function (msg)
     local now = Datetime.unix()
     local lastHour = now - 3600
     local lastDay = now - 86400
@@ -269,7 +237,7 @@ Handlers.add("Participants-Statistic", "Participants-Statistic", function(msg)
     })
 end)
 
-Handlers.add("Dataset-Statistic", "Dataset-Statistic", function(msg)
+Handlers.add("Dataset-Statistic", "Dataset-Statistic", function (msg)
     local res = {}
     for id, pool in pairs(getOngoingCompetitions()) do
         table.insert(res, {
@@ -280,24 +248,13 @@ Handlers.add("Dataset-Statistic", "Dataset-Statistic", function(msg)
         })
     end
 
-    msg.reply({Status="200", Data=json.encode(res)})
+    msg.reply({ Status = "200", Data = json.encode(res) })
 end)
+
+Handlers.add("Join-Pool", "Join-Pool", JoinPoolHandler)
 
 -- ops
 
 function DANGEROUS_CLEAR()
     SQL.ClearParticipants(1002)
-end
-
-function CheckUserStatus(address)
-    if not Lodash.Contain(WhiteList, address) then -- WhiteList
-        return "User " .. address .. " is not allowed to join the event."
-    end
-    if SQL.GetUserRank(1002, address) ~= -1 then
-        return "User " .. address .. " has already joined the event."
-    end
-    if UploadedUserList[address] then
-        return "User " .. address .. " has already called join pool."
-    end
-    return "User is OK"
 end

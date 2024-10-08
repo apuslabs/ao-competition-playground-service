@@ -7,9 +7,9 @@ Log = require("module.utils.log")
 DBClient = DBClient or sqlite3.open_memory()
 SQL.init(DBClient)
 
-Handlers.add("Chat-Question", { Action = "Chat-Question" }, function(msg)
+Handlers.add("Chat-Question", { Action = "Chat-Question" }, function (msg)
     local data = json.decode(msg.Data)
-    local reference = RAGClient.Chat(data, function(response, ref)
+    local reference = RAGClient.Chat(data, function (response, ref)
         SQL.SetResponse(ref, response)
     end)
     SQL.CreateChat(reference, data.dataset_hash, data.question)
@@ -28,7 +28,7 @@ function GetChatAnswer(reference)
     end
 end
 
-Handlers.add("Get-Chat-Answer", { Action = "Get-Chat-Answer" }, function(msg)
+Handlers.add("Get-Chat-Answer", { Action = "Get-Chat-Answer" }, function (msg)
     local reference = msg.Data
     local response = GetChatAnswer(reference)
     if not response then

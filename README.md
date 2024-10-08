@@ -43,7 +43,7 @@ Ardrive -> Data Tx Id
   - Llama3 8B Instruct q4: Pr2YVrxd7VwNdg6ekC0NXWNKXxJbfTlHhhlrKbAd1dA
   - Llama3 8B Instruct q8: jbx-H6aq7b3BbNCHlK50Jz9L-6pz9qmldrYXMwjqQVI
 - Fine-tuned Models
-  - 
+  -
 
 ### Model Evaluation
 
@@ -78,9 +78,11 @@ ao.send({
 ## Architecture
 
 ### Benchmark
+
 The Benchmark is reponsible for managing pool, funding, and rewards.
 
 **Key Data Structure:**
+
 - Benchmarks: A table that holds all the benchmark pools. Each pool contains:
   - funder: The address of the funder.
   - funds: The amount of funds in the pool.
@@ -93,9 +95,11 @@ The Benchmark is reponsible for managing pool, funding, and rewards.
     - progress: The progress of the model.
 
 **Key Functions:**
+
 - Allocation: calculate allocation for each rule.
 
 **Handlers:**
+
 - Create-Pool: Handles the creation of a new funding pool.
 - Join-Pool: Handles the joining of a model to an existing pool.
 - Get-Pools: Retrieves the list of all existing pools.
@@ -105,6 +109,7 @@ The Benchmark is reponsible for managing pool, funding, and rewards.
 - Leaderboard: Retrieves and prints the current leaderboard.
 
 **Cron:**
+
 - Update-Leaderboard: Updates the leaderboard every 24 hours.
 - Allocate-Rewards: Check if the pool is over and allocate rewards to participants every 24 hours.
 
@@ -113,13 +118,16 @@ The Benchmark is reponsible for managing pool, funding, and rewards.
 The Siqa Dataset is an example dataset that is used to benchmark the LLM models.
 
 **Initialization:**
+
 - DataTxID: Transaction Data ID for the dataset
 - LlamaRouter: Router for Llama
 - WrappedAR: Wrapped AR token address
 - SystemPrompt: System prompt for the assistant
 
 **Table Definition:**
+
 - datasets: Stores the context, question, and possible answers (A, B, C) along with the correct result.
+
   - id: INTEGER PRIMARY KEY AUTOINCREMENT
   - context: TEXT NOT NULL
   - question: TEXT NOT NULL
@@ -129,6 +137,7 @@ The Siqa Dataset is an example dataset that is used to benchmark the LLM models.
   - result: TEXT NOT NULL
 
 - models: Stores the model information.
+
   - id: INTEGER PRIMARY KEY AUTOINCREMENT
   - name: TEXT NOT NULL
   - inference_process: TEXT NOT NULL
@@ -147,11 +156,12 @@ The Siqa Dataset is an example dataset that is used to benchmark the LLM models.
   - UNIQUE(dataset_id, model_id)
   - FOREIGN KEY (dataset_id) REFERENCES datasets(id)
 
-
 **Key Functions:**
+
 - ResultRetriever: Converts answer letters (A, B, C) to corresponding numerical values.
 
 **Handlers:**
+
 - Init: Initializes the SQLite database and creates necessary tables.
 - Load-Data: Loads dataset into the database from a given message.
 - Info: Provides information about the Siqa dataset.
@@ -162,6 +172,7 @@ The Siqa Dataset is an example dataset that is used to benchmark the LLM models.
 - LlamaHerder.Transfer-Error: Handles transfer errors from LlamaHerder.
 
 **Cron:**
+
 - Evaluate: Evaluates the model's predictions against the dataset every 1 hours. Each time up to 1000 inferences are made.
 
 ### Llama Router & Llama Worker
@@ -169,6 +180,7 @@ The Siqa Dataset is an example dataset that is used to benchmark the LLM models.
 Llama Router and Llama Worker is where inference actually happens.
 
 Handlers:
+
 - Register-Worker: Registers a worker and initializes its workload.
 - Unregister-Worker: Unregisters a worker and removes it from the list.
 - Inference: Handles inference requests by distributing them to workers with the least workload.
@@ -177,7 +189,6 @@ Handlers:
 - setMaxTokens: Sets the maximum number of tokens for inference.
 - setSystemPrompt: Sets the system prompt for the inference process.
 - Inference: Performs inference using the loaded model and sends the result back to the requester.
-
 
 ## Build a dataset
 
@@ -196,11 +207,13 @@ aos> APM.install("@sam/Llama-Herder")
 ```
 
 Then, load the dataset process
+
 ```shell
 .load src/datasets/siqa.lua
 ```
 
 Then, Initialize the table
+
 ```shell
 aos> Send({
    Target = '<dataset process id>',
@@ -209,6 +222,7 @@ aos> Send({
 ```
 
 Then, load the dataset into the table
+
 ```shell
 aos> Send({
    Target = '<dataset process id>',
@@ -220,6 +234,7 @@ aos> Send({
 ### Build your own Dataset
 
 a Dataset should contains
+
 - Info: Describe the dataset
 - Dataset Loader: we use message to pass in siqa
 - Prompt Template
@@ -231,7 +246,7 @@ a Dataset should contains
 
 You can use [LlamaHerder](https://github.com/permaweb/llama-herder) to evaluate the model's performance.
 
-or 
+or
 
 You can setup your [local CU](https://github.com/permaweb/ao/tree/main/servers/cu) using `llama-router.lua` in `src`
 
@@ -244,16 +259,19 @@ Make sure you use your own `authority` Tags of the process and forward the messa
 ## Useful Resources
 
 ### Links
+
 - [LlamaHerder](https://github.com/permaweb/llama-herder)
 - [WeaveDriver](https://github.com/permaweb/aos/tree/main/extensions/weavedrive)
 - [AO Connect](https://github.com/permaweb/ao/tree/main/connect)
 
 ### Scirpts
+
 - [scripts/wrappedAR.ts](scripts/wrappedAR.ts) : A script to send wrappedAR to the pool/dataset process
 - [scripts/spawn.ts](scripts/spawn.ts) : A script to spawn all processes to setup the benchmark
 - [scripts/siqa.ts](scripts/siqa.ts) : A script to load the siqa data into the dataset process
 
 ### Process ID
+
 - Benchmark: `DLJoP8Xtdat6SKz3kqYGZPaa7DJBG6etF1jRLQCwquo`
 - Siqa: `XUw5NtwUzk7hf_dE4ifEFD2rHfXffMLb8s2QfnZEvg4`
 - WrappedAR: `xU9zFkq3X2ZQ6olwNVvr1vUWIjc3kXTWr7xKQD6dh10`
@@ -263,6 +281,7 @@ Make sure you use your own `authority` Tags of the process and forward the messa
 We welcome contributions! If you find a bug or have suggestions, please open an issue. If you'd like to contribute code, please fork the repository and submit a pull request.
 
 # Llama-Herder
+
 ## Evaluate
 
 ```lua
@@ -323,18 +342,20 @@ Send({
 
 aos text-embedding-service --module=ghSkge2sIUD_F00ym5sEimC63BDBuBrq4b5OcwxOjiw
 
-
 ## How to use
 
 Create-Dataset
+
 ```
 Send({ Target = 'hMEUOgWi97d9rGT-lHNCbm937bTypMq7qxMWeaUnMLo', Action = "Create-Dataset", Data='{"hash":"673322f20121f3dc36538578295819386f1ef2b8","list":[{"content":"This contains variable declarations","meta":{"title":"one"}},{"content":"This contains another sort of variable declarations","meta":{"title":"two"}},{"content":"This has nothing to do with variable declarations","meta":{"title":"three"}},{"content":"A random doc","meta":{"title":"four"}}]}' })
 ```
 
 Search-Prompt
+
 ```
 Send({ Target = 'hMEUOgWi97d9rGT-lHNCbm937bTypMq7qxMWeaUnMLo', Action = "Search-Prompt", Data = '{"dataset_hash": "673322f20121f3dc36538578295819386f1ef2b8","prompt":"variable declarations"}' })
 ```
 
 ## Process ID
+
 hMEUOgWi97d9rGT-lHNCbm937bTypMq7qxMWeaUnMLo

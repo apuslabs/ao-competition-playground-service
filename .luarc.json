@@ -1,12 +1,4 @@
 {
-  "diagnostics.globals": [
-    "Handlers",
-    "Owner",
-    "Send",
-    "Dump",
-    "ao",
-    "Spawn",
-    "Receive"
-  ],
+  "diagnostics.globals": ["Handlers", "Owner", "Send", "Dump", "ao", "Spawn", "Receive"],
   "diagnostics.disable": ["undefined-field"]
 }
