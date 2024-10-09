@@ -27,7 +27,7 @@ querying_pool = LRUCache(maxsize=QUERYING_POOL_SIZE)
 @cached(indexing_pool)
 def get_indexing_pool(user_address):
     indexing = Pipeline()
-    document_store = ChromaDocumentStore(collection_name=user_address, persist_path=f"./chroma/pool3/{user_address}")
+    document_store = ChromaDocumentStore(collection_name=user_address, persist_path=f"./chroma/{user_address}")
     indexing.add_component("embedder", SentenceTransformersDocumentEmbedder())
     indexing.add_component("writer", DocumentWriter(document_store))
     indexing.connect("embedder.documents", "writer.documents")
@@ -36,7 +36,7 @@ def get_indexing_pool(user_address):
 @cached(querying_pool)
 def get_querying_pool(user_address):
     querying = Pipeline()
-    document_store = ChromaDocumentStore(collection_name=user_address, persist_path=f"./chroma/pool3/{user_address}")
+    document_store = ChromaDocumentStore(collection_name=user_address, persist_path=f"./chroma/{user_address}")
     querying.add_component("query_embedder", SentenceTransformersTextEmbedder())
     querying.add_component("retriever", ChromaEmbeddingRetriever(document_store))
     querying.connect("query_embedder.embedding", "retriever.query_embedding")
