@@ -21,7 +21,7 @@ indexing_pool = {}
 def get_indexing_pool(user_address):
     if user_address not in indexing_pool:
         indexing = Pipeline()
-        document_store = ChromaDocumentStore(collection_name=user_address, persist_path=f"./chroma/{user_address}")
+        document_store = ChromaDocumentStore(collection_name=user_address, persist_path=f"./chroma/pool3/{user_address}")
         indexing.add_component("embedder", SentenceTransformersDocumentEmbedder())
         indexing.add_component("writer", DocumentWriter(document_store))
         indexing.connect("embedder.documents", "writer.documents")
@@ -33,7 +33,7 @@ querying_pool = {}
 def get_querying_pool(user_address):
     if user_address not in querying_pool:
         querying = Pipeline()
-        document_store = ChromaDocumentStore(collection_name=user_address, persist_path=f"./chroma/{user_address}")
+        document_store = ChromaDocumentStore(collection_name=user_address, persist_path=f"./chroma/pool3/{user_address}")
         querying.add_component("query_embedder", SentenceTransformersTextEmbedder())
         querying.add_component("retriever", ChromaEmbeddingRetriever(document_store))
         querying.connect("query_embedder.embedding", "retriever.query_embedding")
