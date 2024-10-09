@@ -26,7 +26,7 @@ function createDataset() {
 
   const result = msgResult(
     EMBEDDING_PROCESS,
-    { Action: 'Create-Dataset', PoolID: '1002' },
+    { Action: 'Create-Dataset', PoolID: '1003' },
     { hash: hashOfData, list: testData, name: 'test' }
   );
   result
@@ -72,7 +72,7 @@ async function createDatasetJoinPool() {
     EMBEDDING_PROCESS,
     {
       Action: 'Create-Dataset',
-      PoolID: '1002',
+      PoolID: '1003',
     },
     {
       hash: hashOfData,

@@ -47,7 +47,7 @@ function DispatchWork()
                 log.warn("REMOVE", wType, string.sub(worker, 1, 6))
                 TimeoutHerder[wType][worker] = nil
             end
-            work.rawMsg.reply({ Status = 408, Data = wType == "Chat" and "" or "0" })
+            work.rawMsg.reply({ Status = "408", Data = wType == "Chat" and "" or "0" })
             Busy[worker] = nil
         end
     end
@@ -83,7 +83,7 @@ function DispatchWork()
             }).onReply(function (replyMsg)
                 log.info("RES", workerType, "FROM", string.sub(replyMsg.From, 1, 6), "COSTS",
                     (datetime.unix() - job.timestamp) .. "s")
-                job.rawMsg.reply({ Data = replyMsg.Data })
+                job.rawMsg.reply({ Data = tostring(replyMsg.Data) })
                 Busy[replyMsg.From] = nil
                 table.insert(Herder[workerType], replyMsg.From)
                 DispatchWork()

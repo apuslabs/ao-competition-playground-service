@@ -13,7 +13,7 @@ Handlers.add("Chat-Question", { Action = "Chat-Question" }, function (msg)
         SQL.SetResponse(ref, response)
     end)
     SQL.CreateChat(reference, data.dataset_hash, data.question)
-    msg.reply({ Status = 200, Data = reference })
+    msg.reply({ Status = "200", Data = reference })
 end)
 
 function GetChatAnswer(reference)
@@ -32,11 +32,11 @@ Handlers.add("Get-Chat-Answer", { Action = "Get-Chat-Answer" }, function (msg)
     local reference = msg.Data
     local response = GetChatAnswer(reference)
     if not response then
-        msg.reply({ Status = 404, Data = "Not Found" })
+        msg.reply({ Status = "404", Data = "Not Found" })
     elseif response == "__NULL" then
-        msg.reply({ Status = 102, Data = "Processing" })
+        msg.reply({ Status = "102", Data = "Processing" })
     else
-        msg.reply({ Status = 200, Data = response })
+        msg.reply({ Status = "200", Data = response })
     end
 end)
 

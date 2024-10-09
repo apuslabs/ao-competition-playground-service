@@ -38,7 +38,6 @@ end
 
 function JoinCompetitionHandler(msg)
     SQL.CreateEvaluationSet(msg.Data)
-    msg.reply({ Status = 200 })
 end
 
 Handlers.add("Join-Competition", "Join-Competition", JoinCompetitionHandler)
@@ -48,7 +47,7 @@ function GetRank()
 end
 
 Handlers.add("Get-Rank", "Get-Rank", function(msg)
-    -- msg.reply({ Status = 200, Data = GetRank() })
+    -- msg.reply({ Status = "200", Data = GetRank() })
     Send({ Target = msg.From, Action = "Get-Rank-Response", Data = GetRank() })
 end)
 

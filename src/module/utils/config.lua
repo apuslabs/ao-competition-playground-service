@@ -1,12 +1,12 @@
 local Config = {}
 
 Config.Process = {
-    Chat = "K0zJBT9HQ4KOGE6gCDYFa0tldMB0jdppOyCNH9loe38",
-    LlamaHerder = "ZO9tosDW3L5HT8MU3Xa6bUUoSLpJGblNM4Ef936clCU",
-    Embedding = "b_y_QuM8BVEbzv91dcfDd4V7FQnUbxJUtkigs4U-2M8",
+    Chat = "ZuZZeU2-JeNRdpBWBWU8p6IcjNXyZ0BFZ4M2Pwoj9vM",
+    LlamaHerder = "9tioH6_dy0Wc23EgmPaY-hjz2cqBLvQ5Ll6hv27vAvU",
+    Embedding = "vp4pxoOsilVxdsRqTmLjP86CwwUwtj1RoKeGrFVxIVk",
     Token = "al1xXXnWnfJD8qyZJvttVGq60z1VPGn4M5y6uCcMBUM",
-    Competition = "OnYMDvUdLu0u8W0ld5dK9ejgutl397dlCp7A2L7rK7c",
-    Pool = "NcgWkb377fZRWQDT0t8Xnhb2JYDlJ1pOmXfYZZxb4LM"
+    Competition = "didygr4-n88nmlu-NLW-qJfxJLvfiRhU-mRgKHYb6WE",
+    Pool = "jzZzZJ6SpxLKaZv8rx2rmkq-QwKGQliFyWqr-OK9CIo"
 }
 
 Config.Evaluate = {

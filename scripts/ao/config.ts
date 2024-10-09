@@ -1,4 +1,4 @@
-export const EMBEDDING_PROCESS = 'b_y_QuM8BVEbzv91dcfDd4V7FQnUbxJUtkigs4U-2M8';
-export const HERDER_PROCESS = 'ZO9tosDW3L5HT8MU3Xa6bUUoSLpJGblNM4Ef936clCU';
-export const POOL_PROCESS = 'NcgWkb377fZRWQDT0t8Xnhb2JYDlJ1pOmXfYZZxb4LM';
+export const EMBEDDING_PROCESS = 'vp4pxoOsilVxdsRqTmLjP86CwwUwtj1RoKeGrFVxIVk';
+export const HERDER_PROCESS = '9tioH6_dy0Wc23EgmPaY-hjz2cqBLvQ5Ll6hv27vAvU';
+export const POOL_PROCESS = 'jzZzZJ6SpxLKaZv8rx2rmkq-QwKGQliFyWqr-OK9CIo';
 export const EMBEDDING_SERVICE = 'http://127.0.0.1:8082';
