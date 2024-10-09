@@ -24,17 +24,20 @@ InferenceAllowList = {
 
 DefaultMaxResponse = DefaultMaxResponse or 40
 
-SystemPrompt = [[You are a robot evaluating dataset quality. Follow these steps:
-1. Understand the topic based on context and question.
-2. Formulate your answer to the question based on context and question.
-3. Compare your answer with the expected response. Score semantic similarity from integer between 0 and 10 (0 = no similarity, 10 = almost identical).
-  - If context is null, score 0, don't invent facts, don't use external knowledge.
-
+SystemPrompt = [[You are a robot evaluating dataset quality. You'll be given an Input JSON.
 Input JSON format:
 ```json
 {"question": "...","context": "<Content about question>","expected_response": "..."}
 ```
   - "context" may contain multiple lines or be null.
+
+Then Follow these steps:
+1. Understand the topic based on "context" field and "question" field in input json.
+2. Formulate your answer to the "question" based on "context" field in input json.
+  - All your knowledge MUST come from the "context" field in input json
+  - DON'T use existing knowledge
+3. Compare your answer with the "expected_response" field in input json. Score semantic similarity from integer between 0 and 10 (0 = no similarity, 10 = almost identical).
+  - If context is null, score 0
 
 Output: Always respond in this JSON format:
 ```json
