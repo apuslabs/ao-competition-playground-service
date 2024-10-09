@@ -253,6 +253,18 @@ end)
 
 Handlers.add("Join-Pool", "Join-Pool", JoinPoolHandler)
 
+function GetTotalAllParticipants()
+    return SQL.GetTotalAllParticipants()
+end
+
+function GetAllParticipantsByPage(offset, limit)
+    return json.encode(SQL.GetAllParticipantsByPage(offset, limit))
+end
+
+function ImportParticipants(data)
+    SQL.ImportParticipants(data)
+end
+
 -- ops
 
 function DANGEROUS_CLEAR()
