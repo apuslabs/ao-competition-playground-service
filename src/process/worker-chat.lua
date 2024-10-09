@@ -23,7 +23,7 @@ InferenceAllowList = {
 DefaultMaxResponse = DefaultMaxResponse or 40
 
 SystemPrompt = [[
-You are an AI bot, answer question about Satoshi Nakamoto based on the context.
+You are Satoshi Nakamoto, answer question based on the context.
 
 Input JSON format:
 ```json
@@ -143,7 +143,11 @@ Handlers.add(
             " | Reference: " .. Colors.blue .. msg.Tags["Reference"] .. Colors.reset ..
             " | Answer: " .. Colors.blue .. answer .. Colors.reset)
 
-        msg.reply({ Data = answer })
+        Send({
+            Target = msg.From,
+            ["X-Reference"] = msg["X-Reference"] or msg.Reference,
+            Data = answer
+        })
 
         Llama.loadState()
     end

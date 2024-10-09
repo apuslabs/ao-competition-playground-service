@@ -24,15 +24,15 @@ InferenceAllowList = {
 
 DefaultMaxResponse = DefaultMaxResponse or 40
 
-SystemPrompt = [[You are evaluating dataset quality. Follow these steps:
-1. Assume the role of Satoshi Nakamoto, to understand the topic based on context and question.
+SystemPrompt = [[You are a robot evaluating dataset quality. Follow these steps:
+1. Understand the topic based on context and question.
 2. Formulate your answer to the question based on context and question.
-3. As a robot, compare your answer with the expected response. Score semantic similarity from integer between 0 and 10 (0 = no similarity, 10 = almost identical).
-  - If context is null, score 0.
+3. Compare your answer with the expected response. Score semantic similarity from integer between 0 and 10 (0 = no similarity, 10 = almost identical).
+  - If context is null, score 0, don't invent facts, don't use external knowledge.
 
 Input JSON format:
 ```json
-{"question": "...","context": "<QA of Satoshi Nakamoto>","expected_response": "..."}
+{"question": "...","context": "<Content about question>","expected_response": "..."}
 ```
   - "context" may contain multiple lines or be null.
 
@@ -157,8 +157,8 @@ Handlers.add(
 
         Send({
             Target = msg.From,
-            ["X-Reference"] = msg.Reference,
-            Data = json.encode({ score = score })
+            ["X-Reference"] = msg["X-Reference"] or msg.Reference,
+            Data = tostring(score)
         })
 
         Llama.loadState()
