@@ -38,7 +38,6 @@ end
 
 function JoinCompetitionHandler(msg)
     SQL.CreateEvaluationSet(msg.Data)
-    msg.reply({ Status = "200" })
 end
 
 Handlers.add("Join-Competition", "Join-Competition", JoinCompetitionHandler)

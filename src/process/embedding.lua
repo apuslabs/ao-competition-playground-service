@@ -50,7 +50,7 @@ Handlers.add("Check-Permission", "Check-Permission", function (msg)
 end)
 
 Handlers.add("Count-WhiteList", "Count-WhiteList", function (msg)
-    msg.reply({ Status = "200", Data = #WhiteList })
+    msg.reply({ Status = "200", Data = tostring(#WhiteList) })
 end)
 
 UploadDatasetQueue = UploadDatasetQueue or {}
@@ -84,9 +84,6 @@ function CreateDatasetHandler(msg)
     Helper.assert_non_empty(data, data.hash, data.list, data.name, msg.PoolID)
     Helper.assert_non_empty_array(data.list)
 
-    for _, obj in ipairs(data.list) do
-        Helper.assert_non_empty(obj.content)
-    end
     if not throttleCheck(msg) then
         return
     end

@@ -1,5 +1,4 @@
 -- Module: XcWULRSWWv_bmaEyx4PEOFf4vgRSVCP9vM5AucRvI40
-local aos2 = require("module.utils.aos2polyfill")
 local Config = require("module.utils.config")
 
 Colors = {
@@ -144,7 +143,7 @@ Handlers.add(
             " | Reference: " .. Colors.blue .. msg.Tags["Reference"] .. Colors.reset ..
             " | Answer: " .. Colors.blue .. answer .. Colors.reset)
 
-        aos2.replyMsg(msg, { Data = answer })
+        msg.reply({ Data = answer })
 
         Llama.loadState()
     end
