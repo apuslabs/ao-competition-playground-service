@@ -32,22 +32,22 @@ end
 
 
 Handlers.add("Get-Competitions", "Get-Competitions", function (msg)
-    msg.reply({ Status = 200, Data = json.encode(Lodash.keys(CompetitionPools)) })
+    msg.reply({ Status = "200", Data = json.encode(Lodash.keys(CompetitionPools)) })
 end)
 
 Handlers.add("Get-Competition", "Get-Competition", function (msg)
     local poolId = tonumber(msg.Data)
-    msg.reply({ Status = 200, Data = json.encode(CompetitionPools[poolId]) })
+    msg.reply({ Status = "200", Data = json.encode(CompetitionPools[poolId]) })
 end)
 
 Handlers.add("Get-Participants", "Get-Datasets", function (msg)
     local poolId = tonumber(msg.Data)
-    msg.reply({ Status = 200, Data = json.encode(SQL.GetParticipants(poolId)) })
+    msg.reply({ Status = "200", Data = json.encode(SQL.GetParticipants(poolId)) })
 end)
 
 Handlers.add("Get-Leaderboard", { Action = "Get-Leaderboard" }, function (msg)
     local poolId = tonumber(msg.Data)
-    msg.reply({ Status = 200, Data = json.encode(SQL.GetLeaderboard(poolId)) })
+    msg.reply({ Status = "200", Data = json.encode(SQL.GetLeaderboard(poolId)) })
 end)
 
 Handlers.add("Get-Dashboard", "Get-Dashboard", function (msg)
@@ -60,7 +60,7 @@ Handlers.add("Get-Dashboard", "Get-Dashboard", function (msg)
         rewarded_tokens = SQL.GetUserReward(poolID, From)
     end
     msg.reply({
-        Status = 200,
+        Status = "200",
         Data = json.encode({
             participants = SQL.GetTotalParticipants(poolID),
             granted_reward = SQL.GetTotalRewards(poolID),
@@ -100,7 +100,7 @@ function CreatePoolHandler(msg)
     Send({
         Target = msg.Sender,
         Action = "Create-Pool-Notice",
-        Status = 200,
+        Status = "200",
         Data = LatestPoolID
     })
 end

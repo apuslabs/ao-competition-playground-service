@@ -47,7 +47,7 @@ function DispatchWork()
                 log.warn("REMOVE", wType, string.sub(worker, 1, 6))
                 TimeoutHerder[wType][worker] = nil
             end
-            work.rawMsg.reply({ Status = 408, Data = wType == "Chat" and "" or "0" })
+            work.rawMsg.reply({ Status = "408", Data = wType == "Chat" and "" or "0" })
             Busy[worker] = nil
         end
     end
