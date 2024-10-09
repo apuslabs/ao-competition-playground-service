@@ -6,7 +6,7 @@ import { EMBEDDING_PROCESS, POOL_PROCESS } from '../scripts/ao/config';
 import { expect } from 'chai';
 import crypto from 'crypto';
 
-const POOL_ID = 1002;
+const POOL_ID = 1003;
 
 const ao = connect();
 

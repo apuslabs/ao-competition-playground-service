@@ -190,7 +190,7 @@ Handlers.add("Update-Rank", "Get-Rank-Response", function(msg)
     if not msg.From == Config.Process.Competition then
         return
     end
-    OnGetRank(1002, json.decode(msg.Data))
+    OnGetRank(1003, json.decode(msg.Data))
 end)
 
 CircleTimes = CircleTimes or 0
@@ -255,5 +255,5 @@ Handlers.add("Join-Pool", "Join-Pool", JoinPoolHandler)
 -- ops
 
 function DANGEROUS_CLEAR()
-    SQL.ClearParticipants(1002)
+    SQL.ClearParticipants(1003)
 end
