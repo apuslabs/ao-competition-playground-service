@@ -10,6 +10,7 @@ const wallet = JSON.parse(
 const moneyWallet = JSON.parse(
   readFileSync(join(__dirname, '../../wallets/s5M1xwcHIP9weXuL2HuWHHy4FrgPkJU4_4geptCo0os.json')).toString()
 );
+const devWallet = JSON.parse(readFileSync(join(__dirname, '../../wallets/devops.json')).toString());
 
 // const moneyWalletJason = JSON.parse(
 //   readFileSync(join(__dirname, "../../wallets/3D0cVMRP69ExR9x03i-kv8eL2MJeQEY547c025UwIUM.json")).toString(),
@@ -19,6 +20,7 @@ export const originSigner = createDataItemSigner(wallet);
 export const moneySigner = createDataItemSigner(moneyWallet);
 
 export const jasonSigner = createDataItemSigner(wallet);
+export const devSigner = createDataItemSigner(devWallet);
 
 export const msgResultWrapper =
   (signer: any, debug?: boolean) =>
@@ -41,8 +43,8 @@ export const msgResultWrapper =
     return result;
   };
 
-export const msgResult = msgResultWrapper(originSigner);
-export const msgResultDebug = msgResultWrapper(originSigner, true);
+export const msgResult = msgResultWrapper(devSigner);
+export const msgResultDebug = msgResultWrapper(devSigner, true);
 
 export const dryrunWrapper =
   (signer: any, debug?: boolean) =>
@@ -60,5 +62,5 @@ export const dryrunWrapper =
     return result;
   };
 
-export const dryrun = dryrunWrapper(originSigner);
-export const dryrunDebug = dryrunWrapper(originSigner, true);
+export const dryrun = dryrunWrapper(devSigner);
+export const dryrunDebug = dryrunWrapper(devSigner, true);

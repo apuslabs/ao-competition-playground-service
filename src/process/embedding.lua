@@ -19,7 +19,7 @@ end
 WhiteList = WhiteList or {}
 Handlers.add("Check-Permission", "Check-Permission", function (msg)
     local From = msg.FromAddress or msg.From
-    msg.reply({ Status = 200, Data = Lodash.Contain(WhiteList, From) })
+    msg.reply({ Status = "200", Data = Lodash.Contain(WhiteList, From) })
 end)
 
 function CheckUserStatus(address)
@@ -46,11 +46,11 @@ end
 
 Handlers.add("Check-Permission", "Check-Permission", function (msg)
     local From = msg.FromAddress or msg.From
-    msg.reply({ Status = 200, Data = Lodash.Contain(WhiteList, From) })
+    msg.reply({ Status = "200", Data = Lodash.Contain(WhiteList, From) })
 end)
 
 Handlers.add("Count-WhiteList", "Count-WhiteList", function (msg)
-    msg.reply({ Status = 200, Data = #WhiteList })
+    msg.reply({ Status = "200", Data = tostring(#WhiteList) })
 end)
 
 UploadDatasetQueue = UploadDatasetQueue or {}
@@ -84,9 +84,6 @@ function CreateDatasetHandler(msg)
     Helper.assert_non_empty(data, data.hash, data.list, data.name, msg.PoolID)
     Helper.assert_non_empty_array(data.list)
 
-    for _, obj in ipairs(data.list) do
-        Helper.assert_non_empty(obj.content)
-    end
     if not throttleCheck(msg) then
         return
     end
@@ -192,7 +189,7 @@ end
 function GetUnembededDocumentsHandler(msg)
     for hash, data in pairs(UploadDatasetQueue) do
         msg.reply({
-            Status = 200,
+            Status = "200",
             Data = json.encode({
                 dataset_hash = hash,
                 documents = data.list
@@ -200,7 +197,7 @@ function GetUnembededDocumentsHandler(msg)
         })
         return
     end
-    msg.reply({ Status = 200, Data = "{}" })
+    msg.reply({ Status = "200", Data = "{}" })
 end
 
 function EmbeddingDataHandler(msg)
@@ -208,13 +205,13 @@ function EmbeddingDataHandler(msg)
     local dataset = UploadDatasetQueue[hash]
     if not dataset then
         Log.warn(string.format("Dataset %s not found", hash))
-        msg.reply({ Status = 404, Data = "Dataset not found" })
+        msg.reply({ Status = "404", Data = "Dataset not found" })
         return
     end
     local now = Datetime.unix()
     Log.info(string.format("Embeded %s documents COSTS %d", hash, now - dataset.created_at))
     UploadDatasetQueue[hash] = nil
-    msg.reply({ Status = 200, Data = "Set  " .. hash .. " Embeded" })
+    msg.reply({ Status = "200", Data = "Set  " .. hash .. " Embeded" })
 end
 
 PromptQueue = PromptQueue or {}
@@ -240,7 +237,7 @@ function GetToRetrievePromptHandler(msg)
             break
         end
     end
-    msg.reply({ Status = 200, Data = json.encode(prompts) })
+    msg.reply({ Status = "200", Data = json.encode(prompts) })
 end
 
 function RecevicePromptResponseHandler(msg)

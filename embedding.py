@@ -13,32 +13,34 @@ from haystack.components.embedders import SentenceTransformersDocumentEmbedder,S
 from haystack.dataclasses import Document
 from haystack_integrations.document_stores.chroma import ChromaDocumentStore
 from haystack_integrations.components.retrievers.chroma import ChromaEmbeddingRetriever
+from cachetools import LRUCache, cached
 
 app = FastAPI()
 
-indexing_pool = {}
+# 设置缓存大小
+INDEXING_POOL_SIZE = 100
+QUERYING_POOL_SIZE = 100
 
+indexing_pool = LRUCache(maxsize=INDEXING_POOL_SIZE)
+querying_pool = LRUCache(maxsize=QUERYING_POOL_SIZE)
+
+@cached(indexing_pool)
 def get_indexing_pool(user_address):
-    if user_address not in indexing_pool:
-        indexing = Pipeline()
-        document_store = ChromaDocumentStore(collection_name=user_address, persist_path=f"./chroma/{user_address}")
-        indexing.add_component("embedder", SentenceTransformersDocumentEmbedder())
-        indexing.add_component("writer", DocumentWriter(document_store))
-        indexing.connect("embedder.documents", "writer.documents")
-        indexing_pool[user_address] = indexing
-    return indexing_pool[user_address]
+    indexing = Pipeline()
+    document_store = ChromaDocumentStore(collection_name=user_address, persist_path=f"./chroma/{user_address}")
+    indexing.add_component("embedder", SentenceTransformersDocumentEmbedder())
+    indexing.add_component("writer", DocumentWriter(document_store))
+    indexing.connect("embedder.documents", "writer.documents")
+    return indexing
 
-querying_pool = {}
-
+@cached(querying_pool)
 def get_querying_pool(user_address):
-    if user_address not in querying_pool:
-        querying = Pipeline()
-        document_store = ChromaDocumentStore(collection_name=user_address, persist_path=f"./chroma/{user_address}")
-        querying.add_component("query_embedder", SentenceTransformersTextEmbedder())
-        querying.add_component("retriever", ChromaEmbeddingRetriever(document_store))
-        querying.connect("query_embedder.embedding", "retriever.query_embedding")
-        querying_pool[user_address] = querying
-    return querying_pool[user_address]
+    querying = Pipeline()
+    document_store = ChromaDocumentStore(collection_name=user_address, persist_path=f"./chroma/{user_address}")
+    querying.add_component("query_embedder", SentenceTransformersTextEmbedder())
+    querying.add_component("retriever", ChromaEmbeddingRetriever(document_store))
+    querying.connect("query_embedder.embedding", "retriever.query_embedding")
+    return querying
 
 # meta may be dict or string or None
 class DocumentInput(BaseModel):

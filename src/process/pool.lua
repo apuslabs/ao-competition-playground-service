@@ -32,22 +32,22 @@ end
 
 
 Handlers.add("Get-Competitions", "Get-Competitions", function (msg)
-    msg.reply({ Status = 200, Data = Json.encode(Lodash.keys(CompetitionPools)) })
+    msg.reply({ Status = "200", Data = Json.encode(Lodash.keys(CompetitionPools)) })
 end)
 
 Handlers.add("Get-Competition", "Get-Competition", function (msg)
     local poolId = tonumber(msg.Data)
-    msg.reply({ Status = 200, Data = Json.encode(CompetitionPools[poolId]) })
+    msg.reply({ Status = "200", Data = Json.encode(CompetitionPools[poolId]) })
 end)
 
 Handlers.add("Get-Participants", "Get-Datasets", function (msg)
     local poolId = tonumber(msg.Data)
-    msg.reply({ Status = 200, Data = Json.encode(SQL.GetParticipants(poolId)) })
+    msg.reply({ Status = "200", Data = Json.encode(SQL.GetParticipants(poolId)) })
 end)
 
 Handlers.add("Get-Leaderboard", { Action = "Get-Leaderboard" }, function (msg)
     local poolId = tonumber(msg.Data)
-    msg.reply({ Status = 200, Data = Json.encode(SQL.GetLeaderboard(poolId)) })
+    msg.reply({ Status = "200", Data = Json.encode(SQL.GetLeaderboard(poolId)) })
 end)
 
 Handlers.add("Get-Dashboard", "Get-Dashboard", function (msg)
@@ -60,7 +60,7 @@ Handlers.add("Get-Dashboard", "Get-Dashboard", function (msg)
         rewarded_tokens = SQL.GetUserReward(poolID, From)
     end
     msg.reply({
-        Status = 200,
+        Status = "200",
         Data = Json.encode({
             participants = SQL.GetTotalParticipants(poolID),
             granted_reward = SQL.GetTotalRewards(poolID),
@@ -100,7 +100,7 @@ function CreatePoolHandler(msg)
     Send({
         Target = msg.Sender,
         Action = "Create-Pool-Notice",
-        Status = 200,
+        Status = "200",
         Data = LatestPoolID
     })
 end
@@ -126,7 +126,6 @@ local poolTimeCheck = function (poolID)
     local now = Datetime.unix()
     return now >= tonumber(startTime) and now <= tonumber(endTime)
 end
-local throttleCheck = Helper.throttleCheckWrapper(Config.Pool.JoinThrottle - 10)
 UploadedUserList = UploadedUserList or {}
 function RemoveUserFromUploadedList(address)
     if UploadedUserList[address] then
@@ -191,7 +190,7 @@ Handlers.add("Update-Rank", "Get-Rank-Response", function(msg)
     if not msg.From == Config.Process.Competition then
         return
     end
-    OnGetRank(1002, Json.decode(msg.Data))
+    OnGetRank(1003, Json.decode(msg.Data))
 end)
 
 CircleTimes = CircleTimes or 0
@@ -256,5 +255,5 @@ Handlers.add("Join-Pool", "Join-Pool", JoinPoolHandler)
 -- ops
 
 function DANGEROUS_CLEAR()
-    SQL.ClearParticipants(1002)
+    SQL.ClearParticipants(1003)
 end
