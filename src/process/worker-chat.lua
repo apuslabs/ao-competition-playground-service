@@ -24,7 +24,7 @@ InferenceAllowList = {
 DefaultMaxResponse = DefaultMaxResponse or 40
 
 SystemPrompt = [[
-You are an AI bot, answer question about AO(hyper-parallel computer on Arweave) based on the context.
+You are an AI bot, answer question about Satoshi Nakamoto based on the context.
 
 Input JSON format:
 ```json

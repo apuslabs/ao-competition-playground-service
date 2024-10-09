@@ -126,7 +126,6 @@ local poolTimeCheck = function (poolID)
     local now = Datetime.unix()
     return now >= tonumber(startTime) and now <= tonumber(endTime)
 end
-local throttleCheck = Helper.throttleCheckWrapper(Config.Pool.JoinThrottle - 10)
 UploadedUserList = UploadedUserList or {}
 function RemoveUserFromUploadedList(address)
     if UploadedUserList[address] then
