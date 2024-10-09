@@ -6,11 +6,13 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 
+const COMPETITION_PROCESS = 'hrmEo_Hygd-QiawMdQcWH7-ZzWX7Q_c2Qqy4qNN0EYQ';
+
 // 加载插件
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const PAGE_SIZE = 1;
+const PAGE_SIZE = 50;
 
 function getCountFromResult(result: any): number {
   const raw_str = result.Output.data as string;
@@ -46,6 +48,9 @@ function getNearestHalfHour(): string {
 
 // Embedding stores variables in memory
 async function getPoolBackup() {
+  if (!fs.existsSync('backup/pool/participants/')) {
+    fs.mkdirSync('backup/pool/participants/', { recursive: true });
+  }
   const result = await msgResult(
     POOL_PROCESS,
     {
@@ -92,6 +97,58 @@ async function getPoolBackup() {
   console.log(`Data has been backed up to the file ${target_file_name}.`);
 }
 
+async function getCompetitionBackup() {
+  async function getQuestions() {
+    if (!fs.existsSync('backup/competition/questions/')) {
+      fs.mkdirSync('backup/competition/questions/', { recursive: true });
+    }
+    const target_file_name = 'backup/competition/questions/' + getNearestHalfHour() + '.json';
+    const getQuestionsResult = await msgResult(
+      COMPETITION_PROCESS,
+      {
+        Action: 'Eval',
+      },
+      `Json.encode(SQL.GetQuestions())`
+    );
+    const questions = JSON.stringify(JSON.parse(getQuestionsResult.Output.data), null, 2);
+    fs.writeFileSync(target_file_name, questions);
+
+    console.log(`Question data has been backed up in ${target_file_name}`);
+  }
+  async function getEvaluations() {
+    if (!fs.existsSync('backup/competition/evaluations/')) {
+      fs.mkdirSync('backup/competition/evaluations/', { recursive: true });
+    }
+    const target_file_name = 'backup/competition/evaluations/' + getNearestHalfHour() + '.json';
+    let continue_flag = true;
+    let cur_page = 0;
+    let records: any[] = [];
+
+    while (continue_flag) {
+      const getQuestionsResult = await msgResult(
+        COMPETITION_PROCESS,
+        {
+          Action: 'Eval',
+        },
+        `Json.encode(SQL.GetEvaluations(${PAGE_SIZE}, ${cur_page * PAGE_SIZE}))`
+      );
+      const res = JSON.parse(JSON.parse(getQuestionsResult.Output.data));
+      records = records.concat(res);
+      if (res.length < PAGE_SIZE) {
+        continue_flag = false;
+      }
+      cur_page += 1;
+    }
+
+    fs.writeFileSync(target_file_name, JSON.stringify(records, null, 2));
+    console.log(`Evaluations data has been backed up in ${target_file_name}`);
+  }
+
+  getQuestions();
+  getEvaluations();
+}
+
 (async function main() {
-  getPoolBackup();
+  // getPoolBackup();
+  getCompetitionBackup();
 })();
