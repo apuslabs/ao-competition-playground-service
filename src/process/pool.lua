@@ -163,7 +163,7 @@ Reward = { 35000, 20000, 10000, 5000, 5000, 5000, 5000, 5000, 5000, 5000 }
 local function allocateReward(rank)
     if rank <= 10 then
         return Reward[rank] * 3
-    elseif rank <= 200 then
+    elseif rank <= 300 then
         return 300 * 3
     else
         return 0
