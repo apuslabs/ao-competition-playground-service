@@ -2,7 +2,7 @@ local Config = {}
 
 Config.Process = {
     Chat = "ZuZZeU2-JeNRdpBWBWU8p6IcjNXyZ0BFZ4M2Pwoj9vM",
-    LlamaHerder = "9tioH6_dy0Wc23EgmPaY-hjz2cqBLvQ5Ll6hv27vAvU",
+    LlamaHerder = "IdHBRpDM4rgkLbO0oNU7cErvDQ7DdcCrQo8b-3Rd6io",
     Embedding = "vp4pxoOsilVxdsRqTmLjP86CwwUwtj1RoKeGrFVxIVk",
     Token = "al1xXXnWnfJD8qyZJvttVGq60z1VPGn4M5y6uCcMBUM",
     Competition = "didygr4-n88nmlu-NLW-qJfxJLvfiRhU-mRgKHYb6WE",
