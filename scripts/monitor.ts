@@ -28,10 +28,9 @@ async function getPoolStatistic() {
   Participants in last 24h: \`${last_day}\`\n
   Total participants: \`${total}\``;
 
-  console.log(text);
-  // axios.post(webhookUrl, {
-  //   text,
-  // });
+  axios.post(webhookUrl, {
+    text,
+  });
 }
 
 async function getDatasetStatistic() {
@@ -45,7 +44,9 @@ async function getDatasetStatistic() {
     .join('\n')}
   `;
 
-  console.log(text);
+  axios.post(webhookUrl, {
+    text,
+  });
 }
 
 async function runInterval() {
