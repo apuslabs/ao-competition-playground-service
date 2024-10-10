@@ -134,6 +134,9 @@ function CreateDatasetHandler(msg)
                         created_at = Datetime.unix(),
                         list = data.list,
                         embedding = false,
+                        pool_id = msg.PoolID,
+                        dataset_name = data.name,
+                        user = msg.From
                     }
                     Log.info(string.format("%s Create Dataset %s (%s)", msg.From, data.hash, #data.list))
                     if not UploadedUserList[msg.From] then
@@ -194,7 +197,10 @@ function GetUnembededDocumentsHandler(msg)
             Status = "200",
             Data = Json.encode({
                 dataset_hash = hash,
-                documents = data.list
+                documents = data.list,
+                pool_id = data.pool_id,
+                dataset_name = data.dataset_name,
+                user = data.user
             })
         })
         return
