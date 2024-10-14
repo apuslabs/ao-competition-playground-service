@@ -178,14 +178,6 @@ function GetCreationStatus(msg)
     msg.reply({ Status = "200", Data = json.encode(DatasetStatus[user]) })
 end
 
-function CountUploadDatasetQueue()
-    local count = 0
-    for k, v in pairs(UploadDatasetQueue) do
-        count = count + 1
-    end
-    return count
-end
-
 function GetUnembededDocumentsHandler(msg)
     for hash, data in pairs(UploadDatasetQueue) do
         msg.reply({
@@ -285,4 +277,12 @@ function DANGEROUS_CLEAR()
     UploadDatasetQueue = {}
     DatasetStatus = {}
     PromptQueue = {}
+end
+
+-- ops
+function CountQueue()
+    return json.encode({
+        UploadDatasetQueue = Lodash.Size(UploadDatasetQueue),
+        PromptQueue = Lodash.Size(PromptQueue),
+    })
 end

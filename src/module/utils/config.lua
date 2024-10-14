@@ -20,7 +20,7 @@ Config.Pool = {
 }
 
 Config.Embedding = {
-    RetrieveSize = 5,
+    RetrieveSize = 200,
 }
 
 Config.Llama = {

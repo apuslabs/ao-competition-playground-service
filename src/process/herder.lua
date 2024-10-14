@@ -158,6 +158,22 @@ Handlers.add("Worker-Statistic", "Worker-Statistic", function (msg)
     msg.reply({ Data = json.encode(statistic) })
 end)
 
+-- ops
+
 function DANGEROUS_CLEAR()
     Queue = {}
+end
+
+function DeDuplicateHerder()
+    for workerType, Herd in pairs(Herder) do
+        local t = {}
+        for i, worker in ipairs(Herd) do
+            t[worker] = true
+        end
+        local newHerd = {}
+        for worker, _ in pairs(t) do
+            table.insert(newHerd, worker)
+        end
+        Herder[workerType] = newHerd
+    end
 end
