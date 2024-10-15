@@ -57,6 +57,19 @@ SQL.GetEvaluationsByDataset = function(dataset_hash)
     })
 end
 
+SQL.GetEvaluationByDatasetAndQuestion = function(dataset_hash, question_id)
+    return DB:nrow(string.format([[
+        SELECT
+            e.id,
+            e.participant_dataset_hash AS dataset_hash,
+            q.question,
+            q.expected_response
+        FROM evaluations e
+        JOIN questions q ON e.question_id = q.id
+        WHERE e.participant_dataset_hash = '%s' AND e.question_id = %d
+    ]], dataset_hash, question_id))
+end
+
 SQL.RecoverTimeoutEvaluations = function()
     return DB:exec([=[
         UPDATE evaluations
