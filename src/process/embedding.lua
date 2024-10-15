@@ -179,17 +179,21 @@ function GetCreationStatus(msg)
 end
 
 function GetUnembededDocumentsHandler(msg)
+    -- msg.reply({ Status = "200" })
+    -- find the first unembeded dataset
+    local dataset_hash = nil
     for hash, data in pairs(UploadDatasetQueue) do
-        msg.reply({
-            Status = "200",
-            Data = json.encode({
-                dataset_hash = hash,
-                documents = data.list
-            })
-        })
-        return
+        if not dataset_hash or data.created_at < UploadDatasetQueue[dataset_hash].created_at then
+            dataset_hash = hash
+        end
     end
-    msg.reply({ Status = "200", Data = "{}" })
+    msg.reply({
+        Status = "200",
+        Data = json.encode({
+            dataset_hash = dataset_hash,
+            documents = UploadDatasetQueue[dataset_hash].list
+        })
+    })
 end
 
 function EmbeddingDataHandler(msg)
