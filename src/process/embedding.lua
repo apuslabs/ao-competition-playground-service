@@ -56,111 +56,113 @@ end)
 UploadDatasetQueue = UploadDatasetQueue or {}
 DatasetStatus = DatasetStatus or {}
 function CreateDatasetHandler(msg)
-    if UploadedUserList[msg.From] then
-        Log.warn(string.format("%s has uploaded dataset before", msg.From))
-        msg.reply({ Status = "403", Data = "You have uploaded dataset before." })
-        return
-    end
+    msg.reply({ Status = "500", Data = "System Under Maintenance" })
+    return
+    -- if UploadedUserList[msg.From] then
+    --     Log.warn(string.format("%s has uploaded dataset before", msg.From))
+    --     msg.reply({ Status = "403", Data = "You have uploaded dataset before." })
+    --     return
+    -- end
 
-    if not Lodash.Contain(WhiteList, msg.From) then -- WhiteList
-        Log.warn("User " .. msg.From .. " is not allowed to join the event.")
-        msg.reply({ Status = "403", Data = "You are not allowed to join this event." })
-        return
-    end
+    -- if not Lodash.Contain(WhiteList, msg.From) then -- WhiteList
+    --     Log.warn("User " .. msg.From .. " is not allowed to join the event.")
+    --     msg.reply({ Status = "403", Data = "You are not allowed to join this event." })
+    --     return
+    -- end
 
-    if DatasetStatus[msg.From] ~= nil and DatasetStatus[msg.From].create_pending then
-        Log.warn(string.format("%s has pending creation", msg.From))
-        msg.reply({ Status = "403", Data = "You have pending creation, please wait for it." })
-        return
-    end
-    local data = json.decode(msg.Data)
+    -- if DatasetStatus[msg.From] ~= nil and DatasetStatus[msg.From].create_pending then
+    --     Log.warn(string.format("%s has pending creation", msg.From))
+    --     msg.reply({ Status = "403", Data = "You have pending creation, please wait for it." })
+    --     return
+    -- end
+    -- local data = json.decode(msg.Data)
 
-    if UploadedDatasetList[data.hash] then
-        Log.warn(string.format("%s has been taken, uploaded by %s", data.hash, msg.From))
-        msg.reply({ Status = "403", Data = "Your dataset hash has been taken." })
-        return
-    end
+    -- if UploadedDatasetList[data.hash] then
+    --     Log.warn(string.format("%s has been taken, uploaded by %s", data.hash, msg.From))
+    --     msg.reply({ Status = "403", Data = "Your dataset hash has been taken." })
+    --     return
+    -- end
 
-    Helper.assert_non_empty(data, data.hash, data.list, data.name, msg.PoolID)
-    Helper.assert_non_empty_array(data.list)
+    -- Helper.assert_non_empty(data, data.hash, data.list, data.name, msg.PoolID)
+    -- Helper.assert_non_empty_array(data.list)
 
-    if not throttleCheck(msg) then
-        return
-    end
+    -- if not throttleCheck(msg) then
+    --     return
+    -- end
 
-    Log.info(string.format("%s Creation pending, waiting for syncronizations in Pool", msg.From))
-    msg.reply({ Status = "200", Data = "Creation pending, waiting for syncronizations in Pool" })
+    -- Log.info(string.format("%s Creation pending, waiting for syncronizations in Pool", msg.From))
+    -- msg.reply({ Status = "200", Data = "Creation pending, waiting for syncronizations in Pool" })
 
-    DatasetStatus[msg.From] = {
-        create_pending = true,
-        last_creation = { created_at = Datetime.unix(), updated_at = Datetime.unix(), status = "WAIT_FOR_SYNC" },
-    }
+    -- DatasetStatus[msg.From] = {
+    --     create_pending = true,
+    --     last_creation = { created_at = Datetime.unix(), updated_at = Datetime.unix(), status = "WAIT_FOR_SYNC" },
+    -- }
 
-    Send({
-        Target = Config.Process.Pool,
-        Action = "Join-Pool",
-        User = msg.From,
-        PoolID = msg.PoolID,
-        Data = json.encode({ dataset_hash = data.hash, dataset_name = data.name })
-    }).onReply(function (replyMsg)
-        Log.trace("Receive reply from the pool " .. replyMsg.From)
+    -- Send({
+    --     Target = Config.Process.Pool,
+    --     Action = "Join-Pool",
+    --     User = msg.From,
+    --     PoolID = msg.PoolID,
+    --     Data = json.encode({ dataset_hash = data.hash, dataset_name = data.name })
+    -- }).onReply(function (replyMsg)
+    --     Log.trace("Receive reply from the pool " .. replyMsg.From)
 
-        -- because once the data created, the timer will automaticly process the data, so
-        -- it is hard to revert, we just ensure it will definately succeed.
-        if not DatasetStatus[msg.From].create_pending then
-            -- cancel by user.
-            Log.trace("Reply message dropped because user canceld the uploading")
+    --     -- because once the data created, the timer will automaticly process the data, so
+    --     -- it is hard to revert, we just ensure it will definately succeed.
+    --     if not DatasetStatus[msg.From].create_pending then
+    --         -- cancel by user.
+    --         Log.trace("Reply message dropped because user canceld the uploading")
 
-            DatasetStatus[msg.From].last_creation.updated_at = Datetime.unix()
-            DatasetStatus[msg.From].last_creation.status = "CANCELED"
-            return
-        end
+    --         DatasetStatus[msg.From].last_creation.updated_at = Datetime.unix()
+    --         DatasetStatus[msg.From].last_creation.status = "CANCELED"
+    --         return
+    --     end
 
-        local replySwitch = {
-            ["403"] = {
-                status = "JOIN_POOL_FAILED",
-                message = replyMsg,
-                func = function ()
-                    Log.warn(string.format("%s Join pool failed: %s", msg.From, replyMsg.Data))
-                end
-            },
-            ["200"] = {
-                status = "JOIN_SUCCEED",
-                message = "Successfully join the pool.",
-                func = function ()
-                    UploadDatasetQueue[data.hash] = {
-                        created_at = Datetime.unix(),
-                        list = data.list,
-                        embedding = false,
-                    }
-                    Log.info(string.format("%s Create Dataset %s (%s)", msg.From, data.hash, #data.list))
-                    if not UploadedUserList[msg.From] then
-                        UploadedUserList[msg.From] = true
-                    end
+    --     local replySwitch = {
+    --         ["403"] = {
+    --             status = "JOIN_POOL_FAILED",
+    --             message = replyMsg,
+    --             func = function ()
+    --                 Log.warn(string.format("%s Join pool failed: %s", msg.From, replyMsg.Data))
+    --             end
+    --         },
+    --         ["200"] = {
+    --             status = "JOIN_SUCCEED",
+    --             message = "Successfully join the pool.",
+    --             func = function ()
+    --                 UploadDatasetQueue[data.hash] = {
+    --                     created_at = Datetime.unix(),
+    --                     list = data.list,
+    --                     embedding = false,
+    --                 }
+    --                 Log.info(string.format("%s Create Dataset %s (%s)", msg.From, data.hash, #data.list))
+    --                 if not UploadedUserList[msg.From] then
+    --                     UploadedUserList[msg.From] = true
+    --                 end
 
-                    if not UploadedDatasetList[data.hash] then
-                        UploadedDatasetList[data.hash] = true
-                    end
-                end
-            },
-            ["default"] = {
-                status = "JOIN_POOL_FAILED",
-                message = "unknown error",
-                func = function ()
-                    Log.warn(string.format("%s Join pool failed due to unknown error", msg.From))
-                end
-            },
-        }
+    --                 if not UploadedDatasetList[data.hash] then
+    --                     UploadedDatasetList[data.hash] = true
+    --                 end
+    --             end
+    --         },
+    --         ["default"] = {
+    --             status = "JOIN_POOL_FAILED",
+    --             message = "unknown error",
+    --             func = function ()
+    --                 Log.warn(string.format("%s Join pool failed due to unknown error", msg.From))
+    --             end
+    --         },
+    --     }
 
-        local replyMatch = replySwitch[replyMsg.Status] or replySwitch["default"]
-        if replyMatch.func then
-            replyMatch.func() -- pay attention to return value to decide if we should continue in the future
-        end
-        DatasetStatus[msg.From].last_creation.updated_at = Datetime.unix()
-        DatasetStatus[msg.From].last_creation.status = replyMatch.status
-        DatasetStatus[msg.From].last_creation.message = replyMatch.message
-        DatasetStatus[msg.From].create_pending = false
-    end)
+    --     local replyMatch = replySwitch[replyMsg.Status] or replySwitch["default"]
+    --     if replyMatch.func then
+    --         replyMatch.func() -- pay attention to return value to decide if we should continue in the future
+    --     end
+    --     DatasetStatus[msg.From].last_creation.updated_at = Datetime.unix()
+    --     DatasetStatus[msg.From].last_creation.status = replyMatch.status
+    --     DatasetStatus[msg.From].last_creation.message = replyMatch.message
+    --     DatasetStatus[msg.From].create_pending = false
+    -- end)
 end
 
 function CancelCreatingDatasetHandler(msg)

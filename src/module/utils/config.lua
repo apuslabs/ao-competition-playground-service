@@ -3,6 +3,7 @@ local Config = {}
 Config.Process = {
     Chat = "ZuZZeU2-JeNRdpBWBWU8p6IcjNXyZ0BFZ4M2Pwoj9vM",
     LlamaHerder = "IdHBRpDM4rgkLbO0oNU7cErvDQ7DdcCrQo8b-3Rd6io",
+    OllamaHerder = "rpDpgLAzVvqCoKzxIYjyQjUBcDZqQFi3c7Gh5EgwSKk",
     Embedding = "vp4pxoOsilVxdsRqTmLjP86CwwUwtj1RoKeGrFVxIVk",
     Token = "al1xXXnWnfJD8qyZJvttVGq60z1VPGn4M5y6uCcMBUM",
     Competition = "didygr4-n88nmlu-NLW-qJfxJLvfiRhU-mRgKHYb6WE",
@@ -10,8 +11,8 @@ Config.Process = {
 }
 
 Config.Evaluate = {
-    Interval = 1,   -- 2 * 5mins
-    BatchSize = 100 -- 5 per interval
+    Interval = 500000,   -- 2 * 5mins
+    BatchSize = 3 -- 5 per interval
 }
 
 Config.Pool = {
