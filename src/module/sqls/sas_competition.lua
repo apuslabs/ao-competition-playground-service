@@ -194,6 +194,10 @@ SQL.CleanDatasetReference = function(dataset_hash)
         dataset_hash .. "';")
 end
 
+SQL.CleanAllDatasetReference = function()
+    return DB:exec("UPDATE evaluations SET reference = NULL, sas_score = NULL, response_at = NULL;")
+end
+
 SQL.FindDulplicateDataset = function()
     -- find dataset which count id is > 20
     return DB:nrows([=[
