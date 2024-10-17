@@ -4,6 +4,7 @@ SQL = require("module.sqls.sas_competition")
 Config = require("module.utils.config")
 local RAGClient = require("module.embedding.client")
 Log = require("module.utils.log")
+Log.level = "debug"
 require("module.llama.client")
 require("module.utils.helper")
 
@@ -16,7 +17,7 @@ Handlers.add("CronTick", "Cron", function ()
     if (CircleTimes >= Config.Evaluate.Interval) then
         Log.trace("Auto Evaluate")
         Evaluate()
-        SQL.RecoverTimeoutEvaluations(86400)
+        -- SQL.RecoverTimeoutEvaluations(86400)
         CircleTimes = 0
     else
         CircleTimes = CircleTimes + 1
@@ -28,7 +29,9 @@ function Evaluate()
     for _, row in ipairs(unevaluated) do
         local reference = RAGClient.Evaluate(row, function (response, ref)
             SQL.SetEvaluationResponse(ref, response)
+            Log.debug("Evaluate Result", ref, response)
         end)
+        Log.debug("Evaluate", row.dataset_hash, row.question_id, reference)
         SQL.UpdateEvaluationReference(row.id, reference)
     end
 end
@@ -82,6 +85,18 @@ function SetUnstartedDatasetReferenceNull()
     end
 end
 
+function EvaluateDataset(dataset_hash)
+    local dataset = SQL.GetEvaluationByDatasetAndQuestion(dataset_hash)
+    for _, row in ipairs(dataset) do
+        local reference = RAGClient.Evaluate(row, function (response, ref)
+            SQL.SetEvaluationResponse(ref, response)
+            Log.debug("Evaluate Result", ref, response)
+        end)
+        Log.debug("Evaluate", row.dataset_hash, row.question_id, reference)
+        SQL.UpdateEvaluationReference(row.id, reference)
+    end
+end
+
 function EvaluateDatasetItem(dataset_hash, question_id)
     local item = SQL.GetEvaluationByDatasetAndQuestion(dataset_hash, question_id)
     if item ~= nil then
@@ -91,4 +106,12 @@ function EvaluateDatasetItem(dataset_hash, question_id)
         Log.debug(string.format("EvaluateDatasetItem Start: %s %s %s", dataset_hash, question_id, reference))
         return item
     end
+end
+
+function CountEvaluations() 
+    return json.encode({
+        Evaluated = SQL.CountEvaluated(),
+        Unevaluated = SQL.CountUnEvaluated(),
+        Evaluating = SQL.CountEvaluating(),
+    })
 end

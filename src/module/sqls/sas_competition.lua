@@ -58,16 +58,30 @@ SQL.GetEvaluationsByDataset = function(dataset_hash)
 end
 
 SQL.GetEvaluationByDatasetAndQuestion = function(dataset_hash, question_id)
-    return DB:nrow(string.format([[
-        SELECT
-            e.id,
-            e.participant_dataset_hash AS dataset_hash,
-            q.question,
-            q.expected_response
-        FROM evaluations e
-        JOIN questions q ON e.question_id = q.id
-        WHERE e.participant_dataset_hash = '%s' AND e.question_id = %d
-    ]], dataset_hash, question_id))
+    if question_id then
+        return DB:nrow(string.format([[
+            SELECT
+                e.id,
+                e.participant_dataset_hash AS dataset_hash,
+                q.question,
+                e.question_id,
+                q.expected_response
+            FROM evaluations e
+            JOIN questions q ON e.question_id = q.id
+            WHERE e.participant_dataset_hash = '%s' AND e.question_id = %d
+        ]], dataset_hash, question_id))
+    else
+        return DB:nrows(string.format([[
+            SELECT
+                e.id,
+                e.participant_dataset_hash AS dataset_hash,
+                q.question,
+                q.expected_response
+            FROM evaluations e
+            JOIN questions q ON e.question_id = q.id
+            WHERE e.participant_dataset_hash = '%s'
+        ]], dataset_hash))
+    end
 end
 
 SQL.RecoverTimeoutEvaluations = function(timeout)
@@ -120,6 +134,7 @@ SQL.GetUnEvaluated = function(limit)
         SELECT
             e.id,
             e.participant_dataset_hash AS dataset_hash,
+            e.question_id,
             q.question,
             q.expected_response
         FROM evaluations e
@@ -130,8 +145,16 @@ SQL.GetUnEvaluated = function(limit)
     ]], limit))
 end
 
-SQL.CountNoScore = function()
-    return DB:nrows("SELECT COUNT(id) AS count FROM evaluations WHERE sas_score IS NULL;")
+SQL.CountUnEvaluated = function()
+    return DB:nrows("SELECT COUNT(id) AS count FROM evaluations WHERE reference IS NULL;")
+end
+
+SQL.CountEvaluating = function()
+    return DB:nrows("SELECT COUNT(id) AS count FROM evaluations WHERE reference IS NOT NULL AND sas_score IS NULL;")
+end
+
+SQL.CountEvaluated = function()
+    return DB:nrows("SELECT COUNT(id) AS count FROM evaluations WHERE sas_score IS NOT NULL;")
 end
 
 SQL.ClearScore = function()
@@ -211,6 +234,10 @@ SQL.FindDulplicateDataset = function()
         HAVING
             COUNT(id) > 20;
     ]=])
+end
+
+SQL.DeleteDataset = function(dataset_hash)
+    return DB:exec("DELETE FROM evaluations WHERE participant_dataset_hash = '" .. dataset_hash .. "';")
 end
 
 SQL.BatchDeleteEvaluation = function(ids)

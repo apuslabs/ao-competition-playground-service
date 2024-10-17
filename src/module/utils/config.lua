@@ -12,7 +12,7 @@ Config.Process = {
 
 Config.Evaluate = {
     Interval = 0,   -- 2 * 5mins
-    BatchSize = 200 -- 5 per interval
+    BatchSize = 80 -- 5 per interval
 }
 
 Config.Pool = {

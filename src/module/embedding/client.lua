@@ -45,6 +45,7 @@ RAGClient.Evaluate = function(data, onReply, reference)
             prompt = data.question
         })
     }).onReply(function(replyMsg)
+        Log.debug("Evaluate Retrieved", ref)
         LlamaClient.Evaluate({
             question = data.question,
             expected_response = data.expected_response,

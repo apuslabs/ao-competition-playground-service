@@ -33,7 +33,7 @@ local function InferenceHandler(msg)
         prompt = msg.Data,
         rawMsg = msg
     })
-    log.info("REQ", msg.Tags["WorkerType"], "IDX", Index)
+    log.info("REQ", msg.Tags["WorkerType"], "IDX", Index, "Reference", msg.Reference)
     Index = Index + 1
 end
 
@@ -44,7 +44,7 @@ local function ResponseHandler(msg)
         if v.idx == data.idx then
             v.response = data.response
             v.responseAt = datetime.unix()
-            log.info("RES", v.workerType, "IDX", v.idx, "DATA", data.response)
+            log.info("RES", v.workerType, "IDX", v.idx, "Reference", v.rawMsg.Reference, "DATA", data.response)
             v.rawMsg.reply({ Data = tostring(data.response) })
             table.remove(Queue, i)
             break
