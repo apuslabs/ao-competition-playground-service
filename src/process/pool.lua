@@ -126,13 +126,6 @@ local poolTimeCheck = function (poolID)
     local now = Datetime.unix()
     return now >= tonumber(startTime) and now <= tonumber(endTime)
 end
-UploadedUserList = UploadedUserList or {}
-function RemoveUserFromUploadedList(address)
-    if UploadedUserList[address] then
-        UploadedUserList[address] = nil
-        Log.warn(string.format("Removed %s from uploaded list", address))
-    end
-end
 
 function JoinPoolHandler(msg)
     Log.trace("Receive creation request from embedding process " .. msg.From)
@@ -150,13 +143,6 @@ function JoinPoolHandler(msg)
     local data = json.decode(msg.Data)
     SQL.CreateParticipant(poolID, msg.User, data.dataset_hash, data.dataset_name)
     msg.reply({ Status = "200", Data = "Join Success" })
-    UploadedUserList[msg.User] = true
-    Log.info("Join Pool " .. msg.From .. " : ", data.dataset_hash)
-    Send({
-        Target = CompetitionPools[poolID].process_id,
-        Action = "Join-Competition",
-        Data = data.dataset_hash
-    })
 end
 
 Reward = { 35000, 20000, 10000, 5000, 5000, 5000, 5000, 5000, 5000, 5000 }

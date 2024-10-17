@@ -134,6 +134,7 @@ function CreateDatasetHandler(msg)
     --                     created_at = Datetime.unix(),
     --                     list = data.list,
     --                     embedding = false,
+    --                     pool_id = msg.PoolID,
     --                 }
     --                 Log.info(string.format("%s Create Dataset %s (%s)", msg.From, data.hash, #data.list))
     --                 if not UploadedUserList[msg.From] then
@@ -210,6 +211,13 @@ function EmbeddingDataHandler(msg)
     Log.info(string.format("Embeded %s documents COSTS %d", hash, now - dataset.created_at))
     UploadDatasetQueue[hash] = nil
     msg.reply({ Status = "200", Data = "Set  " .. hash .. " Embeded" })
+
+    Log.info("Join Pool " .. msg.From .. " : ", hash)
+    Send({
+        Target = Config.Process.Competition,
+        Action = "Join-Competition",
+        Data = hash
+    })
 end
 
 PromptQueue = PromptQueue or {}
