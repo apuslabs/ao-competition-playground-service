@@ -70,11 +70,11 @@ SQL.GetEvaluationByDatasetAndQuestion = function(dataset_hash, question_id)
     ]], dataset_hash, question_id))
 end
 
-SQL.RecoverTimeoutEvaluations = function()
+SQL.RecoverTimeoutEvaluations = function(timeout)
     return DB:exec([=[
         UPDATE evaluations
         SET reference = NULL, sas_score = NULL, response_at = NULL
-        WHERE reference IS NOT NULL AND sas_score IS NULL AND created_at + 7200 < ]=] ..
+        WHERE reference IS NOT NULL AND sas_score IS NULL AND created_at + ]=] .. timeout .. [=[ < ]=] ..
         datetime.unix() .. [=[;
     ]=])
 end

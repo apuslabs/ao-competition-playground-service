@@ -16,6 +16,7 @@ Handlers.add("CronTick", "Cron", function ()
     if (CircleTimes >= Config.Evaluate.Interval) then
         Log.trace("Auto Evaluate")
         Evaluate()
+        SQL.RecoverTimeoutEvaluations(86400)
         CircleTimes = 0
     else
         CircleTimes = CircleTimes + 1
