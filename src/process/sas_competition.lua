@@ -1,4 +1,5 @@
 local json = require("json")
+local crypto = require(".crypto");
 local sqlite3 = require("lsqlite3")
 SQL = require("module.sqls.sas_competition")
 Config = require("module.utils.config")
@@ -33,7 +34,9 @@ function Evaluate()
 end
 
 function LoadQuestion(dataStr)
-    SQL.BatchCreateQuestion(json.decode(dataStr))
+    local decryptedRaw = crypto.cipher.aes.decrypt(dataStr, ao.id).asHex()
+    local decrypted = crypto.utils.hex.hexToString(decryptedRaw)
+    SQL.BatchCreateQuestion(json.decode(decrypted))
 end
 
 function JoinCompetitionHandler(msg)
