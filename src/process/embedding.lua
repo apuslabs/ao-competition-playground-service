@@ -1,4 +1,5 @@
 local json = require("json")
+local crypto = require(".crypto");
 Log = require("module.utils.log")
 local Helper = require("module.utils.helper")
 Config = require("module.utils.config")
@@ -9,6 +10,7 @@ local throttleCheck = Helper.throttleCheckWrapper(Config.Pool.JoinThrottle)
 
 UploadedUserList = UploadedUserList or {}
 UploadedDatasetList = UploadedDatasetList or {}
+UploadedDatasetHashList = UploadedDatasetHashList or {}
 function RemoveUserFromUploadedList(address)
     if UploadedUserList[address] then
         UploadedUserList[address] = nil
@@ -84,6 +86,15 @@ function CreateDatasetHandler(msg)
     Helper.assert_non_empty(data, data.hash, data.list, data.name, msg.PoolID)
     Helper.assert_non_empty_array(data.list)
 
+    -- check list dulplicate
+    local listStr = crypto.utils.stream.fromString(json.encode(data.list))
+    local listHash = crypto.digest.md5(listStr).asHex()
+    if UploadedDatasetHashList[listHash] then
+        Log.warn(string.format("%s has been uploaded before, uploaded by %s", listHash, msg.From))
+        msg.reply({ Status = "403", Data = "Your dataset has been uploaded before." })
+        return
+    end
+
     if not throttleCheck(msg) then
         return
     end
@@ -140,6 +151,9 @@ function CreateDatasetHandler(msg)
 
                     if not UploadedDatasetList[data.hash] then
                         UploadedDatasetList[data.hash] = true
+                    end
+                    if not UploadedDatasetHashList[listHash] then
+                        UploadedDatasetHashList[listHash] = true
                     end
                 end
             },
