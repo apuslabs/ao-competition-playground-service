@@ -32,7 +32,12 @@ end
 
 
 Handlers.add("Get-Competitions", "Get-Competitions", function (msg)
-    msg.reply({ Status = "200", Data = json.encode(Lodash.keys(CompetitionPools)) })
+    local CompetitionPoolsArray = {}
+    for id, pool in pairs(CompetitionPools) do
+        pool.id = id
+        table.insert(CompetitionPoolsArray, pool)
+    end
+    msg.reply({ Status = "200", Data = json.encode(CompetitionPoolsArray) })
 end)
 
 Handlers.add("Get-Competition", "Get-Competition", function (msg)
