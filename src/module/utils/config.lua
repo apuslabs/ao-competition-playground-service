@@ -17,6 +17,7 @@ Config.Evaluate = {
 Config.Pool = {
     JoinThrottle = 2 * 60,    -- 2 minute
     LeaderboardInterval = 12, -- 12 * 5 mins
+    CompetitionExtraTimeWindow = 3600 * 48, -- 48 hours
 }
 
 Config.Embedding = {

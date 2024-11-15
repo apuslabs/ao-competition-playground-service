@@ -50,8 +50,7 @@ function GetRank()
 end
 
 Handlers.add("Get-Rank", "Get-Rank", function(msg)
-    -- msg.reply({ Status = "200", Data = GetRank() })
-    Send({ Target = msg.From, Action = "Get-Rank-Response", Data = GetRank() })
+    msg.reply({ Status = "200", Data = GetRank() })
 end)
 
 function GetQuestions()

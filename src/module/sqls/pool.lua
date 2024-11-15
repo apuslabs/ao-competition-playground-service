@@ -5,6 +5,16 @@ local SQL = {}
 local json = require("json")
 
 SQL.DATABASE = [[
+    CREATE TABLE IF NOT EXISTS competitions (
+        pool_id INTEGER PRIMARY KEY,
+        owner TEXT NOT NULL,
+        title TEXT NOT NULL,
+        reward_pool INTEGER NOT NULL,
+        process_id TEXT NOT NULL,
+        start_time INTEGER NOT NULL,
+        end_time INTEGER NOT NULL,
+        metadata TEXT
+    );
     CREATE TABLE IF NOT EXISTS participants (
     	dataset_hash TEXT NOT NULL,
         pool_id INTEGER NOT NULL,
@@ -120,6 +130,33 @@ SQL.CountUnEvaluatedDatasets = function(pool_id)
     local result = DB:nrow(string.format(
         "SELECT COUNT(dataset_hash) AS count FROM participants WHERE pool_id = %s AND (progress < 1 OR progress is NULL)", pool_id))
     return result.count
+end
+
+SQL.CreateCompetition = function(pool_id, owner, title, reward_pool, process_id, start_time, end_time, metadata)
+    Helper.assert_non_empty(pool_id, owner, title, reward_pool, process_id, start_time, end_time)
+    return DB:upsert("competitions", {
+        pool_id = pool_id,
+        owner = owner,
+        title = title,
+        reward_pool = reward_pool,
+        process_id = process_id,
+        start_time = start_time,
+        end_time = end_time,
+        metadata = metadata,
+    })
+end
+
+SQL.GetCompetitions = function()
+    return DB:query("competitions")
+end
+
+SQL.GetCompetition = function(pool_id)
+    return DB:queryOne("competitions", { pool_id = pool_id })
+end
+
+SQL.GetOngoingCompetitions = function()
+    local now = datetime.unix()
+    return DB:nrows(string.format("SELECT * FROM competitions WHERE start_time <= %s AND end_time >= %s", now, now - Config.Pool.CompetitionExtraTimeWindow))
 end
 
 return SQL

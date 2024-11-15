@@ -63,6 +63,13 @@ DB.insert = function(self, tableName, data)
     return self:exec(query)
 end
 
+DB.upsert = function(self, tableName, data, conditions)
+    assert(self.Client, "Database client is not initialized")
+    local columns, values = prepare_columns_values_for_insert(data)
+    local query = string.format("INSERT OR REPLACE INTO %s (%s) VALUES (%s);", tableName, columns, values)
+    return self:exec(query)
+end
+
 DB.batchInsert = function(self, tableName, data)
     assert(self.Client, "Database client is not initialized")
     assert(#data > 0, "Data should be a non-empty table")
