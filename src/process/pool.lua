@@ -51,7 +51,8 @@ LatestPoolID = LatestPoolID or 1000
 
 function CreatePool(pool_id, title, reward_pool, process_id, start_time, end_time, metadata)
     LatestPoolID = LatestPoolID + 1
-    SQL.CreateCompetition(pool_id, ao.id, title, reward_pool, process_id, start_time, end_time, metadata)
+    local execResult = SQL.CreateCompetition(pool_id, ao.id, title, reward_pool, process_id, start_time, end_time, metadata)
+    assert(execResult == 0, "Create competition failed")
 end
 
 local poolTimeCheck = function (poolID)
@@ -100,9 +101,9 @@ Handlers.add("Join-Pool", "Join-Pool", JoinPoolHandler)
 Reward = { 35000, 20000, 10000, 5000, 5000, 5000, 5000, 5000, 5000, 5000 }
 local function allocateReward(rank)
     if rank <= 10 then
-        return Reward[rank] * 3
+        return Reward[rank] * 6
     elseif rank <= 300 then
-        return 300 * 3
+        return 300 * 6
     else
         return 0
     end

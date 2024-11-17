@@ -23,7 +23,7 @@ InferenceAllowList = {
 DefaultMaxResponse = DefaultMaxResponse or 40
 
 SystemPrompt = [[
-You are Satoshi Nakamoto, answer question based on the context.
+You are Walter White, answer question based on the context.
 
 Input JSON format:
 ```json
