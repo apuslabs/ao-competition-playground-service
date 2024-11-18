@@ -2,8 +2,7 @@ local DB = require("module.utils.db")
 local Helper = require("module.utils.helper")
 local datetime = require("module.utils.datetime")
 local SQL = {}
-
-SQL.hasInit = false
+HashInitDB = HashInitDB or false
 
 SQL.DATABASE = [[
     INSERT INTO temp.lembed_models(name, model) 
@@ -20,24 +19,15 @@ SQL.DATABASE = [[
 
     -- Build a vector table with embeddings of article headlines
     create virtual table vec_articles using vec0(
-        dataset_hash text not null,
         headline_embeddings float[1600]
     );
-
-    -- Create a trigger to automatically generate embeddings
-    create trigger after_insert_articles
-    after insert on articles
-    begin
-        insert into vec_articles(rowid, dataset_hash, headline_embeddings)
-            select new.rowid, new.dataset_hash, lembed('all-MiniLM-L6-v2', new.headline);
-    end;
 ]]
 
 SQL.init = function(client)
-    if not SQL.hasInit then
-        DB:init(client)
+    DB:init(client)
+    if not HashInitDB then
+        HashInitDB = true
         DB:exec(SQL.DATABASE)
-        SQL.hasInit = true
     end
 end
 
@@ -47,24 +37,46 @@ SQL.BatchInsert = function(dataset_hash, articles)
         table.insert(insertList, {
             headline = article,
             dataset_hash = dataset_hash,
-            created_at = datetime.now()
+            created_at = datetime.unix()
         })
     end
-    return DB:batchInsert("articles", articles)
+    local rc = DB:batchInsert("articles", insertList)
+    assert(rc == 0, "Insert dataset failed")
+    return DB:exec([[
+    insert into vec_articles(rowid, headline_embeddings)
+        select rowid, lembed('all-MiniLM-L6-v2', headline) from articles where dataset_hash = ']] .. dataset_hash .. "';")
+end
+
+SQL.TestLembed = function(dataset_hash)
+    return DB:nrows("select rowid, dataset_hash, lembed('all-MiniLM-L6-v2', headline) from articles where dataset_hash = '" .. dataset_hash .. "';")
+end
+
+SQL.GetArticles = function(dataset_hash)
+    Helper.assert_non_empty(dataset_hash, "dataset_hash")
+    return DB:query("articles", { dataset_hash = dataset_hash })
 end
 
 SQL.Match = function(dataset_hash, prompt, limit)
     Helper.assert_non_empty(dataset_hash, prompt)
     assert(prompt, "prompt is required")
     assert(limit, "limit is required")
+    local list_rows = DB:nrows("select rowid from articles where dataset_hash = '" .. dataset_hash .. "';")
+    local rows_sql_in_clause = ""
+    for i, row in ipairs(list_rows) do
+        rows_sql_in_clause = rows_sql_in_clause .. row.rowid
+        if i < #list_rows then
+            rows_sql_in_clause = rows_sql_in_clause .. ","
+        end
+    end
     local query = [[
     with matches as (
         select
             rowid,
             distance
         from vec_articles
-        where dataset_hash = ']] .. dataset_hash .. [[' and
-            headline_embeddings match lembed('all-MiniLM-L6-v2', ']] .. prompt .. [[')
+        where rowid IN (
+            select rowid from articles where dataset_hash = ']] .. dataset_hash .. [['
+        ) and headline_embeddings match lembed('all-MiniLM-L6-v2', ']] .. prompt .. [[')
         order by distance
         limit ]] .. limit .. [[
     )
@@ -76,7 +88,7 @@ SQL.Match = function(dataset_hash, prompt, limit)
     ]]
     local result = {}
     for row in DBClient:nrows(query) do
-        table.insert(result, row)
+        table.insert(result, row.headline)
     end
     return result
 end

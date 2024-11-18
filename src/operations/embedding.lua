@@ -1,4 +1,4 @@
-
+local Lodash = require("module.utils.lodash")
 
 function RemoveUserFromUploadedList(address)
     if UploadedUserList[address] then
@@ -32,4 +32,11 @@ end
 
 function CountWhiteList()
     return #WhiteList
+end
+
+function DANGEROUS_CLEAR()
+    WhiteList = {}
+    UploadedUserList = {}
+    UploadDatasetQueue = {}
+    UploadedDatasetHashList = {}
 end

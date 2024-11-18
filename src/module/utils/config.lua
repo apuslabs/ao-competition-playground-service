@@ -3,7 +3,7 @@ local Config = {}
 Config.Process = {
     Chat = "4_zjOJp75rooSI6-f3lUwPJxwgcG1MXITCVqrPd_o5k",
     LlamaHerder = "J0hmRtTPfV3NFiLvn1Pw9-KqrfeAzRAE2JkKWQjz3t0",
-    Embedding = "D6E-mzike2ItozUYC5YdDeDoo69raVmdIwcrkHF31rY",
+    Embedding = "20luavZBZm_F51_Y7yIDZSKERVgjyV4XSS0in4yU7w0",
     Token = "al1xXXnWnfJD8qyZJvttVGq60z1VPGn4M5y6uCcMBUM",
     Competition = "oM_qGTdQhu00aPdo-9O7aJH_HSQvtJuxisheaibE-uM",
     Pool = "HJV6BxQGakxlQe6rfGxOMiifKSFYRz5WEwZOKPLPWEg"
@@ -11,7 +11,7 @@ Config.Process = {
 
 Config.Evaluate = {
     Interval = 1,   -- 2 * 5mins
-    BatchSize = 100 -- 5 per interval
+    BatchSize = 1 -- 5 per interval
 }
 
 Config.AESKey = "c1Tl31gxC9tv8CKG"

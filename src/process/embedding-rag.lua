@@ -6,7 +6,6 @@ local base64 = require(".base64")
 Log = require("module.utils.log")
 local Helper = require("module.utils.helper")
 Config = require("module.utils.config")
-local Datetime = require("module.utils.datetime")
 local Lodash = require("module.utils.lodash")
 
 local sqlite3 = require("lsqlite3")
@@ -29,8 +28,7 @@ end)
 UploadDatasetQueue = UploadDatasetQueue or {}
 
 function GetDatasetHash(list)
-    local listStr = base64.decode(list)
-    return crypto.digest.md5(listStr).asHex()
+    return crypto.digest.md5(crypto.utils.stream.fromString(list)).asHex()
 end
 
 function CheckDataset(msg)
@@ -62,9 +60,9 @@ function CheckDataset(msg)
         return false
     end
     -- check throttle
-    if not throttleCheck(msg) then
-        return false
-    end
+    -- if not throttleCheck(msg) then
+    --     return false
+    -- end
     return true
 end
 
@@ -80,65 +78,36 @@ function CreateDatasetHandler(msg)
         PoolID = msg.PoolID,
         Data = json.encode({ dataset_hash = data.hash, dataset_name = data.name })
     }).onReply(function (replyMsg)
-        Log.trace("Receive reply from the pool " .. replyMsg.From)
-        local replySwitch = {
-            ["403"] = {
-                status = "JOIN_POOL_FAILED",
-                message = replyMsg,
-                func = function ()
-                    Log.warn(string.format("%s Join pool failed: %s", msg.From, replyMsg.Data))
-                end
-            },
-            ["200"] = {
-                status = "JOIN_SUCCEED",
-                message = "Successfully join the pool.",
-                func = function ()
-                    local dataList = json.decode(base64.decode(data.list))
-                    local rc = SQL.BatchInsert(data.hash, dataList)
-                    if rc == 0 then
-                        Log.info(string.format("%s Dataset %s created successfully", msg.From, data.hash))
-                        local listHash = GetDatasetHash(data.list)
-                        UploadedUserList[msg.From] = true
-                        UploadedDatasetList[data.hash] = msg.From
-                        UploadedDatasetHashList[listHash] = msg.From
-                        msg.reply({ Status = "200", Data = "Dataset created successfully" })
-                    else
-                        Log.warn(string.format("%s Dataset %s created failed", msg.From, data.hash))
-                        msg.reply({ Status = "403", Data = "Dataset created failed" })
-                    end
-                end
-            },
-            ["default"] = {
-                status = "JOIN_POOL_FAILED",
-                message = "unknown error",
-                func = function ()
-                    Log.warn(string.format("%s Join pool failed due to unknown error", msg.From))
-                end
-            },
-        }
-
-        local replyMatch = replySwitch[replyMsg.Status] or replySwitch["default"]
-        if replyMatch.func then
-            replyMatch.func() -- pay attention to return value to decide if we should continue in the future
+        if (replyMsg.Status ~= "200") then
+            Log.warn(string.format("Join pool failed: %s %s", replyMsg.Status, replyMsg.Data))
+            return
         end
+        local articles = json.decode(base64.decode(data.list))
+        local rc = SQL.BatchInsert(data.hash, articles)
+        if rc ~= 0 then
+            Log.error(string.format("Insert dataset failed: %s %s", data.hash, rc))
+            return
+        end
+        UploadedUserList[msg.From] = true
+        UploadedDatasetList[data.hash] = true
+        UploadedDatasetHashList[GetDatasetHash(data.list)] = true
+        Send({
+            Target = Config.Process.Competition,
+            Action = "Join-Competition",
+            Data = data.hash
+        })
+        Log.trace(string.format("Create dataset %s", data.name))
     end)
 end
 
 function SearchPromptHandler(msg)
     local data = json.decode(msg.Data)
     Helper.assert_non_empty(data.dataset_hash, data.prompt)
-    local result = SQL.Match(data.dataset_hash, data.prompt, data.limit)
+    local result = SQL.Match(data.dataset_hash, data.prompt, 3)
     msg.reply({ Status = "200", Data = json.encode(result) })
+    Log.trace(string.format("Search prompt %s %s", data.dataset_hash, data.prompt))
 end
 
 Handlers.add("Create-Dataset", "Create-Dataset", CreateDatasetHandler)
 
 Handlers.add("Search-Prompt", "Search-Prompt", SearchPromptHandler)
-
-
-function DANGEROUS_CLEAR()
-    WhiteList = {}
-    UploadedUserList = {}
-    UploadDatasetQueue = {}
-    UploadedDatasetHashList = {}
-end

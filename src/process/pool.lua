@@ -12,11 +12,18 @@ DBClient = DBClient or sqlite3.open_memory()
 SQL.init(DBClient)
 
 Handlers.add("Get-Competitions", "Get-Competitions", function (msg)
-    msg.reply({ Status = "200", Data = json.encode(SQL.GetCompetitions()) })
+    local competitions = SQL.GetCompetitions()
+    for i, v in ipairs(competitions) do
+        v.metadata = json.decode(v.metadata)
+    end
+    msg.reply({ Status = "200", Data = json.encode(competitions) })
 end)
 
 Handlers.add("Get-Competition", "Get-Competition", function (msg)
-    msg.reply({ Status = "200", Data = json.encode(SQL.GetCompetition(msg.Data)) })
+    local competition = SQL.GetCompetition(msg.Data)
+    assert(competition, "Competition not found")
+    competition.metadata = json.decode(competition.metadata)
+    msg.reply({ Status = "200", Data = json.encode(competition) })
 end)
 
 Handlers.add("Get-Participants", "Get-Datasets", function (msg)
@@ -55,8 +62,7 @@ function CreatePool(pool_id, title, reward_pool, process_id, start_time, end_tim
     assert(execResult == 0, "Create competition failed")
 end
 
-local poolTimeCheck = function (poolID)
-    local competition = SQL.GetCompetition(poolID)
+local poolTimeCheck = function (competition)
     assert(competition, "Competition not found")
     local now = Datetime.unix()
     return now >= tonumber(competition.start_time) and now <= tonumber(competition.end_time)
@@ -69,34 +75,38 @@ function RemoveUserFromUploadedList(address)
     end
 end
 
+function CheckJoinPool(msg)
+    if not poolTimeCheck(tonumber(msg.PoolID)) then
+        msg.reply({ Status = "403", Data = "The event has ended, can't join in." })
+        return false
+    end
+    if not Lodash.Contain(Config.WhiteList, msg.User) then
+        msg.reply({ Status = "403", Data = "User " .. msg.User .. " is not allowed to join the event." })
+        return
+    end
+    if UploadedUserList[msg.User] then
+        msg.reply({ Status = "403", Data = "User " .. msg.User .. " has already called join pool." })
+        return
+    end
+    msg.reply({ Status = "200", Data = "User is OK" })
+end
+
 function JoinPoolHandler(msg)
     Log.trace("Receive creation request from embedding process " .. msg.From)
-
-    -- Only embedding process can call this function
-    if msg.From ~= Config.Process.Embedding then
-        msg.reply({ Status = "403", Data = "From must be Embedding process." })
-    end
-    local poolID = tonumber(msg.PoolID)
-    if not poolTimeCheck(poolID) then
+    local competition = SQL.GetCompetition(msg.PoolID)
+    if not poolTimeCheck(competition) then
         msg.reply({ Status = "403", Data = "The event has ended, can't join in." })
         return
     end
-
+    
     local data = json.decode(msg.Data)
-    SQL.CreateParticipant(poolID, msg.User, data.dataset_hash, data.dataset_name)
-    msg.reply({ Status = "200", Data = "Join Success" })
+    SQL.CreateParticipant(msg.PoolID, msg.User, data.dataset_hash, data.dataset_name)
     UploadedUserList[msg.User] = true
     Log.info("Join Pool " .. msg.From .. " : ", data.dataset_hash)
-    local competition = SQL.GetCompetition(poolID)
-    assert(competition, "Competition not found")
-    Send({
-        Target = competition.process_id,
-        Action = "Join-Competition",
-        Data = data.dataset_hash
-    })
+    msg.reply({ Status = "200" })
 end
 
-Handlers.add("Join-Pool", "Join-Pool", JoinPoolHandler)
+Handlers.add("Join-Pool", { Action = "Join-Pool", From = Config.Process.Embedding }, JoinPoolHandler)
 
 Reward = { 35000, 20000, 10000, 5000, 5000, 5000, 5000, 5000, 5000, 5000 }
 local function allocateReward(rank)
