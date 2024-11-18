@@ -1,5 +1,6 @@
 local json = require("json")
-local crypto = require(".crypto");
+local base64 = require(".base64")
+local crypto = require(".crypto")
 Log = require("module.utils.log")
 local Helper = require("module.utils.helper")
 Config = require("module.utils.config")
@@ -87,7 +88,7 @@ function CreateDatasetHandler(msg)
     Helper.assert_non_empty_array(data.list)
 
     -- check list dulplicate
-    local listStr = crypto.utils.stream.fromString(json.encode(data.list))
+    local listStr = base64.decode(data.list)
     local listHash = crypto.digest.md5(listStr).asHex()
     if UploadedDatasetHashList[listHash] then
         Log.warn(string.format("%s has been uploaded before, uploaded by %s", listHash, msg.From))

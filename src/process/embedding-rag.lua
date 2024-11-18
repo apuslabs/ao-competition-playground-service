@@ -2,6 +2,7 @@
 
 local json = require("json")
 local crypto = require(".crypto");
+local base64 = require(".base64")
 Log = require("module.utils.log")
 local Helper = require("module.utils.helper")
 Config = require("module.utils.config")
@@ -28,7 +29,7 @@ end)
 UploadDatasetQueue = UploadDatasetQueue or {}
 
 function GetDatasetHash(list)
-    local listStr = crypto.utils.stream.fromString(json.encode(list))
+    local listStr = base64.decode(list)
     return crypto.digest.md5(listStr).asHex()
 end
 
@@ -53,7 +54,6 @@ function CheckDataset(msg)
         return false
     end
     Helper.assert_non_empty(data, data.hash, data.list, data.name, msg.PoolID)
-    Helper.assert_non_empty_array(data.list)
     -- check list dulplicate
     local listHash = GetDatasetHash(data.list)
     if UploadedDatasetHashList[listHash] then
@@ -93,7 +93,8 @@ function CreateDatasetHandler(msg)
                 status = "JOIN_SUCCEED",
                 message = "Successfully join the pool.",
                 func = function ()
-                    local rc = SQL.BatchInsert(data.hash, data.list)
+                    local dataList = json.decode(base64.decode(data.list))
+                    local rc = SQL.BatchInsert(data.hash, dataList)
                     if rc == 0 then
                         Log.info(string.format("%s Dataset %s created successfully", msg.From, data.hash))
                         local listHash = GetDatasetHash(data.list)

@@ -4,6 +4,7 @@ local sqlite3 = require("lsqlite3")
 SQL = require("module.sqls.sas_competition")
 Config = require("module.utils.config")
 local RAGClient = require("module.embedding.client")
+local base64 = require(".base64")
 Log = require("module.utils.log")
 require("module.llama.client")
 require("module.utils.helper")
@@ -34,9 +35,7 @@ function Evaluate()
 end
 
 function LoadQuestion(dataStr)
-    local decryptedRaw = crypto.cipher.aes.decrypt(dataStr, ao.id).asHex()
-    local decrypted = crypto.utils.hex.hexToString(decryptedRaw)
-    SQL.BatchCreateQuestion(json.decode(decrypted))
+    SQL.BatchCreateQuestion(json.decode(base64.decode(dataStr)))
 end
 
 function JoinCompetitionHandler(msg)
@@ -54,7 +53,7 @@ Handlers.add("Get-Rank", "Get-Rank", function(msg)
 end)
 
 function GetQuestions()
-    Log.debug(SQL.GetQuestions())
+    return SQL.GetQuestions()
 end
 
 -- ops
