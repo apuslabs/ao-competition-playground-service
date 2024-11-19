@@ -24,27 +24,41 @@ InferenceAllowList = {
 
 DefaultMaxResponse = DefaultMaxResponse or 40
 
-SystemPrompt = [[You are a robot evaluating dataset quality. You'll be given an Input JSON.
+-- 用于生成答案的系统提示词
+SystemPrompt_GenerateAnswer = [[You are a helpful assistant.
+
+Instructions:
+
+- Based on the "question" and the "context", provide an answer.
+- Use only the information from the "context".
+- Do not use any external knowledge or make assumptions.
+
 Input JSON format:
-```json
-{"question": "...","context": "<Content about question>","expected_response": "..."}
-```
-  - "context" may contain multiple lines or be null.
+{"question": "...","context": "..."}
 
-Then Follow these steps:
-1. Understand the topic based on "context" field and "question" field in input json.
-2. Formulate your answer to the "question" based on "context" field in input json.
-  - All your knowledge MUST come from the "context" field in input json
-  - DON'T use existing knowledge
-3. Compare your answer with the "expected_response" field in input json. Score semantic similarity from integer between 0 and 10 (0 = no similarity, 10 = almost identical).
-  - If context is null, score 0
+Provide your answer.
 
-Output: Always respond in this JSON format:
-```json
-{"score": <integer_score_0_to_10>}
-```
+Output format:
+{"answer": "<your_answer>"}
 ]]
 
+-- 用于比较答案和预期响应的系统提示词
+SystemPrompt_ScoreAnswer = [[You are a robot evaluating the correctness of an answer.
+
+Instructions:
+
+- Compare the provided "answer" to the "expected_response".
+- Determine if the "answer" correctly answers the "question" based on the "context".
+- Assign a score from 0 to 10 based on correctness (0 = completely incorrect, 10 = completely correct).
+- Use only the information from the "context" to make your assessment.
+- Do not use any external knowledge.
+
+Input JSON format:
+{"question": "...", "context": "...", "answer": "...", "expected_response": "..."}
+
+Output format:
+{"score": <integer_score_0_to_10>}
+]]
 
 function PrimePromptText(systemPrompt)
     return [[<|system|>
@@ -59,13 +73,6 @@ function Init()
 
     print("Loading model: " .. ModelID)
     Llama.load("/data/" .. ModelID)
-
-    local initialPrompt = PrimePromptText(SystemPrompt)
-    print("Initial Prompt: " .. initialPrompt)
-    Llama.setPrompt(initialPrompt)
-
-    print("Save state")
-    Llama.saveState()
 end
 
 function CompletePromptText(userPrompt)
@@ -77,45 +84,130 @@ DefaultResponse = {
     Score = -1,
 }
 
-function ProcessPetition(userPrompt)
-    local additionalPrompt = CompletePromptText(userPrompt)
+function GenerateAnswer(question, context)
+    -- 设置用于生成答案的提示词
+    local initialPrompt = PrimePromptText(SystemPrompt_GenerateAnswer)
+    Llama.setPrompt(initialPrompt)
+
+    local userInput = json.encode({question = question, context = context})
+    local additionalPrompt = CompletePromptText(userInput)
     Llama.add(additionalPrompt)
 
     local responseJson = nil
-
     local responseBuilder = ""
+
     for i = 1, DefaultMaxResponse do
         responseBuilder = responseBuilder .. Llama.next()
 
-        local responseJsonMatch = string.match(responseBuilder, ".*({.*}).*")
+        local responseJsonMatch = string.match(responseBuilder, "({.*})")
         if responseJsonMatch then
             responseJson = json.decode(responseJsonMatch)
             break
         end
 
-        -- if end of <|endoftext|> or <|end|>, stop
-        if string.match(responseBuilder, ".*<|end|>.*") or string.match(responseBuilder, ".*<|endoftext|>.*") or string.match(responseBuilder, ".*<|user|>.*") or string.match(responseBuilder, ".*<|assistant|>.*") or string.match(responseBuilder, ".*<|system|>.*") then
+        -- 检查结束标记
+        if string.match(responseBuilder, "<|end|>") or
+           string.match(responseBuilder, "<|endoftext|>") or
+           string.match(responseBuilder, "<|user|>") or
+           string.match(responseBuilder, "<|assistant|>") or
+           string.match(responseBuilder, "<|system|>") then
+            break
+        end
+    end
+
+    if not responseJson or not responseJson.answer then
+        print("Unusable response: " .. responseBuilder)
+        return nil
+    end
+
+    return responseJson.answer
+end
+function ScoreAnswer(question, context, answer, expected_response)
+    -- 重置模型到初始状态
+    Llama.loadState()
+
+    -- 设置用于评分的提示词
+    local initialPrompt = PrimePromptText(SystemPrompt_ScoreAnswer)
+    Llama.setPrompt(initialPrompt)
+
+    local userInput = json.encode({
+        question = question,
+        context = context,
+        answer = answer,
+        expected_response = expected_response
+    })
+    local additionalPrompt = CompletePromptText(userInput)
+    Llama.add(additionalPrompt)
+
+    local responseJson = nil
+    local responseBuilder = ""
+
+    for i = 1, DefaultMaxResponse do
+        responseBuilder = responseBuilder .. Llama.next()
+
+        local responseJsonMatch = string.match(responseBuilder, "({.*})")
+        if responseJsonMatch then
+            responseJson = json.decode(responseJsonMatch)
+            break
+        end
+
+        -- 检查结束标记
+        if string.match(responseBuilder, "<|end|>") or
+           string.match(responseBuilder, "<|endoftext|>") or
+           string.match(responseBuilder, "<|user|>") or
+           string.match(responseBuilder, "<|assistant|>") or
+           string.match(responseBuilder, "<|system|>") then
             break
         end
     end
 
     if not responseJson or not responseJson.score then
         print("Unusable response: " .. responseBuilder)
-        return DefaultResponse
+        return DefaultResponse.Score
     end
 
-    -- Parse the grade
+    -- 解析得分
     local scoreNumber = tonumber(responseJson.score)
     if not scoreNumber then
-        print("Invalid grade: " .. responseJson.score)
+        print("Invalid score: " .. responseJson.score)
+        return DefaultResponse.Score
+    end
+
+    -- 限制得分范围
+    scoreNumber = math.min(10, math.max(0, scoreNumber))
+
+    return scoreNumber
+end
+
+function ProcessPetition(userPrompt)
+    local inputJson = json.decode(userPrompt)
+    if not inputJson or not inputJson.question or not inputJson.context or not inputJson.expected_response then
+        print("Invalid input JSON")
         return DefaultResponse
     end
 
-    -- Clamp the grade
-    scoreNumber = math.min(10, math.max(-1, scoreNumber))
+    local question = inputJson.question
+    local context = inputJson.context
+    local expected_response = inputJson.expected_response
+
+    -- 第一步：生成答案
+    local answer = GenerateAnswer(question, context)
+    if not answer then
+        print("Failed to generate answer")
+        return DefaultResponse
+    end
+
+    print("Generated Answer: " .. answer)
+
+    -- 第二步：比较答案和预期响应
+    local score = ScoreAnswer(question, context, answer, expected_response)
+    if score == DefaultResponse.Score then
+        print("Failed to score similarity")
+        return DefaultResponse
+    end
 
     return {
-        Score = scoreNumber,
+        Score = score,
     }
 end
 
@@ -163,7 +255,11 @@ Handlers.add(
             ["X-Reference"] = msg["X-Reference"] or msg.Reference,
             Data = tostring(score)
         })
-
-        Llama.loadState()
     end
 )
+
+function TestInference()
+    local userPrompt = [[{"question": "What is the name of the car wash that Walter White buys to launder money?","context": "Question: What is Walter White's alias in 'Breaking Bad'? Answer: Walter White's alias in 'Breaking Bad' is Heisenberg, which he adopts as part of his drug lord persona.\nQuestion: How does Walter White initially start manufacturing methamphetamine? Answer: Walter White initially starts manufacturing methamphetamine using a mobile RV lab in the New Mexico desert, partnering with former student Jesse Pinkman.","expected_response": "A1A Car Wash."}]]
+    local response = ProcessPetition(userPrompt)
+    return response
+end

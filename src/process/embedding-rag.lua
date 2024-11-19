@@ -85,7 +85,7 @@ function CreateDatasetHandler(msg)
         local articles = json.decode(base64.decode(data.list))
         local rc = SQL.BatchInsert(data.hash, articles)
         if rc ~= 0 then
-            Log.error(string.format("Insert dataset failed: %s %s", data.hash, rc))
+            Log.error(string.format("Insert dataset failed: %s %s", data.hash))
             return
         end
         UploadedUserList[msg.From] = true
@@ -104,7 +104,7 @@ function SearchPromptHandler(msg)
     local data = json.decode(msg.Data)
     Helper.assert_non_empty(data.dataset_hash, data.prompt)
     local result = SQL.Match(data.dataset_hash, data.prompt, 3)
-    msg.reply({ Status = "200", Data = json.encode(result) })
+    msg.reply({ Status = "200", Data = Lodash.join(result, "\n") })
     Log.trace(string.format("Search prompt %s %s", data.dataset_hash, data.prompt))
 end
 

@@ -1,5 +1,16 @@
 local Lodash = {}
 
+Lodash.join = function(array, separator)
+    local result = ""
+    for i = 1, #array do
+        result = result .. array[i]
+        if i < #array then
+            result = result .. separator
+        end
+    end
+    return result
+end
+
 Lodash.map = function(array, fn)
     local result = {}
     for i = 1, #array do
