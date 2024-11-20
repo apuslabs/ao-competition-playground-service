@@ -1,8 +1,13 @@
 local DB = require("module.utils.db")
 local Helper = require("module.utils.helper")
 local datetime = require("module.utils.datetime")
+local Lodash = require("module.utils.lodash")
 local SQL = {}
 HashInitDB = HashInitDB or false
+
+local function escape_string(str)
+    return str:gsub("'", "''")
+end
 
 SQL.DATABASE = [[
     INSERT INTO temp.lembed_models(name, model) 
@@ -60,14 +65,6 @@ SQL.Match = function(dataset_hash, prompt, limit)
     Helper.assert_non_empty(dataset_hash, prompt)
     assert(prompt, "prompt is required")
     assert(limit, "limit is required")
-    local list_rows = DB:nrows("select rowid from articles where dataset_hash = '" .. dataset_hash .. "';")
-    local rows_sql_in_clause = ""
-    for i, row in ipairs(list_rows) do
-        rows_sql_in_clause = rows_sql_in_clause .. row.rowid
-        if i < #list_rows then
-            rows_sql_in_clause = rows_sql_in_clause .. ","
-        end
-    end
     local query = [[
     with matches as (
         select
@@ -76,7 +73,7 @@ SQL.Match = function(dataset_hash, prompt, limit)
         from vec_articles
         where rowid IN (
             select rowid from articles where dataset_hash = ']] .. dataset_hash .. [['
-        ) and headline_embeddings match lembed('all-MiniLM-L6-v2', ']] .. prompt .. [[')
+        ) and headline_embeddings match lembed('all-MiniLM-L6-v2', ']] .. escape_string(prompt) .. [[')
         order by distance
         limit ]] .. limit .. [[
     )
@@ -86,11 +83,14 @@ SQL.Match = function(dataset_hash, prompt, limit)
     from matches
         left join articles on articles.rowid = matches.rowid;
     ]]
-    local result = {}
-    for row in DBClient:nrows(query) do
-        table.insert(result, row.headline)
-    end
-    return result
+        
+    return Lodash.map(DB:nrows(query), function(row)
+        return row.headline
+    end)
+end
+
+function TestMatch()
+    return require('json').encode(SQL.Match("ee17560c8b77385b5bb8d8687820f9b82f3fdcdf", "What is the ultimate legacy of Walter White's actions by the series' end?", 3))
 end
 
 return SQL

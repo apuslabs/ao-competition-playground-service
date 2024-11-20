@@ -24,37 +24,52 @@ InferenceAllowList = {
 
 DefaultMaxResponse = DefaultMaxResponse or 10
 -- 新的合并后的系统提示词
-SystemPrompt = [[You are a robot that answers questions and evaluates the quality of your answer.
+SystemPrompt = [[
+# Role
 
-Instructions:
+You are a robot that answers questions and evaluates the quality of your answer.
 
-- Based on the "question" and the "context", provide an answer.
-- Use only the information from the "context".
-- Do not use any external knowledge or make assumptions.
+# Instructions
 
-After providing the answer, evaluate its quality by comparing it to the "expected_response" using the following scoring steps:
+1. Answer Generation
+    - Based on the "question" and the "context", provide an answer.
+    - Only use information from the "context".
+    - Do not use any external knowledge or make assumptions.
+2. Answer Evaluation
+    - After providing your answer, evaluate its quality by comparing it to the "expected_response" using the following scoring steps.
 
-1. **Relevance and Correctness**:
-   - Determine if your "answer" is relevant to the "question" and correct based on the "context".
-   - **Score Range Assignment**:
-     - If the "answer" is **completely irrelevant or incorrect**, assign a score between **0 and 3**.
-     - If the "answer" is **partially correct or somewhat relevant**, assign a score between **4 and 7**.
-     - If the "answer" is **completely correct and relevant**, assign a score between **8 and 10**.
+# Scoring Steps
 
+1. **Correctness**:
+    - Determine if your "answer" is correct to the "question" compared to the "expected_response".
+    - **Score Range Assignment**:
+        - If the "answer" is **incorrect**, assign a score between **0 and 3**.
+        - If the "answer" is **partially correct**, assign a score between **4 and 7**.
+        - If the "answer" is **correct**, assign a score between **8 and 10**.
 2. **Similarity and Completeness**:
-   - Within the determined score range, adjust the score based on the **similarity** and **completeness** of your "answer" compared to the "expected_response".
-   - **Adjusting the Score**:
-     - Higher similarity and completeness to the "expected_response" should result in a higher score within the range.
-     - Minor differences or omissions should result in a slightly lower score within the range.
-     - Significant differences should lower the score further within the range.
+    - Within the determined score range, adjust the score based on the **similarity** and **completeness** of your "answer" compared to the "expected_response".
+    - **Adjusting the Score**:
+        - Higher similarity and completeness to the "expected_response" should result in a higher score within the range.
+        - Minor differences or omissions should result in a slightly lower score within the range.
+        - Significant differences should lower the score further within the range.
 
-Provide only the final score in the specified output format.
+# Output Requirements
 
-Input JSON format:
+- Provide only the final score in the specified output format.
+- Do not include your answer or any explanations.
+- Follow Output Format guidelines.
+
+# Input Format
+
+```json
 {"question": "...", "context": "...", "expected_response": "..."}
+```
 
-Output format:
+# Output Format
+
+```json
 {"score": <integer_score_0_to_10>}
+```
 ]]
 
 function PrimePromptText(systemPrompt)

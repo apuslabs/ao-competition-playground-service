@@ -2,16 +2,10 @@
 
 local json = require("json")
 local crypto = require(".crypto");
-local base64 = require(".base64")
 Log = require("module.utils.log")
 local Helper = require("module.utils.helper")
 Config = require("module.utils.config")
 local Lodash = require("module.utils.lodash")
-
-local sqlite3 = require("lsqlite3")
-SQL = require("module.sqls.embedding")
-DBClient = DBClient or sqlite3.open_memory()
-SQL.init(DBClient)
 
 local throttleCheck = Helper.throttleCheckWrapper(Config.Pool.JoinThrottle)
 
@@ -93,12 +87,12 @@ function CreateDatasetHandler(msg)
             Log.warn(string.format("Join pool failed: %s %s", replyMsg.Status, replyMsg.Data))
             return
         end
-        local process = nextEmbeddingProcess()
-        msg.forward(process)
+        local process = nextEmbeddingProcess(data.hash)
         UploadedUserList[msg.From] = true
         UploadedDatasetList[data.hash] = true
         UploadedDatasetHashList[GetDatasetHash(data.list)] = true
         Log.trace(string.format("Create dataset %s", data.name))
+        msg.forward(process)
     end)
 end
 

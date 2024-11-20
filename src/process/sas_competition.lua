@@ -49,7 +49,11 @@ function GetRank()
 end
 
 Handlers.add("Get-Rank", "Get-Rank", function(msg)
-    msg.reply({ Status = "200", Data = GetRank() })
+    Send({
+        Target = Config.Process.Pool,
+        Action = "Rank-Response",
+        Data = GetRank()
+    })
 end)
 
 function GetQuestions()

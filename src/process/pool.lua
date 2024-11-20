@@ -133,10 +133,12 @@ function GetRank(poolID)
     Send({
         Target = competition.process_id,
         Action = "Get-Rank"
-    }).onReply(function(msg)
-        OnGetRank(poolID, json.decode(msg.Data))
-    end)
+    })
 end
+
+Handlers.add("Rank-Response", { Action = "Rank-Response", From = Config.Process.Competition }, function (msg)
+    OnGetRank(1004, json.decode(msg.Data))
+end)
 
 CircleTimes = CircleTimes or 0
 function AutoUpdateLeaderboard()

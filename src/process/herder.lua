@@ -127,6 +127,7 @@ function WorkerInitResponse(msg)
     checkWorkerType(workerType)
     table.insert(Herder[workerType], msg.From)
     log.info("INIT", workerType, string.sub(msg.From, 1, 6))
+    DispatchWork()
 end
 
 Handlers.add("Worker-Init", "Init-Response", WorkerInitResponse)
