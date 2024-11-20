@@ -25,8 +25,6 @@ Handlers.add("Check-Permission", "Check-Permission", function (msg)
     msg.reply({ Status = "200", Data = Lodash.Contain(WhiteList, From) })
 end)
 
-UploadDatasetQueue = UploadDatasetQueue or {}
-
 function GetDatasetHash(list)
     return crypto.digest.md5(crypto.utils.stream.fromString(list)).asHex()
 end
@@ -66,6 +64,19 @@ function CheckDataset(msg)
     return true
 end
 
+EmbeddingPorcesses = EmbeddingPorcesses or {}
+ProcessIdx = ProcessIdx or 0
+DatasetProcessMap = DatasetProcessMap or {}
+
+local function nextEmbeddingProcess(dataset_hash)
+    ProcessIdx = ProcessIdx + 1
+    if ProcessIdx > #EmbeddingPorcesses then
+        ProcessIdx = 1
+    end
+    DatasetProcessMap[dataset_hash] = EmbeddingPorcesses[ProcessIdx]
+    return EmbeddingPorcesses[ProcessIdx]
+end
+
 function CreateDatasetHandler(msg)
     if not CheckDataset(msg) then
         return
@@ -82,20 +93,11 @@ function CreateDatasetHandler(msg)
             Log.warn(string.format("Join pool failed: %s %s", replyMsg.Status, replyMsg.Data))
             return
         end
-        local articles = json.decode(base64.decode(data.list))
-        local rc = SQL.BatchInsert(data.hash, articles)
-        if rc ~= 0 then
-            Log.error(string.format("Insert dataset failed: %s %s", data.hash))
-            return
-        end
+        local process = nextEmbeddingProcess()
+        msg.forward(process)
         UploadedUserList[msg.From] = true
         UploadedDatasetList[data.hash] = true
         UploadedDatasetHashList[GetDatasetHash(data.list)] = true
-        Send({
-            Target = Config.Process.Competition,
-            Action = "Join-Competition",
-            Data = data.hash
-        })
         Log.trace(string.format("Create dataset %s", data.name))
     end)
 end
@@ -103,10 +105,16 @@ end
 function SearchPromptHandler(msg)
     local data = json.decode(msg.Data)
     Helper.assert_non_empty(data.dataset_hash, data.prompt)
-    local result = SQL.Match(data.dataset_hash, data.prompt, 3)
-    msg.reply({ Status = "200", Data = Lodash.join(result, "\n") })
-    Log.trace(string.format("Search prompt %s %s", data.dataset_hash, data.prompt))
+    msg.forward(DatasetProcessMap[data.dataset_hash])
 end
+
+Handlers.add("Init-Response", "Init-Response", function (msg)
+    local hasInited = Lodash.Contain(EmbeddingPorcesses, msg.From)
+    if not hasInited then
+        table.insert(EmbeddingPorcesses, msg.From)
+        Log.info("Embedding process inited: " .. msg.From)
+    end
+end)
 
 Handlers.add("Create-Dataset", "Create-Dataset", CreateDatasetHandler)
 

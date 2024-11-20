@@ -22,10 +22,9 @@ InferenceAllowList = {
     [ao.id] = true
 }
 
-DefaultMaxResponse = DefaultMaxResponse or 40
-
--- 用于生成答案的系统提示词
-SystemPrompt_GenerateAnswer = [[You are a helpful assistant.
+DefaultMaxResponse = DefaultMaxResponse or 10
+-- 新的合并后的系统提示词
+SystemPrompt = [[You are a robot that answers questions and evaluates the quality of your answer.
 
 Instructions:
 
@@ -33,28 +32,26 @@ Instructions:
 - Use only the information from the "context".
 - Do not use any external knowledge or make assumptions.
 
-Input JSON format:
-{"question": "...","context": "..."}
+After providing the answer, evaluate its quality by comparing it to the "expected_response" using the following scoring steps:
 
-Provide your answer.
+1. **Relevance and Correctness**:
+   - Determine if your "answer" is relevant to the "question" and correct based on the "context".
+   - **Score Range Assignment**:
+     - If the "answer" is **completely irrelevant or incorrect**, assign a score between **0 and 3**.
+     - If the "answer" is **partially correct or somewhat relevant**, assign a score between **4 and 7**.
+     - If the "answer" is **completely correct and relevant**, assign a score between **8 and 10**.
 
-Output format:
-{"answer": "<your_answer>"}
-]]
+2. **Similarity and Completeness**:
+   - Within the determined score range, adjust the score based on the **similarity** and **completeness** of your "answer" compared to the "expected_response".
+   - **Adjusting the Score**:
+     - Higher similarity and completeness to the "expected_response" should result in a higher score within the range.
+     - Minor differences or omissions should result in a slightly lower score within the range.
+     - Significant differences should lower the score further within the range.
 
--- 用于比较答案和预期响应的系统提示词
-SystemPrompt_ScoreAnswer = [[You are a robot evaluating the correctness of an answer.
-
-Instructions:
-
-- Compare the provided "answer" to the "expected_response".
-- Determine if the "answer" correctly answers the "question" based on the "context".
-- Assign a score from 0 to 10 based on correctness (0 = completely incorrect, 10 = completely correct).
-- Use only the information from the "context" to make your assessment.
-- Do not use any external knowledge.
+Provide only the final score in the specified output format.
 
 Input JSON format:
-{"question": "...", "context": "...", "answer": "...", "expected_response": "..."}
+{"question": "...", "context": "...", "expected_response": "..."}
 
 Output format:
 {"score": <integer_score_0_to_10>}
@@ -73,6 +70,13 @@ function Init()
 
     print("Loading model: " .. ModelID)
     Llama.load("/data/" .. ModelID)
+
+    -- 设置并保存初始提示词
+    local initialPrompt = PrimePromptText(SystemPrompt)
+    Llama.setPrompt(initialPrompt)
+
+    print("Save initial state")
+    Llama.saveState()
 end
 
 function CompletePromptText(userPrompt)
@@ -83,60 +87,12 @@ end
 DefaultResponse = {
     Score = -1,
 }
-
-function GenerateAnswer(question, context)
-    -- 设置用于生成答案的提示词
-    local initialPrompt = PrimePromptText(SystemPrompt_GenerateAnswer)
-    Llama.setPrompt(initialPrompt)
-
-    local userInput = json.encode({question = question, context = context})
-    local additionalPrompt = CompletePromptText(userInput)
-    Llama.add(additionalPrompt)
-
-    local responseJson = nil
-    local responseBuilder = ""
-
-    for i = 1, DefaultMaxResponse do
-        responseBuilder = responseBuilder .. Llama.next()
-
-        local responseJsonMatch = string.match(responseBuilder, "({.*})")
-        if responseJsonMatch then
-            responseJson = json.decode(responseJsonMatch)
-            break
-        end
-
-        -- 检查结束标记
-        if string.match(responseBuilder, "<|end|>") or
-           string.match(responseBuilder, "<|endoftext|>") or
-           string.match(responseBuilder, "<|user|>") or
-           string.match(responseBuilder, "<|assistant|>") or
-           string.match(responseBuilder, "<|system|>") then
-            break
-        end
-    end
-
-    if not responseJson or not responseJson.answer then
-        print("Unusable response: " .. responseBuilder)
-        return nil
-    end
-
-    return responseJson.answer
-end
-function ScoreAnswer(question, context, answer, expected_response)
+function ProcessPetition(userPrompt)
     -- 重置模型到初始状态
     Llama.loadState()
 
-    -- 设置用于评分的提示词
-    local initialPrompt = PrimePromptText(SystemPrompt_ScoreAnswer)
-    Llama.setPrompt(initialPrompt)
-
-    local userInput = json.encode({
-        question = question,
-        context = context,
-        answer = answer,
-        expected_response = expected_response
-    })
-    local additionalPrompt = CompletePromptText(userInput)
+    -- 添加用户输入
+    local additionalPrompt = CompletePromptText(userPrompt)
     Llama.add(additionalPrompt)
 
     local responseJson = nil
@@ -163,51 +119,21 @@ function ScoreAnswer(question, context, answer, expected_response)
 
     if not responseJson or not responseJson.score then
         print("Unusable response: " .. responseBuilder)
-        return DefaultResponse.Score
+        return DefaultResponse
     end
 
     -- 解析得分
     local scoreNumber = tonumber(responseJson.score)
     if not scoreNumber then
         print("Invalid score: " .. responseJson.score)
-        return DefaultResponse.Score
+        return DefaultResponse
     end
 
     -- 限制得分范围
     scoreNumber = math.min(10, math.max(0, scoreNumber))
 
-    return scoreNumber
-end
-
-function ProcessPetition(userPrompt)
-    local inputJson = json.decode(userPrompt)
-    if not inputJson or not inputJson.question or not inputJson.context or not inputJson.expected_response then
-        print("Invalid input JSON")
-        return DefaultResponse
-    end
-
-    local question = inputJson.question
-    local context = inputJson.context
-    local expected_response = inputJson.expected_response
-
-    -- 第一步：生成答案
-    local answer = GenerateAnswer(question, context)
-    if not answer then
-        print("Failed to generate answer")
-        return DefaultResponse
-    end
-
-    print("Generated Answer: " .. answer)
-
-    -- 第二步：比较答案和预期响应
-    local score = ScoreAnswer(question, context, answer, expected_response)
-    if score == DefaultResponse.Score then
-        print("Failed to score similarity")
-        return DefaultResponse
-    end
-
     return {
-        Score = score,
+        Score = scoreNumber,
     }
 end
 

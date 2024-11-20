@@ -145,7 +145,7 @@ function AutoUpdateLeaderboard()
 
         for id, pool in pairs(ongoingCompetitions) do
             Log.trace("Auto Update Leaderboard ", pool.title)
-            GetRank(id)
+            GetRank(pool.pool_id)
         end
         CircleTimes = 0
     else

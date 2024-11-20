@@ -156,7 +156,7 @@ end
 
 SQL.GetOngoingCompetitions = function()
     local now = datetime.unix()
-    return DB:nrows(string.format("SELECT * FROM competitions WHERE start_time <= %s AND end_time >= %s", now, now - Config.Pool.CompetitionExtraTimeWindow))
+    return DB:nrows(string.format("SELECT * FROM competitions WHERE start_time <= %s AND end_time >= %s;", now, now - Config.Pool.CompetitionExtraTimeWindow))
 end
 
 return SQL
