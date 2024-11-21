@@ -96,10 +96,11 @@ function CreateDatasetHandler(msg)
     end)
 end
 
-function SearchPromptHandler(msg)
+function RetrieveHandler(msg)
     local data = json.decode(msg.Data)
-    Helper.assert_non_empty(data.dataset_hash, data.prompt)
+    Helper.assert_non_empty(data.dataset_hash, data.question)
     msg.forward(DatasetProcessMap[data.dataset_hash])
+    Log.trace(string.format("Search prompt for %s, Redirect to %s", data.dataset_hash, DatasetProcessMap[data.dataset_hash]))
 end
 
 Handlers.add("Init-Response", "Init-Response", function (msg)
@@ -112,4 +113,4 @@ end)
 
 Handlers.add("Create-Dataset", "Create-Dataset", CreateDatasetHandler)
 
-Handlers.add("Search-Prompt", "Search-Prompt", SearchPromptHandler)
+Handlers.add("Retrieve", "Retrieve", RetrieveHandler)

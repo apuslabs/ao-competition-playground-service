@@ -27,12 +27,17 @@ end)
 function Evaluate()
     local unevaluated = SQL.GetUnEvaluated(Config.Evaluate.BatchSize)
     for _, row in ipairs(unevaluated) do
-        local reference = RAGClient.Evaluate(row, function (response, ref)
-            SQL.SetEvaluationResponse(ref, response)
-        end)
-        SQL.UpdateEvaluationReference(row.id, reference)
+        local traceid = RAGClient.RAG("Evaluate", row)
+        SQL.UpdateEvaluationReference(row.id, traceid)
     end
 end
+
+Handlers.add("Inference-Response", "Inference-Response", function (msg)
+    local data = json.decode(msg.Data)
+    assert(data.score, "Score not provided.")
+    Log.info("RAG-Response", msg["X-TraceID"])
+    SQL.SetEvaluationResponse(msg["X-TraceID"], data.score)
+end)
 
 function LoadQuestion(dataStr)
     SQL.BatchCreateQuestion(json.decode(base64.decode(dataStr)))

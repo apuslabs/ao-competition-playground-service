@@ -34,13 +34,19 @@ function CreateDatasetHandler(msg)
     Log.trace(string.format("Create dataset %s", data.name))
 end
 
-function SearchPromptHandler(msg)
+function RetrieveHandler(msg)
+    local traceid = msg["X-TraceID"]
     local data = json.decode(msg.Data)
-    local result = SQL.Match(data.dataset_hash, data.prompt, 3)
-    msg.reply({ Status = "200", Data = Lodash.join(result, "\n") })
-    Log.trace(string.format("Search prompt %s %s", data.dataset_hash, data.prompt))
+    local result = SQL.Match(data.dataset_hash, data.question, 3)
+    data.context = result
+    -- data: dataset_hash, question, expected_response, context
+    msg.forward(Config.Process.LlamaHerder, {
+        Action = "Inference",
+        Data = json.encode(data)
+    })
+    Log.trace(string.format("Search prompt %s %s", data.dataset_hash, traceid))
 end
 
 Handlers.add("Create-Dataset", "Create-Dataset", CreateDatasetHandler)
 
-Handlers.add("Search-Prompt", "Search-Prompt", SearchPromptHandler)
+Handlers.add("Retrieve", "Retrieve", RetrieveHandler)

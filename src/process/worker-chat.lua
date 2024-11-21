@@ -1,27 +1,16 @@
 -- Module: XcWULRSWWv_bmaEyx4PEOFf4vgRSVCP9vM5AucRvI40
 local Config = require("module.utils.config")
+local Log = require("module.utils.log")
+local Helper = require("module.utils.helper")
+local json = require("json")
 
-Colors = {
-    red = "\27[31m",
-    green = "\27[32m",
-    blue = "\27[34m",
-    reset = "\27[0m",
-    gray = "\27[90m"
-}
-
-WorkerType = "Chat"
-
-ModelID = ModelID or Config.Llama.DefaultModel
 Llama = Llama or nil
-RouterID = RouterID or Config.Process.LlamaHerder
-
 InferenceAllowList = {
-    [RouterID] = true,
+    [Config.Process.LlamaHerder] = true,
     [ao.id] = true
 }
 
 DefaultMaxResponse = DefaultMaxResponse or 40
-
 SystemPrompt = [[
 You are Walter White, answer question based on the context.
 
@@ -48,16 +37,21 @@ end
 function Init()
     Llama = require("llama")
     Llama.logLevel = 4
-
-    print("Loading model: " .. ModelID)
-    Llama.load("/data/" .. ModelID)
+    Llama.load("/data/" .. Config.Llama.DefaultModel)
 
     local initialPrompt = PrimePromptText(SystemPrompt)
-    print("Initial Prompt: " .. initialPrompt)
+    Log.info("Initial Prompt: " .. initialPrompt)
     Llama.setPrompt(initialPrompt)
 
-    print("Save state")
     Llama.saveState()
+end
+
+function Ready()
+    Send({
+        Target = Config.Process.LlamaHerder,
+        Action = "Worker-Ready",
+        WorkerType = "Chat",
+    })
 end
 
 function CompletePromptText(userPrompt)
@@ -70,6 +64,8 @@ DefaultResponse = {
 }
 
 function ProcessPetition(userPrompt)
+    Llama.loadState()
+    
     local additionalPrompt = CompletePromptText(userPrompt)
     Llama.add(additionalPrompt)
 
@@ -96,17 +92,8 @@ Handlers.add(
         if msg.From ~= ao.id then
             return print("Init not allowed: " .. msg.From)
         end
-
-        ModelID = msg.Tags["Model-ID"] or ModelID
-        DefaultMaxResponse = msg.Tags["Max-Response"] or DefaultMaxResponse
         Init()
-        ao.send({
-            Target = RouterID,
-            Tags = {
-                Action = "Init-Response",
-                WorkerType = WorkerType,
-            },
-        })
+        Ready()
     end
 )
 
@@ -134,21 +121,18 @@ Handlers.add(
             return
         end
 
-        local userPrompt = msg.Data
-        local response = ProcessPetition(userPrompt)
-
+        local data = json.decode(msg.Data)
+        local response = ProcessPetition(data)
         local answer = response.Answer
-        print("[" .. Colors.gray .. "INFERENCE" .. Colors.reset .. " ]" ..
-            " From: " .. Colors.blue .. msg.From .. Colors.reset ..
-            " | Reference: " .. Colors.blue .. msg.Tags["Reference"] .. Colors.reset ..
-            " | Answer: " .. Colors.blue .. answer .. Colors.reset)
+        Log.info("Inference", msg["X-TraceID"], answer)
 
+        Ready()
+        data.answer = answer
         Send({
-            Target = msg.From,
-            ["X-Reference"] = msg["X-Reference"] or msg.Reference,
-            Data = answer
+            Target = Config.Process.Chat,
+            Action = "Inference-Response",
+            ["X-TraceID"] = msg["X-TraceID"],
+            Data = json.encode(data)
         })
-
-        Llama.loadState()
     end
 )

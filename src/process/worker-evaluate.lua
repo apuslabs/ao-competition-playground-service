@@ -1,63 +1,39 @@
 -- Module: XcWULRSWWv_bmaEyx4PEOFf4vgRSVCP9vM5AucRvI40
 local Config = require("module.utils.config")
-
-Colors = {
-    red = "\27[31m",
-    green = "\27[32m",
-    blue = "\27[34m",
-    reset = "\27[0m",
-    gray = "\27[90m"
-}
-
-WorkerType = "Evaluate"
-
+local Log = require("module.utils.log")
+local Helper = require("module.utils.helper")
 local json = require("json")
 
-ModelID = ModelID or Config.Llama.DefaultModel
 Llama = Llama or nil
-RouterID = RouterID or Config.Process.LlamaHerder
-
 InferenceAllowList = {
-    [RouterID] = true,
+    [Config.Process.LlamaHerder] = true,
     [ao.id] = true
 }
 
-DefaultMaxResponse = DefaultMaxResponse or 10
--- 新的合并后的系统提示词
+DefaultMaxResponse = DefaultMaxResponse or 20
 SystemPrompt = [[
 # Role
 
-You are a robot that answers questions and evaluates the quality of your answer.
+You are a robot evaluating whether the context contains sufficient information to derive the expected_response for the given question.
 
 # Instructions
 
-1. Answer Generation
-    - Based on the "question" and the "context", provide an answer.
-    - Only use information from the "context".
-    - Do not use any external knowledge or make assumptions.
-2. Answer Evaluation
-    - After providing your answer, evaluate its quality by comparing it to the "expected_response" using the following scoring steps.
-
-# Scoring Steps
-
-1. **Correctness**:
-    - Determine if your "answer" is correct to the "question" compared to the "expected_response".
-    - **Score Range Assignment**:
-        - If the "answer" is **incorrect**, assign a score between **0 and 3**.
-        - If the "answer" is **partially correct**, assign a score between **4 and 7**.
-        - If the "answer" is **correct**, assign a score between **8 and 10**.
-2. **Similarity and Completeness**:
-    - Within the determined score range, adjust the score based on the **similarity** and **completeness** of your "answer" compared to the "expected_response".
-    - **Adjusting the Score**:
-        - Higher similarity and completeness to the "expected_response" should result in a higher score within the range.
-        - Minor differences or omissions should result in a slightly lower score within the range.
-        - Significant differences should lower the score further within the range.
-
-# Output Requirements
-
-- Provide only the final score in the specified output format.
-- Do not include your answer or any explanations.
-- Follow Output Format guidelines.
+Follow these steps carefully:
+1.	Analyze the Context
+    -   Carefully read the "context" provided.
+    -   **Only** use information from the "context".
+    -   **Do not** use any external knowledge or make assumptions.
+2.	Assess Sufficiency
+    -   Determine if the "context" provides enough information to answer the "question" with the "expected_response".
+    -   **Focus on** whether the core content of the "expected_response" is present in the "context".
+3.	Assign a Score
+    -   If the "context" fully supports deriving the "expected_response", assign a score between 8 and 10.
+    -   If the "context" partially supports deriving the "expected_response", assign a score between 4 and 7.
+    -   If the "context" does not support deriving the "expected_response", assign a score between 0 and 3.
+    -   Within each score range, higher relevance and completeness lead to a higher score.
+4.	Provide the Final Score
+    -   **Only** output the final score in the json format.
+    -   **Do not** include any explanations or additional text.
 
 # Input Format
 
@@ -82,32 +58,42 @@ end
 function Init()
     Llama = require("llama")
     Llama.logLevel = 4
+    Llama.load("/data/" .. Config.Llama.DefaultModel)
 
-    print("Loading model: " .. ModelID)
-    Llama.load("/data/" .. ModelID)
-
-    -- 设置并保存初始提示词
     local initialPrompt = PrimePromptText(SystemPrompt)
     Llama.setPrompt(initialPrompt)
-
-    print("Save initial state")
+    Log.info("Initial Prompt: " .. initialPrompt)
     Llama.saveState()
 end
 
-function CompletePromptText(userPrompt)
-    return userPrompt .. [[<|end|>
+function Ready()
+    Send({
+        Target = Config.Process.LlamaHerder,
+        Action = "Worker-Ready",
+        WorkerType = "Evaluate",
+    })
+end
+
+
+function CompletePromptText(data)
+    Helper.assert_non_empty(data, data.question, data.context, data.expected_response)
+    local prompt = json.encode({
+        question = data.question,
+        context = data.context,
+        expected_response = data.expected_response
+    })
+    return prompt .. [[<|end|>
 <|assistant|>]]
 end
 
 DefaultResponse = {
     Score = -1,
 }
-function ProcessPetition(userPrompt)
-    -- 重置模型到初始状态
+
+function ProcessPetition(data)
     Llama.loadState()
 
-    -- 添加用户输入
-    local additionalPrompt = CompletePromptText(userPrompt)
+    local additionalPrompt = CompletePromptText(data)
     Llama.add(additionalPrompt)
 
     local responseJson = nil
@@ -122,7 +108,6 @@ function ProcessPetition(userPrompt)
             break
         end
 
-        -- 检查结束标记
         if string.match(responseBuilder, "<|end|>") or
            string.match(responseBuilder, "<|endoftext|>") or
            string.match(responseBuilder, "<|user|>") or
@@ -159,17 +144,8 @@ Handlers.add(
         if msg.From ~= ao.id then
             return print("Init not allowed: " .. msg.From)
         end
-
-        ModelID = msg.Tags["Model-ID"] or ModelID
-        DefaultMaxResponse = msg.Tags["Max-Response"] or DefaultMaxResponse
         Init()
-        ao.send({
-            Target = RouterID,
-            Tags = {
-                Action = "Init-Response",
-                WorkerType = WorkerType,
-            },
-        })
+        Ready()
     end
 )
 
@@ -182,19 +158,18 @@ Handlers.add(
             return
         end
 
-        local userPrompt = msg.Data
-        local response = ProcessPetition(userPrompt)
-
+        local data = json.decode(msg.Data)
+        local response = ProcessPetition(data)
         local score = response.Score
-        print("[" .. Colors.gray .. "INFERENCE" .. Colors.reset .. " ]" ..
-            " From: " .. Colors.blue .. msg.From .. Colors.reset ..
-            " | Reference: " .. Colors.blue .. msg.Tags["Reference"] .. Colors.reset ..
-            " | Score: " .. Colors.blue .. score .. Colors.reset)
+        Log.info(msg["X-TraceID"], score)
 
+        Ready()
+        data.score = score
         Send({
-            Target = msg.From,
-            ["X-Reference"] = msg["X-Reference"] or msg.Reference,
-            Data = tostring(score)
+            Target = Config.Process.Competition,
+            Action = "Inference-Response",
+            ["X-TraceID"] = msg["X-TraceID"],
+            Data = json.encode(data)
         })
     end
 )

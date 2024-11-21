@@ -128,7 +128,7 @@ function OnGetRank(poolID, ranks)
 end
 
 function GetRank(poolID)
-    local competition = SQL.GetCompetition(poolID)
+    local competition = SQL.GetCompetition(tonumber(poolID))
     assert(competition, "Competition not found")
     Send({
         Target = competition.process_id,
