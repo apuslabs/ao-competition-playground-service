@@ -127,35 +127,12 @@ function OnGetRank(poolID, ranks)
     SQL.UpdateRank(poolID, ranks)
 end
 
-function GetRank(poolID)
-    local competition = SQL.GetCompetition(tonumber(poolID))
-    assert(competition, "Competition not found")
-    Send({
-        Target = competition.process_id,
-        Action = "Get-Rank"
-    })
-end
-
 Handlers.add("Rank-Response", { Action = "Rank-Response", From = Config.Process.Competition }, function (msg)
-    OnGetRank(1004, json.decode(msg.Data))
-end)
-
-CircleTimes = CircleTimes or 0
-function AutoUpdateLeaderboard()
-    if CircleTimes >= Config.Pool.LeaderboardInterval then
-        local ongoingCompetitions = SQL.GetOngoingCompetitions()
-
-        for id, pool in pairs(ongoingCompetitions) do
-            Log.trace("Auto Update Leaderboard ", pool.title)
-            GetRank(pool.pool_id)
+    local ongoingCompetitions = SQL.GetOngoingCompetitions()
+    for _, pool in pairs(ongoingCompetitions) do
+        if pool.process_id == msg.From then
+            Log.trace("Rank-Response", pool.pool_id, msg.Data)
+            OnGetRank(pool.pool_id, json.decode(msg.Data))
         end
-        CircleTimes = 0
-    else
-        CircleTimes = CircleTimes + 1
     end
-end
-
-Handlers.add("CronTick", "Cron", function ()
-    Log.trace("Cron Tick")
-    AutoUpdateLeaderboard()
 end)

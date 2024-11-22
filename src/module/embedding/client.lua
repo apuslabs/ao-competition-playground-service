@@ -10,7 +10,11 @@ RAGClient.Reference = function()
 end
 
 RAGClient.RAG = function(workerType, data)
-    Helper.assert_non_empty(data.dataset_hash, data.question, data.expected_response)
+    if workerType == "Evaluate" then
+        Helper.assert_non_empty(data.dataset_hash, data.question, data.expected_response)
+    elseif workerType == "Chat" then
+        Helper.assert_non_empty(data.dataset_hash, data.question)
+    end
     local traceid = RAGClient.Reference()
     Log.info("RAG", workerType, traceid)
     Send({

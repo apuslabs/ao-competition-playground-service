@@ -18,6 +18,11 @@ Handlers.add("CronTick", "Cron", function ()
     if (CircleTimes >= Config.Evaluate.Interval) then
         Log.trace("Auto Evaluate")
         Evaluate()
+        Send({
+            Target = Config.Process.Pool,
+            Action = "Rank-Response",
+            Data = GetRank()
+        })
         CircleTimes = 0
     else
         CircleTimes = CircleTimes + 1
@@ -52,14 +57,6 @@ Handlers.add("Join-Competition", "Join-Competition", JoinCompetitionHandler)
 function GetRank()
     return json.encode(SQL.GetRank())
 end
-
-Handlers.add("Get-Rank", "Get-Rank", function(msg)
-    Send({
-        Target = Config.Process.Pool,
-        Action = "Rank-Response",
-        Data = GetRank()
-    })
-end)
 
 function GetQuestions()
     return SQL.GetQuestions()
