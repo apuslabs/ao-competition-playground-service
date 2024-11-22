@@ -54,8 +54,13 @@ function Ready()
     })
 end
 
-function CompletePromptText(userPrompt)
-    return userPrompt .. [[<|end|>
+function CompletePromptText(data)
+    Helper.assert_non_empty(data, data.question, data.context)
+    local prompt = json.encode({
+        question = data.question,
+        context = data.context
+    })
+    return prompt .. [[<|end|>
 <|assistant|>]]
 end
 
@@ -63,10 +68,10 @@ DefaultResponse = {
     Answer = "",
 }
 
-function ProcessPetition(userPrompt)
+function ProcessPetition(data)
     Llama.loadState()
     
-    local additionalPrompt = CompletePromptText(userPrompt)
+    local additionalPrompt = CompletePromptText(data)
     Llama.add(additionalPrompt)
 
     local responseBuilder = ""
