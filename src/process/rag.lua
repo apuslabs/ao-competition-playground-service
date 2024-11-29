@@ -52,9 +52,11 @@ function CheckDataset(msg)
         return false
     end
     -- check throttle
-    -- if not throttleCheck(msg) then
-    --     return false
-    -- end
+    if not throttleCheck(msg) then
+        Log.warn(string.format("User %s is throttled", msg.From))
+        msg.reply({ Status = "403", Data = "Too many requests, please try again later." })
+        return false
+    end
     return true
 end
 

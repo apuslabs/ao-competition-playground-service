@@ -42,9 +42,9 @@ function DispatchWork()
     end
 end
 
-local function isAllowed(client)
-    return InferenceAllowList[client] == true or client == ao.id or client == Owner
-end
+-- local function isAllowed(client)
+--     return InferenceAllowList[client] == true or client == ao.id or client == Owner
+-- end
 
 local function checkWorkerType(workerType)
     assert(workerType == "Evaluate" or workerType == "Chat", "WorkerType not allowed: " .. workerType)

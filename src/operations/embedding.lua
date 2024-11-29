@@ -39,4 +39,7 @@ function DANGEROUS_CLEAR()
     UploadedUserList = {}
     UploadDatasetQueue = {}
     UploadedDatasetHashList = {}
+
+    EmbeddingPorcesses = {}
+    DatasetProcessMap = {}
 end

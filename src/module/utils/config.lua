@@ -11,14 +11,14 @@ Config.Process = {
 
 Config.Evaluate = {
     Interval = 1,   -- 2 * 5mins
-    BatchSize = 5 -- 5 per interval
+    BatchSize = 20 -- 5 per interval
 }
 
 Config.AESKey = "c1Tl31gxC9tv8CKG"
 Config.AESIV =  "pool000000000000"
 
 Config.Pool = {
-    JoinThrottle = 2 * 60,    -- 2 minute
+    JoinThrottle = 1 * 60,    -- 2 minute
     LeaderboardInterval = 12, -- 12 * 5 mins
     CompetitionExtraTimeWindow = 3600 * 48 -- 48 hours
 }
