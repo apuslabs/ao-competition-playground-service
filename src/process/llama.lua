@@ -28,7 +28,7 @@ function DispatchWork()
         end
         local msg = table.remove(Queue.Evaluate, 1)
         local worker = nextWorker(msg)
-        log.info("DISPATCH", msg.WorkerType, "TraceID", msg.TraceID)
+        log.info("DISPATCH", msg.WorkerType, "TraceID", msg["X-TraceID"])
         msg.forward(worker)
     end
     while #Queue.Chat > 0 do
