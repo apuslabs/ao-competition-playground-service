@@ -33,6 +33,9 @@ end
 function CountWhiteList()
     return #WhiteList
 end
+Handlers.add("Count-WhiteList", "Count-WhiteList", function (msg)
+    msg.reply({ Status = "200", Data = tostring(CountWhiteList()) })
+end)
 
 function DANGEROUS_CLEAR()
     WhiteList = {}

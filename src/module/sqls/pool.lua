@@ -85,6 +85,10 @@ SQL.GetLeaderboard = function(pool_id)
     return DB:query("participants", { pool_id = pool_id }, { order = "created_at ASC" })
 end
 
+SQL.GetLeaderboardSorted = function(pool_id)
+    return DB:query("participants", { pool_id = pool_id }, { order = "rank IS NULL,rank ASC" })
+end
+
 SQL.GetTotalParticipants = function(pool_id)
     local countResult = DB:nrow(string.format("SELECT COUNT(dataset_hash) AS count FROM participants WHERE pool_id = %s",
         pool_id))

@@ -22,6 +22,10 @@ function SetUnstartedDatasetReferenceNull()
     end
 end
 
+function CountWhiteList()
+    return #WhiteList
+end
+
 function RESET_ALL_DATASET()
     local rank = SQL.GetRank()
     for _, row in ipairs(rank) do
