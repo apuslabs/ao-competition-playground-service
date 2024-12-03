@@ -61,17 +61,8 @@ function CheckDataset(msg)
 end
 
 EmbeddingPorcesses = EmbeddingPorcesses or {}
-ProcessIdx = ProcessIdx or 0
 DatasetProcessMap = DatasetProcessMap or {}
-
-local function nextEmbeddingProcess(dataset_hash)
-    ProcessIdx = ProcessIdx + 1
-    if ProcessIdx > #EmbeddingPorcesses then
-        ProcessIdx = 1
-    end
-    DatasetProcessMap[dataset_hash] = EmbeddingPorcesses[ProcessIdx]
-    return EmbeddingPorcesses[ProcessIdx]
-end
+Queue = Queue or {}
 
 function CreateDatasetHandler(msg)
     if not CheckDataset(msg) then
@@ -89,12 +80,8 @@ function CreateDatasetHandler(msg)
             Log.warn(string.format("Join pool failed: %s %s", replyMsg.Status, replyMsg.Data))
             return
         end
-        local process = nextEmbeddingProcess(data.hash)
-        UploadedUserList[msg.From] = true
-        UploadedDatasetList[data.hash] = true
-        UploadedDatasetHashList[GetDatasetHash(data.list)] = true
-        Log.trace(string.format("Create dataset %s", data.name))
-        msg.forward(process)
+        table.insert(Queue, msg)
+        DispatchWork()
     end)
 end
 
@@ -116,3 +103,17 @@ end)
 Handlers.add("Create-Dataset", "Create-Dataset", CreateDatasetHandler)
 
 Handlers.add("Retrieve", "Retrieve", RetrieveHandler)
+
+function DispatchWork()
+    while #Queue > 0 and #EmbeddingPorcesses > 0 do
+        local work = table.remove(Queue, 1)
+        local process = table.remove(EmbeddingPorcesses, 1)
+        local msg = work.msg
+        local data = json.decode(msg.Data)
+        UploadedUserList[msg.From] = true
+        UploadedDatasetList[data.hash] = true
+        UploadedDatasetHashList[GetDatasetHash(data.list)] = true
+        Log.trace(string.format("Create dataset %s", data.name))
+        msg.forward(process)
+    end
+end

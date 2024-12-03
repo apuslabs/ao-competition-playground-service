@@ -31,6 +31,7 @@ function CreateDatasetHandler(msg)
         Action = "Join-Competition",
         Data = data.hash
     })
+    Init()
     Log.trace(string.format("Create dataset %s", data.name))
 end
 
