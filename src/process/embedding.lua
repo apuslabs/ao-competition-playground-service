@@ -224,15 +224,13 @@ end
 
 PromptQueue = PromptQueue or {}
 function SearchPromptHandler(msg)
-    local PromptReference = msg["X-Reference"] or msg.Reference
+    local PromptReference = msg["X-TraceID"] or msg.Reference
     local data = json.decode(msg.Data)
-    Helper.assert_non_empty(data.dataset_hash, data.prompt)
+    Helper.assert_non_empty(data.dataset_hash, data.question)
     PromptQueue[PromptReference] = {
-        reference = PromptReference,
         dataset_hash = data.dataset_hash,
-        prompt = data.prompt,
-        sender = msg.From,
-        created_at = Datetime.unix()
+        prompt = data.question,
+        rawmsg = msg
     }
     Log.info(string.format("Prompt %s added successfully", PromptReference))
 end
@@ -240,7 +238,10 @@ end
 function GetToRetrievePromptHandler(msg)
     local prompts = {}
     for _, data in pairs(PromptQueue) do
-        table.insert(prompts, data)
+        table.insert(prompts, {
+            dataset_hash = data.dataset_hash,
+            prompt = data.prompt
+        })
         if #prompts >= Config.Embedding.RetrieveSize then
             break
         end
@@ -252,19 +253,16 @@ function RecevicePromptResponseHandler(msg)
     local data = json.decode(msg.Data)
     for _, item in ipairs(data) do
         Helper.assert_non_empty(item.reference, item.retrieve_result)
-        local now = Datetime.unix()
         local prompt = PromptQueue[item.reference]
         if not prompt then
             Log.warn(string.format("Prompt %s not found", item.reference))
             return
         end
-        Log.info(string.format("Prompt %s retrieved COSTS %d", item.reference, now - prompt.created_at))
-        -- TODO: direct send to Llama
-        Send({
-            Target = prompt.sender,
-            Action = "Search-Prompt-Response",
-            ["X-Reference"] = item.reference,
-            Data = item.retrieve_result
+        local data = json.decode(prompt.rawmsg.Data)
+        data.context = item.retrieve_result
+        prompt.rawmsg.forward(Config.Process.LlamaHerder, {
+            Action = "Inference",
+            Data = json.encode(data)
         })
         PromptQueue[item.reference] = nil
     end
@@ -278,7 +276,7 @@ Handlers.add("Get-Unembeded-Documents", "Get-Unembeded-Documents", GetUnembededD
 
 Handlers.add("Embedding-Data", "Embedding-Data", EmbeddingDataHandler)
 
-Handlers.add("Search-Prompt", "Search-Prompt", SearchPromptHandler)
+Handlers.add("Retrieve", "Retrieve", SearchPromptHandler)
 
 Handlers.add("GET-TORETRIEVE-PROMPT", "GET-TORETRIEVE-PROMPT", GetToRetrievePromptHandler)
 

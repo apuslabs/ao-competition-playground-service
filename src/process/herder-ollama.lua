@@ -45,7 +45,15 @@ local function ResponseHandler(msg)
             v.response = data.response
             v.responseAt = datetime.unix()
             log.info("RES", v.workerType, "IDX", v.idx, "Reference", v.rawMsg.Reference, "DATA", data.response)
-            v.rawMsg.reply({ Data = tostring(data.response) })
+            -- v.rawMsg.reply({ Data = tostring(data.response) })
+            local rawData = json.decode(v.rawMsg.Data)
+            rawData.score = data.response
+            Send({
+                Target = Config.Process.Competition,
+                Action = "Inference-Response",
+                ["X-TraceID"] = v.rawMsg["X-TraceID"],
+                Data = json.encode(rawData)
+            })
             table.remove(Queue, i)
             break
         end
