@@ -237,10 +237,11 @@ end
 
 function GetToRetrievePromptHandler(msg)
     local prompts = {}
-    for _, data in pairs(PromptQueue) do
+    for ref, data in pairs(PromptQueue) do
         table.insert(prompts, {
             dataset_hash = data.dataset_hash,
-            prompt = data.prompt
+            prompt = data.prompt,
+            reference = ref,
         })
         if #prompts >= Config.Embedding.RetrieveSize then
             break
