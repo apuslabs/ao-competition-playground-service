@@ -21,7 +21,7 @@ end
 Index = Index or 1
 
 local function InferenceHandler(msg)
-    assert(isAllowed(msg.From), "Inference not allowed: " .. msg.From)
+    -- assert(isAllowed(msg.From), "Inference not allowed: " .. msg.From)
     local msgType = msg.Tags["WorkerType"]
     checkWorkerType(msgType)
     assert(msg.Data, "Prompt not provided.")
@@ -67,6 +67,18 @@ Handlers.add("Get-Inference", "Get-Inference", function(msg)
         return
     end
     local item = Queue[1]
+    if msg.Data == "end" then
+        if #Queue <=1 then
+            return
+        end
+        item = Queue[#Queue]
+    end
+    if msg.Data == "middle" then
+        if #Queue <= 2 then
+            return
+        end
+        item = Queue[math.floor(#Queue / 2)]
+    end
     msg.reply({ Data = json.encode({
         idx = item.idx,
         workerType = item.workerType,

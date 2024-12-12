@@ -261,7 +261,7 @@ function RecevicePromptResponseHandler(msg)
         end
         local data = json.decode(prompt.rawmsg.Data)
         data.context = item.retrieve_result
-        prompt.rawmsg.forward(Config.Process.LlamaHerder, {
+        prompt.rawmsg.forward(Config.Process.OllamaHerder, {
             Action = "Inference",
             Data = json.encode(data)
         })

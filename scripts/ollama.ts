@@ -26,31 +26,38 @@ const cache = new FlatCache({
     cacheId: 'ollama',
 });
 
-const EvaluateSystemPrompt1 = `You are a robot evaluating dataset quality. You'll be given an Input JSON.
-Input JSON format:
+const EvaluateSystemPrompt1 = `# Role
+
+You are a robot evaluating whether the context contains sufficient information to derive the expected_response for the given question.
+
+# Instructions
+
+Follow these steps carefully:
+1.	Analyze the Context
+    -   Carefully read the "context" provided.
+    -   **Only** use information from the "context".
+    -   **Do not** use any external knowledge or make assumptions.
+2.	Assess Sufficiency
+    -   Determine if the "context" provides enough information to answer the "question" with the "expected_response".
+    -   **Focus on** whether the core content of the "expected_response" is present in the "context".
+3.	Assign a Score
+    -   If the "context" fully supports deriving the "expected_response", assign a score between 8 and 10.
+    -   If the "context" partially supports deriving the "expected_response", assign a score between 4 and 7.
+    -   If the "context" does not support deriving the "expected_response", assign a score between 0 and 3.
+    -   Within each score range, higher relevance and completeness lead to a higher score.
+4.	Provide the Final Score
+    -   **Only** output the final score.
+    -   **Do not** include any explanations or additional text.
+
+# Input Format
+
 \`\`\`json
-{"question": "...","context": "<Content about question>"}
-\`\`\`
-  - "context" may contain multiple lines or be null.
-
-Then Follow these steps:
-1. Understand the topic based on "context" field and "question" field in input json.
-2. Formulate your answer to the "question" based on "context" field in input json.
-  - In a single sentence, no line breaks, MAX 40 words.
-  - All your knowledge MUST come from the "context" field in input json
-  - DON'T use existing knowledge, DON'T invent facts.
-`
-
-const EvaluateSystemPrompt2 = `You are a robot evaluating dataset quality. You'll be given an Input JSON.
-Input JSON format:
-\`\`\`json
-{"response": "...","expected_response": "..."} 
+{"question": "...", "context": "...", "expected_response": "..."}
 \`\`\`
 
-Compare your answer with the "expected_response" field in input json. Score semantic similarity from integer between 0 and 10 (0 = no similarity, 10 = almost identical).
+# Output Format
 
-Output: Only return the integer score.
-Example: 7`
+7`;
 
 const ChatSystemPrompt = `You are Satoshi Nakamoto, answer question based on the context.
 
@@ -63,12 +70,12 @@ Input JSON format:
 Output:
 1. Plain text, MAX 40 words, no line breaks.
 2. Answer concisely in one sentence, no line breaks, stop when complete.
-2. If context is null, use existing knowledg, but don't invent facts.`
+2. If context is null, use existing knowledg, but don't invent facts.`;
 
 interface Task {
-    idx: number;
-    workerType: "Evaluate" | "Chat";
-    prompt: string;
+  idx: number;
+  workerType: 'Evaluate' | 'Chat';
+  prompt: string;
 }
 
 async function getTaskFromHerder(): Promise<Task | undefined> {
@@ -77,7 +84,7 @@ async function getTaskFromHerder(): Promise<Task | undefined> {
       Action: 'Get-Inference',
     });
     if (!result.Messages?.length) {
-        return;
+      return;
     }
     const data = result.Messages?.[0]?.Data;
     return JSON.parse(data);
@@ -88,12 +95,16 @@ async function getTaskFromHerder(): Promise<Task | undefined> {
 
 async function setResult(task: Task, response: string) {
   try {
-    const result = await msgResult(OLLAMA_PROCESS, {
-      Action: 'Inference-Response',
-    }, {
+    const result = await msgResult(
+      OLLAMA_PROCESS,
+      {
+        Action: 'Inference-Response',
+      },
+      {
         idx: task.idx,
         response,
-    });
+      }
+    );
     return result;
   } catch (e) {
     logger.error('Failed to send task' + JSON.stringify(e));
@@ -101,50 +112,50 @@ async function setResult(task: Task, response: string) {
 }
 
 async function evaluate(task: Task): Promise<string | undefined> {
-    try {
-        const prompt = JSON.parse(task.prompt);
-        const options = {
-            model: 'phi3:medium',
-            system: EvaluateSystemPrompt1,
-            prompt: JSON.stringify({
-                question: prompt.question,
-                context: prompt.context,
-            }),
-            stream: false,
-            options: {
-                seed: 1234,
-                temperature: 0
-            }
-        }
-        const result = await axios.post(`${OLLAMA_SERVICE}/api/generate`, options)
-        const options2 = {
-            model: 'phi3:medium',
-            system: EvaluateSystemPrompt2,
-            prompt: JSON.stringify({
-                response: result.data.response,
-                expected_response: prompt.expected_response,
-            }),
-            stream: false,
-            options: {
-                seed: 1234,
-                temperature: 0
-            }
-        }
-        const result2 = await axios.post(`${OLLAMA_SERVICE}/api/generate`, options2)
-        let score = Number.parseInt(result2.data.response)
-        if (Number.isNaN(score) || score < 0 || score > 10) {
-            logger.warn(`Invalid score for task ${task.idx}: ${result2.data.response}`);
-            score = 0;
-        }
-        cache.setKey(task.idx.toString(), {
-            response: result.data.response,
-            score
-        });
-        logger.info(`Evaluated task ${task.idx} with score ${score}`);
-        return score.toString();
-    } catch (e) {
-        logger.error('Failed to perform inference' + JSON.stringify(e));
+  try {
+    const prompt = JSON.parse(task.prompt);
+    const options = {
+      model: 'phi3:medium',
+      system: EvaluateSystemPrompt1,
+      prompt: JSON.stringify({
+        question: prompt.question,
+        context: prompt.context,
+      }),
+      stream: false,
+      options: {
+        seed: 1234,
+        temperature: 0,
+      },
+    };
+    const result = await axios.post(`${OLLAMA_SERVICE}/api/generate`, options);
+    // const options2 = {
+    //     model: 'phi3:medium',
+    //     system: EvaluateSystemPrompt2,
+    //     prompt: JSON.stringify({
+    //         response: result.data.response,
+    //         expected_response: prompt.expected_response,
+    //     }),
+    //     stream: false,
+    //     options: {
+    //         seed: 1234,
+    //         temperature: 0
+    //     }
+    // }
+    // const result2 = await axios.post(`${OLLAMA_SERVICE}/api/generate`, options2)
+    let score = Number.parseInt(result.data.response);
+    if (Number.isNaN(score) || score < 0 || score > 10) {
+      logger.warn(`Invalid score for task ${task.idx}: ${result.data.response}`);
+      score = 0;
     }
+    cache.setKey(task.idx.toString(), {
+      response: result.data.response,
+      score,
+    });
+    logger.info(`Evaluated task ${task.idx} with score ${score}`);
+    return score.toString();
+  } catch (e) {
+    logger.error('Failed to perform inference' + JSON.stringify(e));
+  }
 }
 
 async function chat(task: Task): Promise<string | undefined> {
