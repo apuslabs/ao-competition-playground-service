@@ -120,6 +120,7 @@ async function evaluate(task: Task): Promise<string | undefined> {
       prompt: JSON.stringify({
         question: prompt.question,
         context: prompt.context,
+        expected_response: prompt.expected_response,
       }),
       stream: false,
       options: {
