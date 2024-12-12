@@ -24,6 +24,12 @@ function GetDatasetHash(list)
 end
 
 function CheckDataset(msg)
+    -- Check DatasetCount
+    if DatasetCount >= 1500 then
+        Log.warn("Dataset amount exceeds limit")
+        msg.reply({ Status = "403", Data = "Dataset amount exceeds limit." })
+        return false
+    end
     -- Cehck whiteList
     if not Lodash.Contain(WhiteList, msg.From) then
         Log.warn("User " .. msg.From .. " is not allowed to join the event.")
@@ -63,11 +69,13 @@ end
 EmbeddingPorcesses = EmbeddingPorcesses or {}
 DatasetProcessMap = DatasetProcessMap or {}
 Queue = Queue or {}
+DatasetCount = DatasetCount or 0
 
 function CreateDatasetHandler(msg)
     if not CheckDataset(msg) then
         return
     end
+    DatasetCount = DatasetCount + 1
     local data = json.decode(msg.Data)
     Send({
         Target = Config.Process.Pool,
@@ -80,6 +88,9 @@ function CreateDatasetHandler(msg)
             Log.warn(string.format("Join pool failed: %s %s", replyMsg.Status, replyMsg.Data))
             return
         end
+        UploadedUserList[msg.From] = true
+        UploadedDatasetList[data.hash] = true
+        UploadedDatasetHashList[GetDatasetHash(data.list)] = true
         table.insert(Queue, msg)
         DispatchWork()
     end)
@@ -106,13 +117,9 @@ Handlers.add("Retrieve", "Retrieve", RetrieveHandler)
 
 function DispatchWork()
     while #Queue > 0 and #EmbeddingPorcesses > 0 do
-        local work = table.remove(Queue, 1)
+        local msg = table.remove(Queue, 1)
         local process = table.remove(EmbeddingPorcesses, 1)
-        local msg = work.msg
         local data = json.decode(msg.Data)
-        UploadedUserList[msg.From] = true
-        UploadedDatasetList[data.hash] = true
-        UploadedDatasetHashList[GetDatasetHash(data.list)] = true
         Log.trace(string.format("Create dataset %s", data.name))
         msg.forward(process)
     end
