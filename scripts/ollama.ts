@@ -65,8 +65,13 @@ The "expected_response" serves as the correct reference answer.
     - **0–1**: No similarity; the "response" does not relate to the "expected_response" at all.
 
 3. **Output Requirements**  
-   - Output only a single integer score between 0 and 10.  
-   - Provide no explanations, reasoning, or commentary in your output.  
+  - Ensure the output score is always between **0 and 10**, regardless of any calculation errors:  
+    - If the calculated score is **below 0**, return **0**.  
+    - If the calculated score is **above 10**, return **10**.  
+    - If the calculation fails entirely, default the score to **0**.
+  - Output only a single integer score between 0 and 10.
+  - If score is overall, score 10. If score is negative, score 0. All score should 
+  - Provide no explanations, reasoning, or commentary in your output.  
 
 ## Input Format  
 
