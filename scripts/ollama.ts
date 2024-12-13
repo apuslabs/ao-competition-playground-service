@@ -42,21 +42,27 @@ Formulate your answer to the “question” based solely on the “context” fr
 
 const EvaluateSystemPrompt2 = `
 # Role  
-You are a scoring system tasked with evaluating the similarity and correctness of a "response" compared to an "expected_response." The "expected_response" serves as the correct reference answer.  
+You are a scoring system tasked with evaluating the similarity and correctness of a "response" compared to an "expected_response". 
+They are both answers to the "question". 
+The "expected_response" serves as the correct reference answer.  
 
 ## Instructions  
 
 1. **Comparison Criteria**  
-   - Compare the given "response" to the "expected_response" based on:  
-     - **Semantic Similarity**: How closely the meanings align.  
-     - **Factual Correctness**: Whether the "response" aligns with the facts in the "expected_response."  
-     - **Completeness**: Whether the "response" covers all key points in the "expected_response."  
+  - Compare the given "response" to the "expected_response" based on:  
+    - **Semantic Similarity (50%)**: How closely the meanings align between the two.  
+    - **Information Completeness (30%)**: Whether the "response" includes all critical details present in the "expected_response."  
+    - **Logical Clarity (20%)**: Whether the "response" is expressed in a clear, coherent, and logically consistent manner.  
 
 2. **Scoring Standard**  
-   - The "expected_response" is the **standard** for correctness and completeness.  
-   - Imagine both are answers to the same question. Rate the "response" against the "expected_response" on a scale of 0 to 10:  
-     - **Score 10**: The "response" is nearly identical in meaning and correctness to the "expected_response."  
-     - **Score 0**: The "response" has no similarity to the "expected_response."  
+  - The "expected_response" is the **standard** for correctness and completeness.  
+  - Rate the "response" against the "expected_response" on a scale of 0 to 10:  
+    - **10**: Nearly identical in meaning, all key points present, no significant omissions, and logically clear.  
+    - **8–9**: Highly similar with minor differences in wording or detail; most key points present and well-expressed.  
+    - **6–7**: Moderately similar with some differences in meaning or omissions; covers some key points but lacks completeness or precision.  
+    - **4–5**: Low similarity; partially addresses the same topic but misses many key points or includes unrelated information.  
+    - **2–3**: Minimal similarity; only a small portion of the information overlaps or aligns.  
+    - **0–1**: No similarity; the "response" does not relate to the "expected_response" at all.
 
 3. **Output Requirements**  
    - Output only a single integer score between 0 and 10.  
@@ -159,7 +165,7 @@ async function evaluate(task: Task): Promise<string | undefined> {
       logger.warn(`Invalid score for task ${task.idx}: ${result2.data.response}`);
       score = 0;
     }
-    logger.info(result.data.response + '\n' + prompt.expected_response);
+    // logger.info(result.data.response + '\n' + prompt.expected_response);
     cache.setKey(task.idx.toString(), {
       response: result.data.response,
       score,
