@@ -72,7 +72,7 @@ The "expected_response" serves as the correct reference answer.
 
 ## Ouput Format
 - **ONLY** output a single integer score between 0 and 10, the output score **MUST** between 0 to 10.
-- **DO NOT** Provide any explanations, reasoning, or commentary in your output.
+- **DO NOT** Provide any prefix, suffix, explanations, reasoning, or commentary in your output.
 
 Example: 5`;
 
