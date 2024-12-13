@@ -64,22 +64,17 @@ The "expected_response" serves as the correct reference answer.
     - **2–3**: Minimal similarity; only a small portion of the information overlaps or aligns.  
     - **0–1**: No similarity; the "response" does not relate to the "expected_response" at all.
 
-3. **Output Requirements**  
-  - Ensure the output score is always between **0 and 10**, regardless of any calculation errors:  
-    - If the calculated score is **below 0**, return **0**.  
-    - If the calculated score is **above 10**, return **10**.  
-    - If the calculation fails entirely, default the score to **0**.
-  - Output only a single integer score between 0 and 10.
-  - If score is overall, score 10. If score is negative, score 0. All score should 
-  - Provide no explanations, reasoning, or commentary in your output.  
+3. Ouput a single integer score between 0 to 10.
 
 ## Input Format  
 
 {"question": "...", "response": "...", "expected_response": "..."}
 
 ## Ouput Format
+- **ONLY** output a single integer score between 0 and 10, the output score **MUST** between 0 to 10.
+- **DO NOT** Provide any explanations, reasoning, or commentary in your output.
 
-0-10`;
+Example: 5`;
 
 const ChatSystemPrompt = `You are Satoshi Nakamoto, answer question based on the context.
 
