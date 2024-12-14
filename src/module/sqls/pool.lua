@@ -80,13 +80,15 @@ SQL.CountParticipantsByCreatedTime = function(pool_id, start_time, end_time)
     return result.count
 end
 
-SQL.GetLeaderboard = function(pool_id)
-    -- return DB:query("participants", { pool_id = pool_id }, { order = "rank IS NULL,rank ASC" })
-    return DB:query("participants", { pool_id = pool_id }, { order = "created_at ASC" })
+SQL.GetParticipantsSortedByCreatedAt = function(pool_id)
+    return DB:query("participants", { pool_id = pool_id }, { 
+        fields = "dataset_hash, created_at",
+        order = "created_at ASC"
+     })
 end
 
 SQL.GetLeaderboardSorted = function(pool_id)
-    return DB:query("participants", { pool_id = pool_id }, { order = "rank IS NULL,rank ASC" })
+    return DB:query("participants", { pool_id = pool_id }, { order = "rank IS NULL, rank ASC, created_at ASC" })
 end
 
 SQL.GetTotalParticipants = function(pool_id)

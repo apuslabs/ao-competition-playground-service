@@ -27,7 +27,7 @@ function CheckDataset(msg)
     -- Check DatasetCount
     if DatasetCount >= 1500 then
         Log.warn("Dataset amount exceeds limit")
-        msg.reply({ Status = "403", Data = "Dataset amount exceeds limit." })
+        msg.reply({ Status = "403", Data = "Notice: Our event has reached its full capacity of 1,500 participants. Please do not upload any more datasets, as submissions will not be considered. Thank you for your understanding and support!" })
         return false
     end
     -- Cehck whiteList

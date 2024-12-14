@@ -114,6 +114,12 @@ SQL.CreateEvaluationSet = function(participant_dataset_hash)
     return SQL.BatchCreateEvaluation(evaluations)
 end
 
+SQL.IsDatasetExist = function(dataset_hash)
+    local result = DB:nrow("SELECT COUNT(id) AS count FROM evaluations WHERE participant_dataset_hash = '" ..
+        dataset_hash .. "';")
+    return result.count > 0
+end
+
 SQL.GetUnEvaluated = function(limit)
     limit = limit or 1
     return DB:nrows(string.format([[
@@ -154,6 +160,27 @@ SQL.SetEvaluationResponse = function(reference, sas_score)
         reference = reference,
     })
 end
+
+SQL.CleanEvaluationBefore = function(timestamp)
+    return DB:exec("UPDATE evaluations SET reference = NULL, sas_score = NULL, response_at = NULL WHERE response_at < " .. timestamp .. ";")
+end
+
+SQL.CountEvaluationBefore = function(timestamp)
+    return DB:nrows("SELECT COUNT(id) AS count FROM evaluations WHERE response_at < " .. timestamp .. ";")
+end
+
+SQL.CountEvaluated = function()
+    return DB:nrows("SELECT COUNT(id) AS count FROM evaluations WHERE sas_score IS NOT NULL;")
+end
+
+SQL.CountZeroScore = function()
+    return DB:nrows("SELECT COUNT(id) AS count FROM evaluations WHERE sas_score = 0;")
+end
+
+SQL.ResetZeroScore = function()
+    return DB:exec("UPDATE evaluations SET reference = NULL, sas_score = NULL, response_at = NULL WHERE sas_score = 0;")
+end
+
 
 SQL.GetRank = function()
     return DB:nrows([=[

@@ -31,18 +31,14 @@ Handlers.add("Get-Participants", "Get-Datasets", function (msg)
 end)
 
 Handlers.add("Get-Leaderboard", { Action = "Get-Leaderboard" }, function (msg)
-    msg.reply({ Status = "200", Data = json.encode(SQL.GetLeaderboard(msg.Data)) })
+    msg.reply({ Status = "200", Data = json.encode(SQL.GetLeaderboardSorted(msg.Data)) })
 end)
 
 Handlers.add("Get-Dashboard", "Get-Dashboard", function (msg)
     local From = msg.FromAddress or msg.From
     local poolID = tonumber(msg.Data)
-    local rank = 0
-    local rewarded_tokens = 0
-    if (From ~= "" and From ~= "1234") then
-        rank = SQL.GetUserRank(poolID, From)
-        rewarded_tokens = SQL.GetUserReward(poolID, From)
-    end
+    local rank = SQL.GetUserRank(poolID, From)
+    local rewarded_tokens = SQL.GetUserReward(poolID, From)
     msg.reply({
         Status = "200",
         Data = json.encode({
@@ -121,8 +117,22 @@ end
 
 function OnGetRank(poolID, ranks)
     Log.info("Update Rank ", poolID, ranks)
+    local datasets = SQL.GetParticipantsSortedByCreatedAt(poolID)
+    -- sort rank by created_at when score is the same
+    local createdAtMap = {}
+    for _, dataset in ipairs(datasets) do
+        createdAtMap[dataset.dataset_hash] = dataset.created_at
+    end
+    table.sort(ranks, function(a, b)
+        if a.score == b.score then
+            return createdAtMap[a.dataset_hash] < createdAtMap[b.dataset_hash]
+        else
+            return a.score > b.score
+        end
+    end)
     for i in ipairs(ranks) do
         ranks[i].reward = allocateReward(i)
+        ranks[i].rank = i
     end
     SQL.UpdateRank(poolID, ranks)
 end
