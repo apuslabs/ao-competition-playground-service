@@ -80,6 +80,26 @@ async def create_dataset(input_data: CreateDatasetInput):
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/import-dataset")
+async def import_dataset_from_local():
+    try:
+        # read `final-dataset-list.json`
+        with open("final-dataset-list.json", "r") as f:
+            dataset_list = json.load(f)
+            print(f"Read dataset list from file, total {len(dataset_list)} datasets")
+            # create dataset
+            for dataset in dataset_list:
+                indexed_docs = [
+                    Document(content=doc) for doc in dataset["list"]
+                ]
+                indexing = get_indexing_pool(dataset["hash"])
+                indexing.run({"embedder": {"documents": indexed_docs}})
+                print(f"Dataset {dataset['hash']} embedded {len(dataset['list'])} documents")
+        return {"message": "Dataset embedded successfully"}
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/retrieve-data")
 async def retrieve_data(input_data: RetrieveInput):
