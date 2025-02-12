@@ -10,6 +10,13 @@ local throttleCheck = Helper.throttleCheckWrapper(Config.Pool.JoinThrottle)
 UploadDatasetQueue = UploadDatasetQueue or {}
 DatasetStatus = DatasetStatus or {}
 
+function Init()
+    Send({
+        Target = Config.Process.Embedding,
+        Action = "Init-Response",
+    })
+end
+
 function CreateDatasetHandler(msg)
     -- if msg.From ~= "lpJ5Edz_8DbNnVDL0XdbsY9vCOs45NACzfI4jvo4Ba8" then
     --     msg.reply({ Status = "500", Data = "System Under Maintenance" })
