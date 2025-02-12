@@ -49,7 +49,7 @@ local function ResponseHandler(msg)
             local rawData = json.decode(v.rawMsg.Data)
             rawData.score = data.response
             Send({
-                Target = Config.Process.Competition,
+                Target = Config.Process.Chat,
                 Action = "Inference-Response",
                 ["X-TraceID"] = v.rawMsg["X-TraceID"],
                 Data = json.encode(rawData)

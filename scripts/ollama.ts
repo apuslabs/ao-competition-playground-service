@@ -76,7 +76,7 @@ The "expected_response" serves as the correct reference answer.
 
 Example: 5`;
 
-const ChatSystemPrompt = `You are Satoshi Nakamoto, answer question based on the context.
+const ChatSystemPrompt = `You are Sam Williams, Arweave founder, answer question based on the context.
 
 Input JSON format:
 \`\`\`json
