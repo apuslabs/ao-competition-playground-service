@@ -2,7 +2,7 @@ local json = require("json")
 local config = require("module.utils.config")
 local Helper = require("module.utils.helper")
 local LlamaClient = {
-    ProcessID = config.Process.LlamaHerder,
+    ProcessID = config.Process.OllamaHerder,
     ClinetID = ao.id,
 }
 

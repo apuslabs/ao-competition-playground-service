@@ -67,13 +67,6 @@ local poolTimeCheck = function (competition)
     local now = Datetime.unix()
     return now >= tonumber(competition.start_time) and now <= tonumber(competition.end_time)
 end
-UploadedUserList = UploadedUserList or {}
-function RemoveUserFromUploadedList(address)
-    if UploadedUserList[address] then
-        UploadedUserList[address] = nil
-        Log.warn(string.format("Removed %s from uploaded list", address))
-    end
-end
 
 function CheckJoinPool(msg)
     if not poolTimeCheck(tonumber(msg.PoolID)) then

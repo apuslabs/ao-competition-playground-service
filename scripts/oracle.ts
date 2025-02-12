@@ -160,6 +160,7 @@ async function setPromptRetrieved() {
       ErrorPool[prompt.reference] = prompt;
       delete PromptPool[prompt.reference];
     }
+    console.error(`Failed to set retrieve result for ${toSetPrompt.map((v) => v.reference).join(',')}`);
   }
 }
 
