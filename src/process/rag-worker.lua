@@ -4,7 +4,6 @@ local json = require("json")
 local base64 = require(".base64")
 Log = require("module.utils.log")
 Config = require("module.utils.config")
-local Lodash = require("module.utils.lodash")
 
 local sqlite3 = require("lsqlite3")
 SQL = require("module.sqls.embedding")

@@ -1,7 +1,7 @@
 local Config = {}
 
 Config.Process = {
-    Chat = "4_zjOJp75rooSI6-f3lUwPJxwgcG1MXITCVqrPd_o5k",
+    Chat = "URaM7OLcB-TZj3C76qg7mjjX6nC2HvU9unUIxSDotJg",
     LlamaHerder = "J0hmRtTPfV3NFiLvn1Pw9-KqrfeAzRAE2JkKWQjz3t0",
     OllamaHerder = "79uAAtUuyh0qjscpzKG51LfNFT_LRDADvBD9Kb6yyks",
     Embedding = "q7QJTZbOI_avjaltnF-kP21kpL3qCs8sJSP6Wdl9wzM",
