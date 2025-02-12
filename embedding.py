@@ -28,7 +28,7 @@ querying_pool = LRUCache(maxsize=QUERYING_POOL_SIZE)
 def get_indexing_pool(user_address):
     indexing = Pipeline()
     document_store = ChromaDocumentStore(collection_name=user_address, persist_path=f"./chroma/{user_address}")
-    indexing.add_component("embedder", SentenceTransformersDocumentEmbedder())
+    indexing.add_component("embedder", SentenceTransformersDocumentEmbedder(model="sentence-transformers/all-MiniLM-L6-v2"))
     indexing.add_component("writer", DocumentWriter(document_store))
     indexing.connect("embedder.documents", "writer.documents")
     return indexing
