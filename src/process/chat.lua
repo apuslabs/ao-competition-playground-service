@@ -16,9 +16,10 @@ end)
 
 Handlers.add("Inference-Response", "Inference-Response", function (msg)
     local data = json.decode(msg.Data)
-    assert(data.answer, "Answer not provided.")
+    -- TODO: unify the response json
+    assert(data.score, "Answer not provided.")
     Log.info("RAG-Response", msg["X-TraceID"])
-    SQL.SetResponse(msg["X-TraceID"], data.answer)
+    SQL.SetResponse(msg["X-TraceID"], data.score)
 end)
 
 function GetChatAnswer(reference)
