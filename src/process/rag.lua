@@ -99,7 +99,12 @@ end
 function RetrieveHandler(msg)
     local data = json.decode(msg.Data)
     Helper.assert_non_empty(data.dataset_hash, data.question)
-    msg.forward(DatasetProcessMap[data.dataset_hash])
+    -- TODO: refactor for chatbot
+    if DatasetProcessMap[data.dataset_hash] ~= nil then
+        msg.forward(DatasetProcessMap[data.dataset_hash])
+    else
+        msg.forward("fEP7m9HKlDzrKehnPM0jzJzJZ0nIfgrH5KlY0PlHJKc")
+    end
     Log.trace(string.format("Search prompt for %s, Redirect to %s", data.dataset_hash, DatasetProcessMap[data.dataset_hash]))
 end
 

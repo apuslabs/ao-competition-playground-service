@@ -37,7 +37,7 @@ def get_indexing_pool(user_address):
 def get_querying_pool(user_address):
     querying = Pipeline()
     document_store = ChromaDocumentStore(collection_name=user_address, persist_path=f"./chroma/{user_address}")
-    querying.add_component("query_embedder", SentenceTransformersTextEmbedder())
+    querying.add_component("query_embedder", SentenceTransformersTextEmbedder(model="sentence-transformers/all-MiniLM-L6-v2"))
     querying.add_component("retriever", ChromaEmbeddingRetriever(document_store))
     querying.connect("query_embedder.embedding", "retriever.query_embedding")
     return querying
